@@ -141,6 +141,6 @@ send http request to an endpoint that designed to execute window terminal comman
 Java JDK21, Springboot 3.5.13, Maven 3.6.3
 
 ### Java dependencies
-Jackson-databind (@JsonInclude)
-Jackson-annotations (@JsonProperty)
-commons-lang3 (StringUtils)
+Jackson-databind (@JsonInclude) <br>
+Jackson-annotations (@JsonProperty) <br>
+commons-lang3 (StringUtils) <br>
