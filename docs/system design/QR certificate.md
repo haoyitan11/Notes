@@ -135,3 +135,7 @@ send http request to an endpoint that designed to execute window terminal comman
         return rpts;
     }
 ```
+
+## Simulator
+### Design
+Java JDK21, Springboot 3.5.13, Maven 3.6.3
