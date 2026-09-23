@@ -8,7 +8,8 @@ HTML, Javascript
 ### Data store
 JSON format, .dat file
 <img width="106" height="31" alt="image" src="https://github.com/user-attachments/assets/9d083621-347f-4018-b17c-b27196837d4f" />
-<img width="483" height="862" alt="image" src="https://github.com/user-attachments/assets/1ce0910e-4c11-4781-95cc-d892571cc26c" />
+<img width="239" height="427" alt="image" src="https://github.com/user-attachments/assets/d67c2098-5bee-40fd-9127-5d3b94ea0650" />
+
 
 ### Data store
 Send HTTP request – XMLHttpRequest dependencies
