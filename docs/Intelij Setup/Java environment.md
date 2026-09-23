@@ -4,22 +4,22 @@ Download your specific JDK version and setup your system environment
 https://www.oracle.com/java/technologies/javase/jdk11-archive-downloads.html
 <img width="940" height="162" alt="image" src="https://github.com/user-attachments/assets/ca141ee4-fd19-4891-90aa-57e76a95e6df" />
 
-After install done, find ENV on search bar
+<br> After install done, find ENV on search bar
 <img width="375" height="269" alt="image" src="https://github.com/user-attachments/assets/69b1c7ec-3fb1-42c4-8916-7e7f749489ed" />
  
 
-Create new, set Java_Home
+<br> Create new, set Java_Home
 <img width="254" height="279" alt="image" src="https://github.com/user-attachments/assets/b7d4be1b-3150-4fc2-ab89-bd7ed0b6d5bd" />
 <img width="542" height="162" alt="image" src="https://github.com/user-attachments/assets/8c526209-abc0-4d94-9bac-0f9ecc5cd852" />
 
 
-then go to path, set %JAVA_HOME%\bin inside
+<br> then go to path, set %JAVA_HOME%\bin inside
 <img width="600" height="271" alt="image" src="https://github.com/user-attachments/assets/80567ed6-2f71-4c48-b43f-8c54e1630fff" />
 <img width="294" height="324" alt="image" src="https://github.com/user-attachments/assets/4a63e3b5-04ee-49a8-b5b2-b4743f66367e" />
 
-Remember to click apply
+<br> Remember to click apply
 
-Go Terminal , write command java -version to check java jdk 
+<br> Go Terminal , write command java -version to check java jdk 
 <img width="595" height="218" alt="image" src="https://github.com/user-attachments/assets/dfd39714-c04a-4bad-b110-f8fcaab64099" />
 
 ## Swap multiple JDK version with script
