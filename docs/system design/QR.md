@@ -1,4 +1,4 @@
-# QR System Design
+# Payment Service Provider QR System Design
 ## Message Broker
 1. Solace
 
