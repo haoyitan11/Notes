@@ -33,7 +33,7 @@ Function: Acts as the central OAuth2 lifecycle manager.
 Function : Acts as the OAuth2 authorized client storage layer.
 - Stores and retrieves OAuth2AuthorizedClient instances.
 - In this implementation, InMemoryReactiveOAuth2AuthorizedClientService is used to store authorized clients and access tokens in JVM memory.
-<br>v
+<br>
 4. ClientCredentialsReactiveOAuth2AuthorizedClientProvider
 Function : Handles the OAuth2 Client Credentials grant flow.
 - Determines whether a new access token needs to be requested.
