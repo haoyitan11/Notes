@@ -1,4 +1,4 @@
-# Find frontend JSP element using Browser > Inspect
+# Find JSP element using Browser > Inspect
 
 <p>
   <img width="940" height="216" alt="image" src="https://github.com/user-attachments/assets/1dd654e2-9469-46e4-999f-6acc217e1f18" />
