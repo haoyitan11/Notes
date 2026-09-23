@@ -121,6 +121,7 @@ Send HTTP request – XMLHttpRequest dependencies
 ```
 
 ### Execute command
+send http request to an endpoint that designed to execute window terminal command
 ```javascript
     run(cmd, isSilent = false) {
         let xh = new XMLHttpRequest();
