@@ -121,4 +121,28 @@ Send HTTP request – XMLHttpRequest dependencies
 ```
 
 ### Execute command
-send http request to an endpoint that designed to execute Linux command (must fulfil Linux command)
+```javascript
+    return new Promise((resolve) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", destination, true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.setRequestHeader("KeyId", keyId);
+        xhr.setRequestHeader("sign", signature);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState !== 4) return;
+            resolve({
+                ok: xhr.status === 200,
+                status: xhr.status,
+                headers: xhr.getAllResponseHeaders(),
+                body: xhr.responseText,
+                destination,
+                signature,
+                requestBody: payload,
+            });
+        };
+        xhr.onerror = function () {
+            resolve({ ok: false, status: 0, headers: "", body: "Network error", destination, signature, requestBody: payload });
+        };
+        xhr.send(payload);
+    });
+```
