@@ -93,7 +93,49 @@ JSON format, .dat file
 
 ### Data store
 Send HTTP request – XMLHttpRequest dependencies
-<img width="1226" height="560" alt="image" src="https://github.com/user-attachments/assets/db898459-eba8-4df5-9c5b-0cc2d7c393f0" />
+```javascript
+async function signedPost(destination, keyId, secret, payload) {
+const inputSign = payload + secret;
+const signature = (await sha256Base64(inputSign)) + "=";
+ 
+return new Promise((resolve) => {
+const xhr = new XMLHttpRequest();
+ 
+xhr.open("POST", destination, true);
+xhr.setRequestHeader("Content-Type", "application/json");
+xhr.setRequestHeader("KeyId", keyId);
+xhr.setRequestHeader("sign", signature);
+ 
+xhr.onreadystatechange = function () {
+if (xhr.readyState !== 4) return;
+ 
+resolve({
+ok: xhr.status === 200,
+status: xhr.status,
+headers: xhr.getAllResponseHeaders(),
+body: xhr.responseText,
+destination,
+signature,
+requestBody: payload,
+});
+};
+ 
+xhr.onerror = function () {
+resolve({
+ok: false,
+status: 0,
+headers: "",
+body: "Network error",
+destination,
+signature,
+requestBody: payload
+});
+};
+ 
+xhr.send(payload);
+});
+}
+```
 
 ### Execute command
 send http request to an endpoint that designed to execute Linux command (must fulfil Linux command)
