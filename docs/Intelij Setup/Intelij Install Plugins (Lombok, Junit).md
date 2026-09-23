@@ -29,16 +29,7 @@ You should now be able to access the **IntelliJ IDEA Marketplace**.
 </p>
 
 ## 2. Install Plugins
-
-Go to:
-
-**IntelliJ IDEA → Settings → Plugins → Marketplace**
-
-Search for the required plugin and click **Install**.
-
-### JUnit
-
-Search for **JUnit** in the Marketplace and install the plugin.
+Open intelij > Setting > Plugins, Go to marketplace, search Junit and install
 
 <p>
   <img width="405" height="218" alt="Search JUnit Plugin" src="https://github.com/user-attachments/assets/09c2f7ae-760e-404c-a781-9c5c1c514e93" />
@@ -47,9 +38,3 @@ Search for **JUnit** in the Marketplace and install the plugin.
 <p>
   <img width="486" height="222" alt="Install JUnit Plugin" src="https://github.com/user-attachments/assets/dc5cd960-4fc8-4fae-99ce-cd9a4e8f3743" />
 </p>
-
-### Lombok
-
-Search for **Lombok** in the Marketplace and click **Install**.
-
-After installing the required plugins, restart IntelliJ IDEA if prompted.
