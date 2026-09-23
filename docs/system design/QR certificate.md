@@ -7,9 +7,6 @@ HTML, Javascript
 
 ### Data store
 JSON format, .dat file
-<br><br>
-<img width="106" height="31" alt="image" src="https://github.com/user-attachments/assets/9d083621-347f-4018-b17c-b27196837d4f" />
-&nbsp;
 ```json
 {
   "test_case": "test0",
@@ -92,7 +89,7 @@ JSON format, .dat file
     }
   }
 }
-
+```
 
 ### Data store
 Send HTTP request – XMLHttpRequest dependencies
