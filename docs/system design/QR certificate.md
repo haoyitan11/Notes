@@ -9,14 +9,14 @@ HTML, Javascript
 JSON format, .dat file
 ```json
 {
-  "test_case": "test0",
-  "test_description": "12121",
-  "test_objective": "1212121",
+  "test_case": "hy213",
+  "test_description": "test",
+  "test_objective": "test",
   "qr_type": "static",
   "services": [
     {
       "service": "qrquery",
-      "npshost": "N",
+      "npshost": "Y",
       "first_timeout": "N",
       "first_timeout_return_code": "",
       "second_timeout": "N",
@@ -26,7 +26,7 @@ JSON format, .dat file
     },
     {
       "service": "payadvice",
-      "npshost": "N",
+      "npshost": "Y",
       "first_timeout": "N",
       "first_timeout_return_code": "",
       "second_timeout": "N",
@@ -36,7 +36,7 @@ JSON format, .dat file
     },
     {
       "service": "payquery",
-      "npshost": "N",
+      "npshost": "Y",
       "first_timeout": "N",
       "first_timeout_return_code": "",
       "second_timeout": "N",
@@ -48,44 +48,45 @@ JSON format, .dat file
   "advanced_options": {
     "qrquery-request": {
       "title": "QRQuery Request",
-      "enabled": true,
-      "rows": [
-        {
-          "variable": "retrieval_ref",
-          "scenario": "is_present",
-          "value": "21321312"
-        },
-        {
-          "variable": "txn_identifier",
-          "scenario": "is_present",
-          "value": "test"
-        }
-      ]
+      "enabled": "N",
+      "rows": []
     },
     "qrquery-response": {
       "title": "QRQuery Response",
-      "enabled": false,
+      "enabled": "N",
       "rows": []
     },
     "payadvice-request": {
       "title": "PayAdvice Request",
-      "enabled": false,
+      "enabled": "N",
       "rows": []
     },
     "payadvice-response": {
       "title": "PayAdvice Response",
-      "enabled": false,
+      "enabled": "N",
       "rows": []
     },
     "payquery-request": {
       "title": "PayQuery Request",
-      "enabled": false,
-      "rows": []
+      "enabled": "Y",
+      "rows": [
+        {
+          "variable": "host_tid",
+          "scenario": "same_as_payadvice_request",
+          "value": ""
+        }
+      ]
     },
     "payquery-response": {
       "title": "PayQuery Response",
-      "enabled": false,
-      "rows": []
+      "enabled": "Y",
+      "rows": [
+        {
+          "variable": "response_code",
+          "scenario": "same_as_payadvice_request",
+          "value": ""
+        }
+      ]
     }
   }
 }
