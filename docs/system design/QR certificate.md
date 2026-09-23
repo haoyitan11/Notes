@@ -1,18 +1,13 @@
-# QR Certification Maintenance Tool
+#QR Certification System Design
+##Maintenance Listing, Detail, API tester page
+###Page design
+HTML, Javascript
 
-## Maintenance Configuration Management & API Testing Simulator
+###Data store
+JSON format, .dat file
 
-### Frontend
-HTML, JavaScript, XMLHttpRequest
+###Data store
+Send HTTP request – XMLHttpRequest dependencies
 
-### Backend Simulator
-JDK 21, Spring Boot 3.5.13, Maven 3.6.3
-
-### Data Storage
-JSON (.dat)
-
-### Features
-- Maintenance Listing
-- Maintenance Detail
-- API Tester
-- Linux Command Execution
+###Execute command
+send http request to an endpoint that designed to execute Linux command (must fulfil Linux command)
