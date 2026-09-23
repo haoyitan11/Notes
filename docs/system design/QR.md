@@ -16,7 +16,7 @@
 
 ## Oauth2 dependencies handle
 ### Components
-<img width="947" height="457" alt="image" src="https://github.com/user-attachments/assets/69683cab-b4f3-440a-8087-ee0409be33fa" />
+<img width="947" height="457" alt="image" src="https://github.com/user-attachments/assets/d6b592b4-df51-4c3d-8ad4-113e16a305b1" />
 
 1. AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager
 Function: Acts as the central OAuth2 lifecycle manager.
@@ -40,4 +40,4 @@ Function : Handles the OAuth2 Client Credentials grant flow.
 - Returns an OAuth2AuthorizedClient containing the newly acquired access token.
 
 ### How OAuth2 token works inside manager
-<img width="940" height="414" alt="image" src="https://github.com/user-attachments/assets/f7cb8185-879c-46b7-8dde-e5e454f41d27" />
+<img width="940" height="414" alt="image" src="https://github.com/user-attachments/assets/90540499-b89a-4857-9150-02bffd5717ee" />
