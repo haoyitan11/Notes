@@ -25,4 +25,6 @@ Open the project u want, then u can let agent to read your repository and prompt
 <p>
   <img width="429" height="213" alt="image" src="https://github.com/user-attachments/assets/731610b8-7685-474c-993e-01304aaa03de" />
   <img width="498" height="259" alt="image" src="https://github.com/user-attachments/assets/c89e0ca2-567f-4179-aee8-261c8cf8374f" />
+  <img width="1893" height="965" alt="image" src="https://github.com/user-attachments/assets/30549da1-f937-40cc-8724-660046133661" />
+
 </p>
