@@ -42,4 +42,7 @@ Function : Handles the OAuth2 Client Credentials grant flow.
 ### How OAuth2 token works inside manager
 <p> <img width="1515" height="671" alt="image" src="https://github.com/user-attachments/assets/7838b255-c35c-47f0-af9a-c1b728ea004c" /> </p>
 
+## QR code generate dependencies handle
+Zxing
+
 
