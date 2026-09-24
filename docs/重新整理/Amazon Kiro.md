@@ -1,7 +1,28 @@
 # Amazon Kiro Setup
-Once u get access from Amazon Kiro <br>
-<img width="562" height="201" alt="image" src="https://github.com/user-attachments/assets/bbd9a12d-5b2b-4b2a-8831-69f037ec1e4a" />
 
-Go to [https://aws.amazon.com/q/developer/ install](https://kiro.dev/?trk=32baf755-7a70-4575-8443-9b98b7e58a90&sc_channel=ps&ef_id=EAIaIQobChMIna-7-7CElwMVk5JmAh1I4jxQEAAYASAAEgLYq_D_BwE:G:s&gads_camp=23846236688&gads_ag=198027728322&gads_ad=808827549818&gads_kw=ai%20code%20cli&gads_matchtype=p&gads_network=g&gads_device=c&gads_geo=9062524&gad_source=1&gad_campaignid=23846236688&gbraid=0AAAAADjHtp9ONw46WgAJr4MDK13REwZTA&gclid=EAIaIQobChMIna-7-7CElwMVk5JmAh1I4jxQEAAYASAAEgLYq_D_BwE) install
-<img width="940" height="366" alt="image" src="https://github.com/user-attachments/assets/4cc30479-0d79-4d3b-9912-c761b93fb355" />
+Once u get access from Amazon Kiro
 
+<p>
+  <img width="562" height="201" alt="image" src="https://github.com/user-attachments/assets/bbd9a12d-5b2b-4b2a-8831-69f037ec1e4a" />
+</p>
+
+Go to https://aws.amazon.com/q/developer/ install
+
+<p>
+  <img width="940" height="366" alt="image" src="https://github.com/user-attachments/assets/4cc30479-0d79-4d3b-9912-c761b93fb355" />
+  <img width="498" height="63" alt="image" src="https://github.com/user-attachments/assets/3c77b547-d4f5-45e2-ad93-badddbb9a57e" />
+</p>
+
+Login with your account
+
+<p>
+  <img width="372" height="300" alt="image" src="https://github.com/user-attachments/assets/bc89ea8c-0d9f-486f-a9ac-a1870f9bfe3e" />
+  <img width="282" height="298" alt="image" src="https://github.com/user-attachments/assets/1394d0e9-4130-41c4-8609-f9bf79b3817c" />
+</p>
+
+Open the project u want, then u can let agent to read your repository and prompt
+
+<p>
+  <img width="429" height="213" alt="image" src="https://github.com/user-attachments/assets/731610b8-7685-474c-993e-01304aaa03de" />
+  <img width="498" height="259" alt="image" src="https://github.com/user-attachments/assets/c89e0ca2-567f-4179-aee8-261c8cf8374f" />
+</p>
