@@ -140,7 +140,15 @@ send http request to an endpoint that designed to execute window terminal comman
 ### Design
 Java JDK21, Springboot 3.5.13, Maven 3.6.3
 
-### Java dependencies
-Jackson-databind (@JsonInclude) <br>
-Jackson-annotations (@JsonProperty) <br>
-commons-lang3 (StringUtils) <br>
+### Spring dependencies
+#### spring-boot-starter-web
+- Jackson Databind (@JsonInclude), Jackson Annotations (@JsonProperty)
+ 
+#### spring-boot-starter-test
+- JUnit 5 (@Test, Assertions), Mockito (@Mock, @InjectMocks)
+ 
+#### spring-integration-core
+- Spring Messaging (Message, MessageBuilder), @ServiceActivator, @MessagingGateway
+ 
+### Java Utility Dependencies
+- Apache Commons Lang3 (StringUtils), Lombok (@Getter, @Setter, @Builder)
