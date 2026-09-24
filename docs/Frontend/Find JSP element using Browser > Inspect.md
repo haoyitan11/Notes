@@ -1,27 +1,28 @@
-# Find JSP element using Browser > Inspect
+# Amazon Kiro Setup
+
+Once u get access from Amazon Kiro
 
 <p>
-  <img width="940" height="216" alt="image" src="https://github.com/user-attachments/assets/1dd654e2-9469-46e4-999f-6acc217e1f18" />
+  <img width="562" height="201" alt="image" src="https://github.com/user-attachments/assets/bbd9a12d-5b2b-4b2a-8831-69f037ec1e4a" />
 </p>
 
-Find frontend JSP element using Browser > Inspect
-
-Go to a page, then Right click > Inspect
+Go to https://aws.amazon.com/q/developer/ install
 
 <p>
-  <img width="590" height="408" alt="image" src="https://github.com/user-attachments/assets/7fc3964c-c9ff-455f-b8f9-ac3fc006c0e2" />
+  <img width="940" height="366" alt="image" src="https://github.com/user-attachments/assets/4cc30479-0d79-4d3b-9912-c761b93fb355" />
+  <img width="498" height="63" alt="image" src="https://github.com/user-attachments/assets/3c77b547-d4f5-45e2-ad93-badddbb9a57e" />
 </p>
 
+Login with your account
+
 <p>
-  <img width="233" height="406" alt="image" src="https://github.com/user-attachments/assets/2fe75c74-641a-40ec-b7fa-1dc738b1f872" />
+  <img width="372" height="300" alt="image" src="https://github.com/user-attachments/assets/bc89ea8c-0d9f-486f-a9ac-a1870f9bfe3e" />
+  <img width="282" height="298" alt="image" src="https://github.com/user-attachments/assets/1394d0e9-4130-41c4-8609-f9bf79b3817c" />
 </p>
 
-Click the icon, then hover to the screen, then it displays what content used, once click it will display which jsp part using at element
+Open the project u want, then u can let agent to read your repository and prompt
 
 <p>
-  <img width="493" height="224" alt="image" src="https://github.com/user-attachments/assets/d042c3c2-fd65-43a3-a1f3-a1cb44498844" />
-</p>
-
-<p>
-  <img width="940" height="216" alt="image" src="https://github.com/user-attachments/assets/e1c4e5dd-5ba4-4794-b711-b0f5bd9aa3a8" />
+  <img width="429" height="213" alt="image" src="https://github.com/user-attachments/assets/731610b8-7685-474c-993e-01304aaa03de" />
+  <img width="498" height="259" alt="image" src="https://github.com/user-attachments/assets/c89e0ca2-567f-4179-aee8-261c8cf8374f" />
 </p>
