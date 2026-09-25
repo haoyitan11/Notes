@@ -153,6 +153,7 @@ Java JDK21, Springboot 3.5.13, Maven 3.6.3
 ### Java Utility Dependencies
 - Apache Commons Lang3 (StringUtils), Lombok (@Getter, @Setter, @Builder)
 
+<br><br>
 ## Meeting Sessions
 ### Meeting (14/8/2026)
 1. 3 pages (Maintenance Page, Listing page)
