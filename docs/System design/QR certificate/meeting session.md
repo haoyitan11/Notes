@@ -36,7 +36,4 @@
 6. There is scenario where OrderRequest can choose connect / not to connect NPS host, so maintenance detail add 1 more service row for OrderRequest, but default tick to connect NPS host
 7. need to add on logic to batch job validation - if UI configure(maintenance screen upper configure section) is there, example 2 times timeoult been click, then if Advance option there got click on the option, need to make sure 2 times request/response are appear
 8. need to add on a check, all the request cannot come in more than 3 times with same reference(retrieval_ref??)
-9. qrquery request / response = 1 retrieval ref
-payadvice request / response = 1 retrieval ref
-payquery request / response = 1 retrieval ref
- 
+9. qrquery request / response = 1 retrieval ref , payadvice request / response = 1 retrieval ref, payquery request / response = 1 retrieval ref
