@@ -29,8 +29,8 @@
 1. How Simulator log works (API tester generate QR > wallet provider scan > call API to our simulator > simulator call to NPS host > NPS host return response > simulator generate log to track these response), other than that , when simulator(receive request from WP also need to log)
 2. Wallet provider pass in wrong MTI and process code to simulator > just let it go through nps-host, nps-host will reject automatically since the sequence has to be QRquery > payadvice > payquery
 3. Some test case scenario writing PayQuery Request not present, maintenance detail has to add dropdownlist detail, for PayQuery object, if detected request sent to simulator, automatically declare as fail
-- When first row is variable, then second row and next row cant pick PayQuery request for dropdownlist
-- After PayQuery request picked at dropdownlist, second row and next cant pick variable
+- When first row is variable, then second row and next row cant pick QRQuery, PayQuery, Payadvice request for dropdownlist
+- After QRQuery, PayQuery, Payadvice request picked at dropdownlist, second row and next cant pick variable
 4. There is 1 scenario, txn_identifer read from QR code string, to design this, allow maintenance detail to upload QR code and javascript read the QR code value and save at .dat file, when this scenario picked then simulator will read .dat file
 5. Instuition code + SOF_URI = determine specific wallet provider, so instuition code dropdownlist scenario should be tied to wallet provider SOF_URI, while SOF_URI scenario dropdownlist add tied to wallet provider instuition code
 6. There is scenario where OrderRequest can choose connect / not to connect NPS host, so maintenance detail add 1 more service row for OrderRequest, but default tick to connect NPS host
