@@ -2,9 +2,11 @@
 ## Maintenance Listing, Detail, API tester page
 <img width="1784" height="781" alt="image" src="https://github.com/user-attachments/assets/b17f9489-0b77-4c5e-bb47-0fba2abd6fda" />
 
+<br><br>
 ### Page design
 HTML, Javascript
 
+<br><br>
 ### Data store
 JSON format, .dat file
 ```json
@@ -135,7 +137,7 @@ send http request to an endpoint that designed to execute window terminal comman
         return rpts;
     }
 ```
-
+<br><br>
 ## Simulator
 ### Design
 Java JDK21, Springboot 3.5.13, Maven 3.6.3
