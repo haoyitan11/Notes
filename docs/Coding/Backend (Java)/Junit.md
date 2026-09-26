@@ -2,7 +2,7 @@
 
 ## File > Settings > Plugins
 
-Ensure Code Coverage for Java being installed
+Ensure Code Coverage for Java being installed.
 
 <p>
   <img width="267" height="198" alt="image" src="https://github.com/user-attachments/assets/8c71d983-c524-4110-b03c-22780ca8b6ea" />
