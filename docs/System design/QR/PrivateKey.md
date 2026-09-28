@@ -132,7 +132,7 @@ Dependency :
 java.security.PrivateKey
 ```
 Functions Used :
-up
+
 Returned from:
 ```java
 converter.getPrivateKey(privateKeyInfo)
