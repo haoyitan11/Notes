@@ -39,6 +39,7 @@ Responsibilities :
 
 ### 2. ReactiveClientRegistrationRepository
 Purpose : Provides OAuth2 client configuration information.
+
 Dependency :
 ```java
 org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository
