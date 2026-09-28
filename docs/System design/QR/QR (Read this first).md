@@ -35,6 +35,8 @@ More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20desi
 8. StepBuilder
 9. Tasklet
 
+More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SpringBatch.md
+
 ## QR code generate dependencies handle
 Zxing
 
