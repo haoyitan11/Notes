@@ -1,6 +1,6 @@
 # Oauth2 dependencies handle
 ## Components
-<p> <img width="1523" height="721" alt="image" src="https://github.com/user-attachments/assets/0a29e703-b70c-40d7-9e90-f560630e8729" /> </p>
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/aa4769e4-7344-476c-92a6-0bf5d30f6c1d" />
 
 ### 1. AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager
 Function: Acts as the central OAuth2 lifecycle manager.
