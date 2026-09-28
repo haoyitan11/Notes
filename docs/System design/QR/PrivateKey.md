@@ -22,7 +22,6 @@ Responsibilities :
 - Supports PEM processing.
 - Used by PEMParser and JcaPEMKeyConverter.
 
-
 ### 2. Files & Paths
 Purpose : Loads the PEM file content from the filesystem.
 Dependencies
@@ -55,56 +54,97 @@ Responsibilities :
 - Supplies character stream to PEMParser
 
 ### 4. PEMParser
-Function: Parses the PEM formatted content.
-- Reads PEM content from the Reader. 
-- Parses the PEM structure. 
-- Returns an object depending on the PEM format:
-- 1. PEMKeyPair for PKCS#1 key pairs.
-- 2. PrivateKeyInfo for PKCS#8 private keys.
+Purpose : Parses PEM-formatted content into Bouncy Castle key objects.
+Dependency
+```java
+<dependency>
+<groupId>org.bouncycastle</groupId>
+<artifactId>bcpkix-jdk18on</artifactId>
+<version>${bouncycastle.version}</version>
+</dependency>
+```
+Function Used : 
+```java
+PEMParser parser = new PEMParser(reader);
+Object obj = parser.readObject();
+```
+
+Responsibilities : 
+- Reads PEM content
+- Detects PEM type
+- Converts PEM text into Java objects
 
 ### 5A. PEMKeyPair
-Function: Represents a parsed key pair (PKCS#1).
-- Contains both public and private key information.
-- Returned when parsing PEM content such as:
+Purpose : Represents a PKCS#1 RSA key pair.
+Dependency :
 ```java
------BEGIN RSA PRIVATE KEY-----
-...
------END RSA PRIVATE KEY-----
+org.bouncycastle.openssl.PEMKeyPair
 ```
-- Provides access to PrivateKeyInfo through:
+Functions Used :
 ```java
 pemKeyPair.getPrivateKeyInfo()
 ```
+Responsibilities :
+- Contains RSA public key information
+- Contains RSA private key information
+- Provides access to PrivateKeyInfo
 
 ### 5B. PrivateKeyInfo
-Function: Represents the ASN.1 encoded private key structure (PKCS#8).
-- Used as an intermediate Bouncy Castle representation of a private key.
-- Returned directly for PKCS#8 keys:
+Purpose : Represents the ASN.1 private key structure.
+Dependency : 
 ```java
------BEGIN PRIVATE KEY-----
-...
------END PRIVATE KEY-----
+org.bouncycastle.asn1.pkcs.PrivateKeyInfo
 ```
-- Can also be extracted from PEMKeyPair.
-- Serves as input to JcaPEMKeyConverter.
+Functions Used : 
+Obtained directly from
+```java
+(PrivateKeyInfo) obj
+```
+or from:
+```java
+pemKeyPair.getPrivateKeyInfo()
+```
+Responsibilities : 
+- Holds private key metadata.
+- Holds ASN.1 encoded key data.
+- Intermediate representation used by Bouncy Castle.
 
 ### 6. JcaPEMKeyConverter
-Function: Converts Bouncy Castle key objects into Java Security objects.
--	Converts PrivateKeyInfo into a Java PrivateKey.
--	Works with the configured BouncyCastleProvider.
--	Bridges Bouncy Castle APIs and standard Java Security APIs.
-Example : 
+Purpose : Converts Bouncy Castle key objects into standard Java Security objects.
+Dependency : 
 ```java
-PrivateKey privateKey = converter.getPrivateKey(privateKeyInfo);
+org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 ```
+Functions Used :
+```java
+new JcaPEMKeyConverter().setProvider("BC")
+converter.getPrivateKey(privateKeyInfo)
+```
+Responsibilities : 
+- Converts PrivateKeyInfo to Java PrivateKey
+- Uses the registered Bouncy Castle provider
+- Bridges Bouncy Castle APIs and Java Security APIs
 
 ### 7. PrivateKey
-Function: Final RSA private key output.
-- Standard Java Security PrivateKey.
-- Returned by RSAUtility.getPrivateKey().
-- Used for digital signature generation.
-- Passed into
+Purpose : Final RSA private key object used by application code.
+Dependency : 
+```java
+java.security.PrivateKey
+```
+Functions Used :
+Returned from:
+```java
+converter.getPrivateKey(privateKeyInfo)
+```
+Used for signing : 
 ```java
 signature.initSign(privateKey);
 ```
-- Can also be used for RSA decryption operations.
+Used for decryption :
+```java
+cipher.init(Cipher.DECRYPT_MODE, privateKey);
+```
+Responsibilities : 
+- Digital signature generation.
+- Signature verification workflows.
+- RSA decryption operations.
