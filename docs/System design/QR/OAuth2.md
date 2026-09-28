@@ -47,7 +47,8 @@ org.springframework.security.oauth2.client.registration.ReactiveClientRegistrati
 Common Implementation : InMemoryReactiveClientRegistrationRepository
 
 Functions Used : 
-- Find registration:
+
+Find registration:
 ```java
 findByRegistrationId("scb")
 ```
