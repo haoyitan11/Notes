@@ -37,9 +37,44 @@ Responsibilities :
 - Stores newly authorized clients.
 
 ### 2. ReactiveClientRegistrationRepository
-- Loads the ClientRegistration based on the registrationId (for example: scb).
-- Maps the registrationId to OAuth2 client configurations defined in .properties or .yaml.
-- Provides OAuth2 metadata such as Client ID, Client Secret, Token Endpoint, Grant Type, and Scopes.
+Purpose : Provides OAuth2 client configuration information.
+Dependency :
+```java
+org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository
+```
+Common Implementation : InMemoryReactiveClientRegistrationRepository
+Functions Used : 
+- Find registration:
+```java
+findByRegistrationId("scb")
+```
+
+Responsibilities :
+- Loads ClientRegistration
+- Maps registrationId to client configuration
+- Provides OAuth2 metadata
+
+Configuration Source
+```java
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          scb:
+            client-id: xxx
+            client-secret: xxx
+```
+
+Information Returned :
+```java
+Client ID
+Client Secret
+Authorization Grant Type
+Scopes
+Token URI
+Client 
+```
 
 ### 3. ReactiveOAuth2AuthorizedClientService
 Function : Acts as the OAuth2 authorized client storage layer.
