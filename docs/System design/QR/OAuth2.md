@@ -13,16 +13,11 @@ Functions Used :
 
 Constructor:
 ```java
-new AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager(
-clientRegistrationRepository,
-authorizedClientService
-)
+new AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager(clientRegistrationRepository,authorizedClientService)
 ```
 Configure provider : 
 ```java
-authorizedClientManager.setAuthorizedClientProvider(
-authorizedClientProvider
-);
+authorizedClientManager.setAuthorizedClientProvider(authorizedClientProvider);
 ```
 Authorize client : 
 ```java
@@ -44,7 +39,10 @@ Dependency :
 ```java
 org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository
 ```
-Common Implementation : InMemoryReactiveClientRegistrationRepository
+Common Implementation :
+```java
+InMemoryReactiveClientRegistrationRepository
+```
 
 Functions Used : 
 
@@ -81,15 +79,69 @@ Client
 ```
 
 ### 3. ReactiveOAuth2AuthorizedClientService
-Function : Acts as the OAuth2 authorized client storage layer.
-- Stores and retrieves OAuth2AuthorizedClient instances.
-- In this implementation, InMemoryReactiveOAuth2AuthorizedClientService is used to store authorized clients and access tokens in JVM memory.
+Purpose : Acts as the OAuth2 authorized client storage layer.
+
+Dependency :
+```java
+org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientService
+```
+
+Common Implementation :
+```java
+InMemoryReactiveOAuth2AuthorizedClientService
+```
+
+Functions Used :
+
+Load authorized client:
+```java
+loadAuthorizedClient(registrationId,principalName)
+```
+
+Save authorized client: 
+```java
+saveAuthorizedClient(authorizedClient,principal)
+```
+
+Remove authorized client:
+```java
+removeAuthorizedClient(registrationId,principalName)
+```
+
+Responsibilities
+- Stores OAuth2AuthorizedClient
+- Retrieves OAuth2AuthorizedClient
+- Maintains access token information
+- Supports token reuse
+- Supports removal of expired or invalid clients
 
 ### 4. ClientCredentialsReactiveOAuth2AuthorizedClientProvider
-Function : Handles the OAuth2 Client Credentials grant flow.
-- Determines whether a new access token needs to be requested.
-- Delegates the token request to a ReactiveOAuth2AccessTokenResponseClient.
-- Returns an OAuth2AuthorizedClient containing the newly acquired access token.
+Purpose : Handles the OAuth2 Client Credentials grant flow.
+
+Dependency :
+```java
+org.springframework.security.oauth2.client.ClientCredentialsReactiveOAuth2AuthorizedClientProvider
+```
+
+Function used : 
+
+Authorize:
+```java
+authorize(context)
+```
+Configure access token client:
+```java
+setAccessTokenResponseClient(accessTokenResponseClient)
+```
+
+Responsibilities
+- Determines whether authorization is required
+- Checks token expiry status
+- Requests new access tokens
+- Delegates token requests to a ReactiveOAuth2AccessTokenResponseClient
+- Creates a new OAuth2AuthorizedClient
+
+
 
 ## How OAuth2 token works inside manager
 <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/7ce2bebc-0708-4156-9ec9-731a7c467f02" />
