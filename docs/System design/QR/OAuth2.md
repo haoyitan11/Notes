@@ -3,9 +3,38 @@
 <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/aa4769e4-7344-476c-92a6-0bf5d30f6c1d" />
 
 ### 1. AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager
-Function: Acts as the central OAuth2 lifecycle manager.
-- Integrates ReactiveClientRegistrationRepository, ReactiveOAuth2AuthorizedClientService and ClientCredentialsReactiveOAuth2AuthorizedClientProvider.
-- Coordinates token retrieval, token reuse, token expiration checks, and authorized client storage.
+Purpose : Acts as the central OAuth2 lifecycle manager.
+Dependency : 
+```java
+org.springframework.security.oauth2.client.AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager
+```
+Functions Used : 
+
+Constructor:
+```java
+new AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager(
+clientRegistrationRepository,
+authorizedClientService
+)
+```
+Configure provider : 
+```java
+authorizedClientManager.setAuthorizedClientProvider(
+authorizedClientProvider
+);
+```
+Authorize client : 
+```java
+authorizedClientManager.authorize(authorizeRequest)
+```
+
+Responsibilities :
+- Central coordinator for OAuth2 authorization.
+- Loads client configuration from ReactiveClientRegistrationRepository.
+- Retrieves existing authorized clients from ReactiveOAuth2AuthorizedClientService.
+- Checks token validity and expiration.
+- Requests new access tokens when required.
+- Stores newly authorized clients.
 
 ### 2. ReactiveClientRegistrationRepository
 - Loads the ClientRegistration based on the registrationId (for example: scb).
