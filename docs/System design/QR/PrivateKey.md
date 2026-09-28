@@ -39,10 +39,19 @@ Responsibilities :
 Exceptions : IOException
 
 ### 3. Reader (StringReader)
-Function: Provides character stream access to PEM content.
-- Wraps the PEM String.
-- Provides character stream access to the PEM content.
-- Supplies the content to PEMParser.
+Purpose : Provides character stream access to the PEM content.
+Dependency 
+```java
+java.io.StringReader
+```
+Functions Used : 
+```java
+new StringReader(pemContent)
+```
+Responsibilities :
+- Wraps PEM String
+- Exposes content as a Reader
+- Supplies character stream to PEMParser
 
 ### 4. PEMParser
 Function: Parses the PEM formatted content.
