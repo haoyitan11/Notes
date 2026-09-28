@@ -43,6 +43,7 @@ Dependency :
 org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository
 ```
 Common Implementation : InMemoryReactiveClientRegistrationRepository
+
 Functions Used : 
 - Find registration:
 ```java
