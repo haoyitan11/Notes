@@ -5,10 +5,6 @@
 ### 1. AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager
 Purpose : Acts as the central OAuth2 lifecycle manager.
 
-Dependency : 
-```java
-org.springframework.security.oauth2.client.AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager
-```
 Functions Used : 
 
 Constructor:
@@ -35,10 +31,6 @@ Responsibilities :
 ### 2. ReactiveClientRegistrationRepository
 Purpose : Provides OAuth2 client configuration information.
 
-Dependency :
-```java
-org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository
-```
 Common Implementation :
 ```java
 InMemoryReactiveClientRegistrationRepository
@@ -81,11 +73,6 @@ Client
 ### 3. ReactiveOAuth2AuthorizedClientService
 Purpose : Acts as the OAuth2 authorized client storage layer.
 
-Dependency :
-```java
-org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientService
-```
-
 Common Implementation :
 ```java
 InMemoryReactiveOAuth2AuthorizedClientService
@@ -118,11 +105,6 @@ Responsibilities
 ### 4. ClientCredentialsReactiveOAuth2AuthorizedClientProvider
 Purpose : Handles the OAuth2 Client Credentials grant flow.
 
-Dependency :
-```java
-org.springframework.security.oauth2.client.ClientCredentialsReactiveOAuth2AuthorizedClientProvider
-```
-
 Function used : 
 
 Configure access token client:
@@ -137,7 +119,44 @@ Responsibilities
 - Delegates token requests to a ReactiveOAuth2AccessTokenResponseClient
 - Creates a new OAuth2AuthorizedClient
 
+### 5. WebClientReactiveClientCredentialsTokenResponseClient
+Purpose : Executes the OAuth2 token endpoint request.
+Functions Used :
 
+Request access token:
+```java
+getTokenResponse(clientCredentialsGrantRequest)
+```
+
+Responsibilities
+- Sends HTTP POST request to token endpoint
+- Supplies Client ID and Client Secret
+- Receives OAuth2 token response
+- Converts response into OAuth2AccessTokenResponse
+
+### 6. OAuth2AuthorizedClient
+Purpose : Represents an authorized OAuth2 client
+Dependency :
+```java
+org.springframework.security.oauth2.client.OAuth2AuthorizedClient
+```
+Functions Used:
+
+Get access token:
+```java
+authorizedClient.getAccessToken()
+```
+
+Get client registration:
+```java
+authorizedClient.getClientRegistration()
+```
+
+Responsibilities
+- Stores client registration
+- Stores access token
+- Stores authorization information
+- Returned after successful authorization
 
 ## How OAuth2 token works inside manager
 <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/7ce2bebc-0708-4156-9ec9-731a7c467f02" />
