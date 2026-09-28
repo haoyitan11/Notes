@@ -24,4 +24,5 @@ Function : Handles the OAuth2 Client Credentials grant flow.
 - Returns an OAuth2AuthorizedClient containing the newly acquired access token.
 
 ## How OAuth2 token works inside manager
-<p> <img width="1515" height="671" alt="image" src="https://github.com/user-attachments/assets/7838b255-c35c-47f0-af9a-c1b728ea004c" /> </p>
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/7ce2bebc-0708-4156-9ec9-731a7c467f02" />
+
