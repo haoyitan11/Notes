@@ -48,6 +48,8 @@ More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20desi
 7. JcaPEMKeyConverter
 8. PrivateKey
 
+More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/PrivateKey.md
+
 ## QR code generate dependencies handle
 Zxing
 
