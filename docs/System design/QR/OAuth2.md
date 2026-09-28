@@ -125,10 +125,6 @@ org.springframework.security.oauth2.client.ClientCredentialsReactiveOAuth2Author
 
 Function used : 
 
-Authorize:
-```java
-authorize(context)
-```
 Configure access token client:
 ```java
 setAccessTokenResponseClient(accessTokenResponseClient)
