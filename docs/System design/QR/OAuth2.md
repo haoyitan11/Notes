@@ -4,6 +4,7 @@
 
 ### 1. AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager
 Purpose : Acts as the central OAuth2 lifecycle manager.
+
 Dependency : 
 ```java
 org.springframework.security.oauth2.client.AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager
