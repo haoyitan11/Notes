@@ -1,6 +1,7 @@
 # Spring Batch dependencies handle
 ## Components
-<img width="1859" height="861" alt="image" src="https://github.com/user-attachments/assets/77436823-9bc4-4ce3-bfde-9ec9dbeaa2a8" />
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/084673dc-ca29-4640-9e36-d64dbed9af44" />
+
 
 ### 1. JobLauncher
 Function: Starts batch execution
