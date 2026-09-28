@@ -23,6 +23,18 @@
 
 More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/OAuth2.md
 
+## Spring Batch dependencies handle
+### Components
+1. JobLauncher
+2. Job
+3. JobParameters
+4. JobExecution
+5. JobRepository
+6. JobBuilder
+7. Step
+8. StepBuilder
+9. Tasklet
+
 ## QR code generate dependencies handle
 Zxing
 
