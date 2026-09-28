@@ -158,6 +158,25 @@ Responsibilities
 - Stores authorization information
 - Returned after successful authorization
 
+### 7. OAuth2AccessToken
+Purpose : Represents the OAuth2 access token
+Functions Used :
+
+Get token value:
+```java
+accessToken.getTokenValue()
+```
+Check expiry:
+```java
+accessToken.getExpiresAt()
+```
+
+Responsibilities
+- Holds bearer token value
+- Holds issue time
+- Holds expiry time
+- Used when calling protected APIs
+
 ## How OAuth2 token works inside manager
 <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/7ce2bebc-0708-4156-9ec9-731a7c467f02" />
 
