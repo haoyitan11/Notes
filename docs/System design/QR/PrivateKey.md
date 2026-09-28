@@ -23,12 +23,20 @@ Responsibilities :
 - Used by PEMParser and JcaPEMKeyConverter.
 
 ### 2. Files & Paths
-Function: Reads the PEM file from the filesystem.
-- Reads the PEM file from the filesystem.
-- Loads the file content into memory.
-- Converts the file content into a String.
-- May throw IOException
-  
+Purpose : Loads the PEM file content from the filesystem.
+Dependencies
+```java
+java.nio.file.Files
+java.nio.file.Paths
+```
+Functions Used : Files.readString(Paths.get(filePath))
+Responsibilities : 
+- Locates PEM file
+- Reads file content into memory
+- Converts file content into a String
+
+Exceptions : IOException
+
 ### 3. Reader (StringReader)
 Function: Provides character stream access to PEM content.
 - Wraps the PEM String.
