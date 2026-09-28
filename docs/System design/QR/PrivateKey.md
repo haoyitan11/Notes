@@ -30,6 +30,7 @@ java.nio.file.Files
 java.nio.file.Paths
 ```
 Functions Used : Files.readString(Paths.get(filePath))
+
 Responsibilities : 
 - Locates PEM file
 - Reads file content into memory
