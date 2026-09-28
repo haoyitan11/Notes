@@ -3,11 +3,24 @@
 <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/37d28281-919b-4266-9b8d-886703c73fdb" />
 
 ### 1. BouncyCastleProvider
-Function: Acts as the cryptographic provider.
-- Registered through Security.addProvider(...). 
-- Provides support for PEM processing and RSA cryptographic operations. 
+Purpose : Acts as the cryptographic provider for PEM parsing and RSA key conversion.
+Dependency : 
+```java
+<dependency>
+<groupId>org.bouncycastle</groupId>
+<artifactId>bcprov-jdk18on</artifactId>
+<version>${bouncycastle.version}</version>
+</dependency>
+```
+Function used :
+```java
+Security.addProvider(new BouncyCastleProvider());
+```
+Responsibilities : 
+- Registers Bouncy Castle with Java Security.
+- Provides cryptographic algorithms and ASN.1 implementations.
+- Supports PEM processing.
 - Used by PEMParser and JcaPEMKeyConverter.
-- Enables conversion of Bouncy Castle key objects into Java Security key objects.
 
 ### 2. Files & Paths
 Function: Reads the PEM file from the filesystem.
