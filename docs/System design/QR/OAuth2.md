@@ -137,6 +137,7 @@ Responsibilities
 
 ### 6. OAuth2AuthorizedClient
 Purpose : Represents an authorized OAuth2 client
+
 Dependency :
 ```java
 org.springframework.security.oauth2.client.OAuth2AuthorizedClient
