@@ -89,7 +89,7 @@ ClientRegistrationRepository
 Find registration:
 
 ```java
-ReactiveClientRegistrationRepository.findByRegistrationId("partner-bank");
+registrationId -> Mono.justOrEmpty(clientRegistrationRepository.findByRegistrationId(registrationId));
 ```
 
 #### Responsibilities
