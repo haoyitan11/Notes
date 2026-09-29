@@ -38,6 +38,19 @@ Authorize request:
 AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager.authorize(OAuth2AuthorizeRequest);
 ```
 
+#### Actual Usage
+```java
+OAuth2AuthorizeRequest authorizeRequest =
+        OAuth2AuthorizeRequest
+                .withClientRegistrationId(clientRegistrationId)
+                .principal(SCB_PRINCIPAL_NAME)
+                .build();
+
+return authorizedClientManager.authorize(authorizeRequest)
+        .map(OAuth2AuthorizedClient::getAccessToken)
+        .map(OAuth2AccessToken::getTokenValue);
+```
+
 #### Responsibilities
 
 - Central coordinator for OAuth2 authorization.
