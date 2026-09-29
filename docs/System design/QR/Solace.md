@@ -222,5 +222,40 @@ Bridges JMS into Spring Integration.
 
 #### XML Declaration
 ```java
-<int-jms:message-driven-channel-adapter id="jsonJmsIn" container="jsonMessageListenerContainer" channel="jsonJmsInChannel" extract-payload="true"/>
+<int-jms:message-driven-channel-adapter id="jsonJmsIn"
+container="jsonMessageListenerContainer" channel="jsonJmsInChannel" extract-payload="true"/>
 ```
+
+#### Responsibilities
+- Converts incoming JMS messages.
+- Routes to Spring Integration channels.
+
+### 14. JsonMsgServiceImpl
+#### Purpose
+Processes JSON requests.
+
+#### XML Declaration
+```java
+<int:service-activator input-channel="jsonJmsInChannel" output-channel="jsonJMSOutChannel" ref="jsonMsgServiceImpl"/>
+```
+
+#### Functions Used
+processJsonMsg(String request);
+
+#### Responsibilities
+- Processes inbound requests.
+- Performs business logic.
+- Generates response.
+
+### 15. outbound-channel-adapter
+#### Purpose
+Sends Spring Integration responses back to Solace.
+
+#### XML Declaration
+```java
+<int-jms:outbound-channel-adapter id="jsonJmsOut" input-channel="jsonJMSOutChannel"/>
+```
+
+#### Responsibilities
+- Publishes response messages.
+- Uses JMSReplyTo destination.
