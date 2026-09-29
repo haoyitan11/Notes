@@ -20,7 +20,10 @@
 2. ReactiveClientRegistrationRepository
 3. ReactiveOAuth2AuthorizedClientService
 4. ClientCredentialsReactiveOAuth2AuthorizedClientProvider
-
+5. WebClientReactiveClientCredentialsTokenResponseClient
+6. OAuth2AuthorizeRequest
+7. OAuth2AuthorizedClient
+8. OAuth2AccessToken
 More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/OAuth2.md
 
 ## Spring Batch dependencies handle
