@@ -89,7 +89,7 @@ ClientRegistrationRepository
 Find registration:
 
 ```java
-registrationId -> Mono.justOrEmpty(clientRegistrationRepository.findByRegistrationId(registrationId));
+ReactiveClientRegistrationRepository.findByRegistrationId("partner-bank");
 ```
 
 #### Responsibilities
@@ -493,3 +493,4 @@ OAuth2AccessToken.getTokenType();
     - **WebClient.post()** with **HttpHeaders.setBearerAuth(accessToken)** sends API request.
 
 11. **WebClient** returns **ApiResponse** to **APIGateway** for processing.
+
