@@ -1,7 +1,7 @@
 # Solace Message Broker Components Reference
 
 
-## Componenets
+## Components
 ## 1. JndiTemplate
 
 ### Purpose
