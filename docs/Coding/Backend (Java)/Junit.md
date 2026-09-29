@@ -1,4 +1,4 @@
-<img width="350" height="119" alt="image" src="https://github.com/user-attachments/assets/a5b0604a-8206-4020-8c88-16a14cdcfa9f" /><img width="335" height="339" alt="image" src="https://github.com/user-attachments/assets/c71377c4-0dc5-487e-939e-92d949123263" /># Junit
+# Junit
 File > Settings > Plugins 
 Ensure Code Coverage for Java being installed.
 <p>
