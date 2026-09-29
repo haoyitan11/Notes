@@ -18,34 +18,19 @@ ReactiveOAuth2AuthorizedClientService
 ClientCredentialsReactiveOAuth2AuthorizedClientProvider
 ```
 
-#### Functions Used
-
-Constructor:
+#### Actual Usage
 
 ```java
-new AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager(ReactiveClientRegistrationRepository, ReactiveOAuth2AuthorizedClientService);
-```
+AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager manager =
+        new AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager(reactiveClientRegistrationRepository, clientService);
+manager.setAuthorizedClientProvider(provider);
 
-Configure authorization provider:
-
-```java
-AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager.setAuthorizedClientProvider(ClientCredentialsReactiveOAuth2AuthorizedClientProvider);
+this.authorizedClientManager = manager;
 ```
 
 Authorize request:
 
 ```java
-AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager.authorize(OAuth2AuthorizeRequest);
-```
-
-#### Actual Usage
-```java
-OAuth2AuthorizeRequest authorizeRequest =
-        OAuth2AuthorizeRequest
-                .withClientRegistrationId(clientRegistrationId)
-                .principal(SCB_PRINCIPAL_NAME)
-                .build();
-
 return authorizedClientManager.authorize(authorizeRequest)
         .map(OAuth2AuthorizedClient::getAccessToken)
         .map(OAuth2AccessToken::getTokenValue);
@@ -54,11 +39,17 @@ return authorizedClientManager.authorize(authorizeRequest)
 #### Responsibilities
 
 - Central coordinator for OAuth2 authorization.
+
 - Integrates **ReactiveClientRegistrationRepository** (loads client configuration).
+
 - Integrates **ReactiveOAuth2AuthorizedClientService** (stores and retrieves authorized clients).
+
 - Integrates **ClientCredentialsReactiveOAuth2AuthorizedClientProvider** (handles token acquisition).
+
 - Checks token validity and expiration.
+
 - Requests new access tokens when required.
+
 - Returns **OAuth2AuthorizedClient** containing the access token.
 
 #### Configuration Source
@@ -98,40 +89,42 @@ Provides OAuth2 client configuration information.
 ClientRegistrationRepository
 ```
 
-#### Functions Used
+#### Actual Usage
 
-Find registration:
+Wrapping blocking repository to reactive:
 
 ```java
-ReactiveClientRegistrationRepository.findByRegistrationId("partner-bank");
+ReactiveClientRegistrationRepository reactiveClientRegistrationRepository =
+        registrationId -> Mono.justOrEmpty(clientRegistrationRepository.findByRegistrationId(registrationId));
 ```
 
 #### Responsibilities
 
 - Integrates **ClientRegistrationRepository** (underlying blocking repository).
+
 - Loads **ClientRegistration** containing:
+
   - Client ID
+
   - Client Secret
+
   - Authorization Grant Type
+
   - Token URI
+
   - OAuth2 metadata
+
 - Used by **AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager** to load client configuration.
 
 #### Configuration Source
 
-```yaml
-spring:
-  security:
-    oauth2:
-      client:
-        registration:
-          partner-bank:
-            client-id: ${OAUTH2_CLIENT_ID}
-            client-secret: ${OAUTH2_CLIENT_SECRET}
-            authorization-grant-type: client_credentials
-        provider:
-          partner-bank:
-            token-uri: ${OAUTH2_TOKEN_URI}
+```properties
+spring.security.oauth2.client.registration.partner.provider=partner
+spring.security.oauth2.client.provider.partner.token-uri=${OAUTH2_TOKEN_URI}
+spring.security.oauth2.client.registration.partner.authorization-grant-type=client_credentials
+spring.security.oauth2.client.registration.partner.client-id=${OAUTH2_CLIENT_ID}
+spring.security.oauth2.client.registration.partner.client-authentication-method=none
+spring.security.oauth2.client.registration.partner.scope=${OAUTH2_SCOPE}
 ```
 
 ---
@@ -154,34 +147,27 @@ ReactiveClientRegistrationRepository
 InMemoryReactiveOAuth2AuthorizedClientService
 ```
 
-#### Functions Used
-
-Load authorized client:
+#### Actual Usage
 
 ```java
-ReactiveOAuth2AuthorizedClientService.loadAuthorizedClient(registrationId, principalName);
-```
-
-Save authorized client:
-
-```java
-ReactiveOAuth2AuthorizedClientService.saveAuthorizedClient(OAuth2AuthorizedClient, principal);
-```
-
-Remove authorized client:
-
-```java
-ReactiveOAuth2AuthorizedClientService.removeAuthorizedClient(registrationId, principalName);
+ReactiveOAuth2AuthorizedClientService clientService =
+        new InMemoryReactiveOAuth2AuthorizedClientService(reactiveClientRegistrationRepository);
 ```
 
 #### Responsibilities
 
 - Integrates **ReactiveClientRegistrationRepository** (for client registration lookup).
+
 - Stores **OAuth2AuthorizedClient** instances.
+
 - Retrieves **OAuth2AuthorizedClient** by registration ID and principal name.
+
 - Maintains access token information for reuse.
+
 - Removes expired or invalid clients.
+
 - Acts as token cache.
+
 - Used by **AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager** for token persistence.
 
 ---
@@ -198,27 +184,26 @@ Handles the OAuth2 Client Credentials grant flow.
 WebClientReactiveClientCredentialsTokenResponseClient
 ```
 
-#### Functions Used
-
-Configure access token client:
+#### Actual Usage
 
 ```java
-ClientCredentialsReactiveOAuth2AuthorizedClientProvider.setAccessTokenResponseClient(WebClientReactiveClientCredentialsTokenResponseClient);
-```
-
-Authorize:
-
-```java
-ClientCredentialsReactiveOAuth2AuthorizedClientProvider.authorize(OAuth2AuthorizationContext);
+ClientCredentialsReactiveOAuth2AuthorizedClientProvider provider =
+        new ClientCredentialsReactiveOAuth2AuthorizedClientProvider();
+provider.setAccessTokenResponseClient(this.tokenResponseClient);
 ```
 
 #### Responsibilities
 
 - Integrates **WebClientReactiveClientCredentialsTokenResponseClient** (executes token requests).
+
 - Determines whether authorization is required.
+
 - Checks token expiry status.
+
 - Requests new access tokens via token response client.
+
 - Creates new **OAuth2AuthorizedClient** from token response.
+
 - Used by **AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager** as the authorization provider.
 
 ---
@@ -235,28 +220,31 @@ Executes the OAuth2 token endpoint request.
 WebClient
 ```
 
-#### Functions Used
+#### Actual Usage
+
+```java
+private final WebClientReactiveClientCredentialsTokenResponseClient tokenResponseClient = 
+        new WebClientReactiveClientCredentialsTokenResponseClient();
+```
 
 Configure WebClient:
 
 ```java
-WebClientReactiveClientCredentialsTokenResponseClient.setWebClient(WebClient);
-```
-
-Request access token:
-
-```java
-WebClientReactiveClientCredentialsTokenResponseClient.getTokenResponse(OAuth2ClientCredentialsGrantRequest);
+this.tokenResponseClient.setWebClient(this.webClient);
 ```
 
 #### Responsibilities
 
 - Integrates **WebClient** (HTTP client for token requests).
+
 - Sends HTTP POST request to token endpoint.
+
 - Supplies Client ID and Client Secret in request.
-- Uses MTLS-enabled WebClient for secure communication.
+
 - Receives OAuth2 token response.
+
 - Converts response into **OAuth2AccessTokenResponse**.
+
 - Used by **ClientCredentialsReactiveOAuth2AuthorizedClientProvider** to execute token requests.
 
 ---
@@ -265,61 +253,31 @@ WebClientReactiveClientCredentialsTokenResponseClient.getTokenResponse(OAuth2Cli
 
 #### Purpose
 
-HTTP client used for OAuth2 token requests and partner bank business API requests.
+HTTP client used for OAuth2 token requests and partner business API requests.
 
 #### Dependencies
 
 ```java
-SslContext
 HttpClient
 ```
 
-#### Functions Used
-
-POST request:
+#### Actual Usage
 
 ```java
-WebClient.post();
-```
-
-Define endpoint:
-
-```java
-WebClient.uri(apiEndpointUrl);
-```
-
-Set Bearer token:
-
-```java
-HttpHeaders.setBearerAuth(accessToken);
-```
-
-Set request body:
-
-```java
-WebClient.bodyValue(ApiRequest);
-```
-
-Retrieve response:
-
-```java
-WebClient.retrieve();
-```
-
-Convert response:
-
-```java
-WebClient.bodyToMono(ApiResponse.class);
+this.webClient = gatewayWebClientBuilder.buildWebClient(partner, viaWebProxy, enableSSL);
+this.tokenResponseClient.setWebClient(this.webClient);
 ```
 
 #### Responsibilities
 
 - Sends OAuth2 token requests to token endpoint.
-- Sends business API requests to partner bank.
-- Supports MTLS communication via **SslContext**.
-- Supports Web Proxy routing.
+
+- Sends business API requests to partner.
+
 - Handles reactive HTTP communication.
+
 - Used by **WebClientReactiveClientCredentialsTokenResponseClient** for token requests.
+
 - Used by **APIGateway** for business API calls.
 
 ---
@@ -336,40 +294,29 @@ Represents an authorization request submitted to the OAuth2 manager.
 OAuth2AuthorizeRequest.Builder
 ```
 
-#### Functions Used
-
-Specify registration:
+#### Actual Usage
 
 ```java
-OAuth2AuthorizeRequest.withClientRegistrationId(clientRegistrationId);
+OAuth2AuthorizeRequest authorizeRequest = OAuth2AuthorizeRequest
+        .withClientRegistrationId(clientRegistrationId)
+        .principal(PRINCIPAL_NAME)
+        .build();
 ```
 
-Specify principal:
+Where constants are defined as:
 
 ```java
-OAuth2AuthorizeRequest.principal(principalName);
-```
-
-Build request:
-
-```java
-OAuth2AuthorizeRequest.build();
-```
-
-#### Actual usage
-```java
-OAuth2AuthorizeRequest authorizeRequest =
-        OAuth2AuthorizeRequest
-                .withClientRegistrationId(clientRegistrationId)
-                .principal(SCB_PRINCIPAL_NAME)
-                .build();
+private static final String PRINCIPAL_NAME = "partner-reversal";
 ```
 
 #### Responsibilities
 
 - Identifies OAuth2 registration by registration ID.
+
 - Identifies principal (user or service account).
+
 - Triggers authorization process when passed to manager.
+
 - Built by caller and passed to **AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager.authorize()**.
 
 ---
@@ -387,32 +334,24 @@ ClientRegistration
 OAuth2AccessToken
 ```
 
-#### Functions Used
-
-Get access token:
+#### Actual Usage
 
 ```java
-OAuth2AuthorizedClient.getAccessToken();
-```
-
-Get registration:
-
-```java
-OAuth2AuthorizedClient.getClientRegistration();
-```
-
-Get principal name:
-
-```java
-OAuth2AuthorizedClient.getPrincipalName();
+return authorizedClientManager.authorize(authorizeRequest)
+        .map(OAuth2AuthorizedClient::getAccessToken)
+        .map(OAuth2AccessToken::getTokenValue);
 ```
 
 #### Responsibilities
 
 - Integrates **ClientRegistration** (client configuration).
+
 - Integrates **OAuth2AccessToken** (the bearer token).
+
 - Stores authorization information for a specific client registration and principal.
+
 - Returned by **AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager.authorize()**.
+
 - Stored in **ReactiveOAuth2AuthorizedClientService** for token reuse.
 
 ---
@@ -430,89 +369,148 @@ TokenType
 Instant
 ```
 
-#### Functions Used
-
-Get token value:
+#### Actual Usage
 
 ```java
-OAuth2AccessToken.getTokenValue();
-```
-
-Get expiry time:
-
-```java
-OAuth2AccessToken.getExpiresAt();
-```
-
-Get issued time:
-
-```java
-OAuth2AccessToken.getIssuedAt();
-```
-
-Get token type:
-
-```java
-OAuth2AccessToken.getTokenType();
+return authorizedClientManager.authorize(authorizeRequest)
+        .map(OAuth2AuthorizedClient::getAccessToken)
+        .map(OAuth2AccessToken::getTokenValue);
 ```
 
 #### Responsibilities
 
 - Holds bearer token value.
+
 - Holds issue time.
+
 - Holds expiry time.
+
 - Used when calling protected APIs via **HttpHeaders.setBearerAuth()**.
+
 - Returned from **OAuth2AuthorizedClient.getAccessToken()**.
 
 ---
 
 ## How OAuth2 Token Works Inside Manager
-
-![OAuth2 Token Flow Diagram](https://github.com/user-attachments/assets/7ce2bebc-0708-4156-9ec9-731a7c467f02)
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/c44a283f-d2e9-4fb8-a10f-39d3f00ab96c" />
 
 ---
 
 ## Execution Flow
 
 1. **APIGateway** (caller method) builds **OAuth2AuthorizeRequest** using builder:
-   - Sets **clientRegistrationId** (e.g., "partner-bank").
-   - Sets **principalName** (e.g., "api-service").
+
+   ```java
+   OAuth2AuthorizeRequest authorizeRequest = OAuth2AuthorizeRequest
+           .withClientRegistrationId(clientRegistrationId)
+           .principal(PRINCIPAL_NAME)
+           .build();
+   ```
 
 2. **AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager.authorize(OAuth2AuthorizeRequest)** is called:
+
+   ```java
+   return authorizedClientManager.authorize(authorizeRequest)
+           .map(OAuth2AuthorizedClient::getAccessToken)
+           .map(OAuth2AccessToken::getTokenValue);
+   ```
+
    - Manager integrates **ReactiveClientRegistrationRepository** to load **ClientRegistration**.
+
    - Manager integrates **ReactiveOAuth2AuthorizedClientService** to check for existing **OAuth2AuthorizedClient**.
 
 3. **ReactiveOAuth2AuthorizedClientService.loadAuthorizedClient()** checks cache:
+
    - If **OAuth2AuthorizedClient** exists and token is valid → return cached client (skip to step 9).
+
    - If not found or token expired → proceed to step 4.
 
 4. **AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager** delegates to **ClientCredentialsReactiveOAuth2AuthorizedClientProvider.authorize()**:
+
+   ```java
+   ClientCredentialsReactiveOAuth2AuthorizedClientProvider provider =
+           new ClientCredentialsReactiveOAuth2AuthorizedClientProvider();
+   provider.setAccessTokenResponseClient(this.tokenResponseClient);
+   ```
+
    - Provider integrates **ClientRegistration** (client credentials).
+
    - Provider determines new token is required.
 
 5. **ClientCredentialsReactiveOAuth2AuthorizedClientProvider** delegates to **WebClientReactiveClientCredentialsTokenResponseClient.getTokenResponse()**:
-   - Token client integrates **WebClient** (MTLS-enabled HTTP client).
+
+   ```java
+   this.tokenResponseClient.setWebClient(this.webClient);
+   ```
+
+   - Token client integrates **WebClient** (HTTP client).
+
    - Token client builds **OAuth2ClientCredentialsGrantRequest**.
 
 6. **WebClientReactiveClientCredentialsTokenResponseClient** executes HTTP request:
+
    - Sends POST to token endpoint URI from **ClientRegistration**.
+
    - Includes Client ID and Client Secret.
+
    - Receives **OAuth2AccessTokenResponse** from token server.
 
 7. **ClientCredentialsReactiveOAuth2AuthorizedClientProvider** creates **OAuth2AuthorizedClient**:
+
    - Integrates **ClientRegistration**.
+
    - Integrates **OAuth2AccessToken** from response.
+
    - Integrates principal name.
 
 8. **ReactiveOAuth2AuthorizedClientService.saveAuthorizedClient()** stores the new client:
+
+   ```java
+   ReactiveOAuth2AuthorizedClientService clientService =
+           new InMemoryReactiveOAuth2AuthorizedClientService(reactiveClientRegistrationRepository);
+   ```
+
    - Caches **OAuth2AuthorizedClient** for future reuse.
+
    - Keyed by registration ID and principal name.
 
 9. **AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager** returns **OAuth2AuthorizedClient** to caller.
 
 10. **APIGateway** extracts token and calls business API:
-    - **OAuth2AuthorizedClient.getAccessToken()** → **OAuth2AccessToken**.
-    - **OAuth2AccessToken.getTokenValue()** → bearer token string.
-    - **WebClient.post()** with **HttpHeaders.setBearerAuth(accessToken)** sends API request.
 
-11. **WebClient** returns **ApiResponse** to **APIGateway** for processing.
+    ```java
+    public Mono<String> getOAuth2AccessToken(PartnerEntity partner, String clientRegistrationId) {
+        createWebClient(partner);
+
+        OAuth2AuthorizeRequest authorizeRequest = OAuth2AuthorizeRequest
+                .withClientRegistrationId(clientRegistrationId)
+                .principal(PRINCIPAL_NAME)
+                .build();
+
+        return authorizedClientManager.authorize(authorizeRequest)
+                .map(OAuth2AuthorizedClient::getAccessToken)
+                .map(OAuth2AccessToken::getTokenValue);
+    }
+    ```
+
+11. **APIGateway** sends business request with Bearer token:
+
+    ```java
+    public Mono<ApiResponse> sendRequest(Mono<String> token, ApiRequest request) {
+        return token.flatMap(accessToken ->
+                this.webClient
+                .post()
+                .uri(apiUrl)
+                .headers(h -> {
+                    h.setBearerAuth(accessToken);
+                    h.set(HEADER_MARKET, market);
+                })
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(ApiResponse.class));
+    }
+    ```
+
+12. **WebClient** returns **ApiResponse** to **APIGateway** for processing.
