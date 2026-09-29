@@ -66,5 +66,5 @@ More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20desi
 8. Graphics2D
 9. ImageIO
 
-
+More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/ZXing%20QR.md
 
