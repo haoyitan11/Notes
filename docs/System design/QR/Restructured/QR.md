@@ -67,8 +67,16 @@ More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20desi
 More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SpringBatchJob.md
 
 ### Spring Batch Chunk components
+1. Chunk-Oriented Step
+2. ItemReader
+3. ItemProcessor
+4. ItemWriter (FlatFileItemWriter)
+5. FlatFileHeaderCallback
+6. FlatFileFooterCallback
+7. DataContainer
+8. @StepScope / @JobScope
 
-
+More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SpringBatchChunk.md
 
 ## PrivateKey dependencies handle
 ### Components
