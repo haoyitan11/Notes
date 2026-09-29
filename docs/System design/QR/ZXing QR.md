@@ -30,8 +30,6 @@ Acts as the central QR image generation manager that orchestrates the entire QR 
 #### Dependencies
 ```java
 QRCodeWriter
-EncodeHintType
-ErrorCorrectionLevel
 BitMatrix
 MatrixToImageWriter
 MatrixToImageConfig
