@@ -1,6 +1,7 @@
 # Spring Batch Chunk Processing Dependencies Handle
 
 ## Components
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/dd1088da-e942-4745-bf47-5c57151abc94" />
 
 ### 1. Chunk-Oriented Step
 
