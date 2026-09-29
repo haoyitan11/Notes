@@ -152,6 +152,19 @@ Create image:
 new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
 ```
 
+Get graphics context:
+```java
+BufferedImage.getGraphics();
+```
+
+```java
+BufferedImage.getWidth();
+```
+
+```java
+BufferedImage.getHeight();
+```
+
 #### Responsibilities
 - Holds QR image data
 - Supports image manipulation
