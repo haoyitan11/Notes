@@ -1,7 +1,8 @@
 # Solace Message Broker
 
 ## Components
-<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/3d682233-75ba-4a61-b52f-1b45a251d4dd" />
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/4380f745-4b64-4369-8919-f4c78df74882" />
+
 
 ## 1. JndiTemplate
 
