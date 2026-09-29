@@ -1,8 +1,7 @@
-# Spring Batch Dependencies Handle
+# Spring Batch Job Dependencies Handle
 
 ## Components
-
-![Spring Batch Components Diagram](https://github.com/user-attachments/assets/82448992-483a-4e62-a72f-88a411320ed8)
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/9980fa55-b885-48c5-8045-d080ec40dd42" />
 
 ### 1. JobLauncher
 
