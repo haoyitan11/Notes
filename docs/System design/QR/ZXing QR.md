@@ -1,7 +1,7 @@
 # ZXing QR Code Generation Dependencies Handle
 
 ## Components
-<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/c602d8b6-301c-4687-86ca-6561b2d818a4" />
+<img width="1536" height="1024" alt="Designer (15)" src="https://github.com/user-attachments/assets/6f213bf2-f013-4130-8465-10b682ddf86a" />
 
 ### 1. DynamicQrImageUtil
 #### Purpose
