@@ -3,7 +3,27 @@
 ## Components
 <img width="1536" height="1024" alt="Designer (15)" src="https://github.com/user-attachments/assets/6f213bf2-f013-4130-8465-10b682ddf86a" />
 
-### 1. DynamicQrImageUtil
+### 1. DynamicQrCodeUtil
+#### Purpose
+Generates the QR payload string before image generation
+
+#### Functions Used
+Generate payload:
+```java
+DynamicQrCodeUtil.getQrString(...);
+```
+
+Calculate CRC:
+```java
+DynamicQrCodeUtil.calculateCRC16(...);
+```
+
+#### Responsibilities
+- Builds QR payload
+- Calculates CRC
+- Returns QR data string
+
+### 2. DynamicQrImageUtil
 #### Purpose
 Acts as the central QR image generation manager that orchestrates the entire QR code creation process.
 
@@ -36,7 +56,7 @@ DynamicQrImageUtil.generateQrImage(String qrData,int imageSize);
 - Encodes image as PNG
 - Returns Base64 encoded image
 
-### 2. QRCodeWriter
+### 3. QRCodeWriter
 #### Purpose
 Encodes QR payload data into a QR code matrix.
 
@@ -59,7 +79,7 @@ QRCodeWriter.encode(qrData,BarcodeFormat.QR_CODE,imageSize,imageSize,hints);
 - Applies encoding hints
 - Generates BitMatrix
 
-### 3. BitMatrix
+### 4. BitMatrix
 #### Purpose
 Represents the QR code as a 2D matrix
 
@@ -78,7 +98,7 @@ BitMatrix.getHeight();
 - Stores QR pattern data
 - Acts as input for image conversion
 
-### 4. MatrixToImageWriter
+### 5. MatrixToImageWriter
 #### Purpose
 Converts BitMatrix into BufferedImage
 
@@ -99,7 +119,7 @@ MatrixToImageWriter.toBufferedImage(BitMatrix,MatrixToImageConfig);
 - Converts QR matrix into image format
 - Produces BufferedImage output
 
-### 5. MatrixToImageConfig
+### 6. MatrixToImageConfig
 #### Purpose
 Defines QR image color configuration.
 
@@ -113,7 +133,7 @@ new MatrixToImageConfig(MatrixToImageConfig.BLACK,MatrixToImageConfig.WHITE);
 - Defines foreground color
 - Defines background color
 
-### 6. BufferedImage
+### 7. BufferedImage
 #### Purpose
 Represents the QR image in memory
 
@@ -133,7 +153,7 @@ new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
 - Holds QR image data
 - Supports image manipulation
 
-### 7. Graphics2D
+### 8. Graphics2D
 #### Purpose
 Handles logo overlay rendering
 
@@ -152,7 +172,7 @@ Graphics2D.drawImage(logoImage,x,y,null);
 - Renders QR image
 - Places logo at center
 
-### 8. ImageIO
+### 9. ImageIO
 #### Purpose
 Handles image loading and PNG encoding.
 
@@ -165,23 +185,3 @@ ImageIO.read(InputStream);
 #### Responsibilities
 - Loads logo image
 - Writes PNG image
-
-### 9. DynamicQrCodeUtil
-#### Purpose
-Generates the QR payload string before image generation
-
-#### Functions Used
-Generate payload:
-```java
-DynamicQrCodeUtil.getQrString(...);
-```
-
-Calculate CRC:
-```java
-DynamicQrCodeUtil.calculateCRC16(...);
-```
-
-#### Responsibilities
-- Builds QR payload
-- Calculates CRC
-- Returns QR data string
