@@ -71,48 +71,52 @@ spring:
 ```
 
 ### 3. ReactiveOAuth2AuthorizedClientService
-Purpose : Acts as the OAuth2 authorized client storage layer.
+#### Purpose
+Acts as the OAuth2 authorized client storage layer.
 
-Common Implementation :
+#### Implementation :
 ```java
 InMemoryReactiveOAuth2AuthorizedClientService
 ```
 
-Functions Used :
-
+#### Functions Used :
 Load authorized client:
 ```java
-loadAuthorizedClient(registrationId,principalName)
+ReactiveOAuth2AuthorizedClientService.loadAuthorizedClient(registrationId,principalName);
 ```
 
 Save authorized client: 
 ```java
-saveAuthorizedClient(authorizedClient,principal)
+ReactiveOAuth2AuthorizedClientService.saveAuthorizedClient(OAuth2AuthorizedClient,principal);
 ```
 
 Remove authorized client:
 ```java
-removeAuthorizedClient(registrationId,principalName)
+ReactiveOAuth2AuthorizedClientService.removeAuthorizedClient(registrationId,principalName);
 ```
 
-Responsibilities
+#### Responsibilities
 - Stores OAuth2AuthorizedClient
 - Retrieves OAuth2AuthorizedClient
 - Maintains access token information
 - Supports token reuse
-- Supports removal of expired or invalid clients
+- Removes expired or invalid clients
+- Acts as token cache
 
 ### 4. ClientCredentialsReactiveOAuth2AuthorizedClientProvider
-Purpose : Handles the OAuth2 Client Credentials grant flow.
+#### Purpose
+Handles the OAuth2 Client Credentials grant flow.
 
-Function used : 
+#### Dependencies
+WebClientReactiveClientCredentialsTokenResponseClient
 
+#### Function used : 
 Configure access token client:
 ```java
-setAccessTokenResponseClient(accessTokenResponseClient)
+ClientCredentialsReactiveOAuth2AuthorizedClientProvider.setAccessTokenResponseClient(WebClientReactiveClientCredentialsTokenResponseClient);
 ```
 
-Responsibilities
+#### Responsibilities
 - Determines whether authorization is required
 - Checks token expiry status
 - Requests new access tokens
