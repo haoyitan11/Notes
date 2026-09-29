@@ -71,3 +71,33 @@ JmsTemplate.receiveSelected(selector);
 - Receives JMS messages.
 - Manages JMS sessions.
 - Provides request-reply messaging support.
+
+### 4. SolaceMessageSender
+#### Purpose
+- Handles outbound messaging to Solace Broker.
+
+#### Dependencies
+```java
+JmsTemplate
+MessageCreator
+Session
+Message
+Destination
+```
+
+#### Functions Used
+Send message:
+```java
+SolaceMessageSender.sendMessages(msg,destination);
+```
+
+Send with correlation:
+```java
+SolaceMessageSender.sendMessages(msg,destination,correlationId);
+```
+
+#### Responsibilities
+- Sends text messages.
+- Sets correlation IDs.
+- Sets reply destinations.
+- Supports request-reply messaging.
