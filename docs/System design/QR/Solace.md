@@ -1,4 +1,4 @@
-# Solace Message Broker Components Reference
+# Solace Message Broker
 
 
 ## Components
