@@ -1,6 +1,7 @@
 # OAuth2 Dependencies Handle
 
 ## Components
+
 <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/e114e6ed-22e6-4094-af43-0cdb1064bb21" />
 
 ### 1. AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager
@@ -342,6 +343,15 @@ Build request:
 OAuth2AuthorizeRequest.build();
 ```
 
+#### Actual usage
+```java
+OAuth2AuthorizeRequest authorizeRequest =
+        OAuth2AuthorizeRequest
+                .withClientRegistrationId(clientRegistrationId)
+                .principal(SCB_PRINCIPAL_NAME)
+                .build();
+```
+
 #### Responsibilities
 
 - Identifies OAuth2 registration by registration ID.
@@ -493,4 +503,3 @@ OAuth2AccessToken.getTokenType();
     - **WebClient.post()** with **HttpHeaders.setBearerAuth(accessToken)** sends API request.
 
 11. **WebClient** returns **ApiResponse** to **APIGateway** for processing.
-
