@@ -16,8 +16,7 @@ ClientCredentialsReactiveOAuth2AuthorizedClientProvider
 #### Functions Used
 Constructor :
 ```java
-new AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager(ReactiveClientRegistrationRepository,
-ReactiveOAuth2AuthorizedClientService)
+new AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager(ReactiveClientRegistrationRepository,ReactiveOAuth2AuthorizedClientService)
 ```
 Configure authorization provider : 
 ```java
