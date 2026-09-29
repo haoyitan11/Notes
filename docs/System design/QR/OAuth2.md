@@ -3,24 +3,32 @@
 <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/aa4769e4-7344-476c-92a6-0bf5d30f6c1d" />
 
 ### 1. AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager
-Purpose : Acts as the central OAuth2 lifecycle manager.
+#### Purpose 
+Acts as the central OAuth2 authorization and token lifecycle manager.
 
-Functions Used : 
-
-Constructor:
+#### Dependencies
 ```java
-new AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager(clientRegistrationRepository,authorizedClientService)
-```
-Configure provider : 
-```java
-authorizedClientManager.setAuthorizedClientProvider(authorizedClientProvider);
-```
-Authorize client : 
-```java
-authorizedClientManager.authorize(authorizeRequest)
+ReactiveClientRegistrationRepository
+ReactiveOAuth2AuthorizedClientService
+ClientCredentialsReactiveOAuth2AuthorizedClientProvider
 ```
 
-Responsibilities :
+#### Functions Used
+Constructor :
+```java
+new AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager(ReactiveClientRegistrationRepository,
+ReactiveOAuth2AuthorizedClientService)
+```
+Configure authorization provider : 
+```java
+AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager.setAuthorizedClientProvider(ClientCredentialsReactiveOAuth2AuthorizedClientProvider);
+```
+Authorize request : 
+```java
+AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager.authorize(OAuth2AuthorizeRequest);
+```
+
+#### Responsibilities
 - Central coordinator for OAuth2 authorization.
 - Loads client configuration from ReactiveClientRegistrationRepository.
 - Retrieves existing authorized clients from ReactiveOAuth2AuthorizedClientService.
