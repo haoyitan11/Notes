@@ -240,7 +240,9 @@ Processes JSON requests.
 ```
 
 #### Functions Used
+```java
 processJsonMsg(String request);
+```
 
 #### Responsibilities
 - Processes inbound requests.
