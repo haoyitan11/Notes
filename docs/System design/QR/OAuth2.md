@@ -1,8 +1,8 @@
 # OAuth2 Dependencies Handle
 
 ## Components
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/ee6d3c94-0890-44b1-bf63-a0d8781800b1" />
 
-![OAuth2 Component Diagram](https://github.com/user-attachments/assets/ac041a9b-43d5-4240-bcb6-8f485cc88bfd)
 
 ### 1. AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager
 
