@@ -79,7 +79,7 @@ Acts as the OAuth2 authorized client storage layer.
 InMemoryReactiveOAuth2AuthorizedClientService
 ```
 
-#### Functions Used :
+#### Functions Used
 Load authorized client:
 ```java
 ReactiveOAuth2AuthorizedClientService.loadAuthorizedClient(registrationId,principalName);
@@ -112,7 +112,7 @@ Handles the OAuth2 Client Credentials grant flow.
 WebClientReactiveClientCredentialsTokenResponseClient
 ```
 
-#### Function used : 
+#### Function used
 Configure access token client:
 ```java
 ClientCredentialsReactiveOAuth2AuthorizedClientProvider.setAccessTokenResponseClient(WebClientReactiveClientCredentialsTokenResponseClient);
@@ -134,7 +134,7 @@ Executes the OAuth2 token endpoint request.
 WebClient
 ```
 
-#### Functions Used :
+#### Functions Used
 Configure WebClient
 ```java
 WebClientReactiveClientCredentialsTokenResponseClient.setWebClient(WebClient);
@@ -229,7 +229,7 @@ ClientRegistration
 OAuth2AccessToken
 ```
 
-#### Functions Used :
+#### Functions Used
 Get token value:
 ```java
 OAuth2AuthorizedClient.getAccessToken();
