@@ -126,3 +126,53 @@ session.createQueue(queueName);
 - Creates destinations.
 
 ### 8. Message (TextMessage)
+#### Purpose
+Carries payload and JMS headers.
+
+#### Functions Used
+```java
+message.setJMSCorrelationID(correlationId);
+
+message.setJMSReplyTo(destination);
+
+textMessage.getText();
+```
+
+#### Responsibilities
+- Stores payload.
+- Stores Correlation ID.
+- Stores Reply-To destination.
+
+### 9. Destination (Topic / Queue)
+#### Purpose
+Represents messaging endpoint.
+
+#### Functions Used
+```java
+session.createTopic(topicName);
+
+session.createQueue(queueName);
+```
+
+#### Responsibilities
+- Identifies message target.
+- Identifies message source.
+
+### 10. Receiver JmsTemplate
+#### Purpose
+Provides inbound JMS receive operations.
+
+#### XML Declaration
+<bean id="financialMessageReceiverJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+    <property name="connectionFactory" ref="solaceCachedConnectionFactory"/>
+    <property name="defaultDestination" ref="consumerQueue"/>
+</bean>
+
+#### Functions Used
+```java
+receiveSelected(selector);
+```
+
+#### Responsibilities
+- Receives response messages.
+- Filters using selectors.
