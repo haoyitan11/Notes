@@ -37,26 +37,29 @@ AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager.authorize(OAuth2Aut
 - Stores newly authorized clients.
 
 ### 2. ReactiveClientRegistrationRepository
-Purpose : Provides OAuth2 client configuration information.
+#### Purpose 
+Provides OAuth2 client configuration information.
 
-Common Implementation :
+#### Dependencies
 ```java
-InMemoryReactiveClientRegistrationRepository
+ClientRegistrationRepository
 ```
 
-Functions Used : 
-
-Find registration:
+#### Functions Used
+Find registration : 
 ```java
-findByRegistrationId("scb")
+ClientRegistrationRepository.findByRegistrationId("scb");
 ```
 
-Responsibilities :
+#### Responsibilities
 - Loads ClientRegistration
-- Maps registrationId to client configuration
+- Provides Client ID
+- Provides Client Secret
+- Provides Authorization Grant Type
+- Provides Token URI
 - Provides OAuth2 metadata
 
-Configuration Source
+#### Configuration Source
 ```java
 spring:
   security:
@@ -66,16 +69,6 @@ spring:
           scb:
             client-id: xxx
             client-secret: xxx
-```
-
-Information Returned :
-```java
-Client ID
-Client Secret
-Authorization Grant Type
-Scopes
-Token URI
-Client 
 ```
 
 ### 3. ReactiveOAuth2AuthorizedClientService
