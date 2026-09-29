@@ -1,6 +1,6 @@
 # Spring Batch dependencies handle
 ## Components
-<img width="1536" height="1024" alt="Designer (16)" src="https://github.com/user-attachments/assets/c3dcf510-8de8-4590-bc80-9fe0faa9ae3c" />
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/82448992-483a-4e62-a72f-88a411320ed8" />
 
 ## Components
 
@@ -271,66 +271,6 @@ JobExecution.getAllFailureExceptions();
 - Integrates BatchStatus (COMPLETED, FAILED, STOPPED).
 - Integrates ExitStatus and failure exceptions.
 - Returned by JobLauncher.run() for status checking.
-
-## How Spring Batch execution works inside the launcher
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              JobLauncher                                     │
-│                                                                              │
-│  Integrates:                                                                 │
-│  ┌──────────────┐  ┌───────────────┐  ┌──────────────┐                      │
-│  │     Job      │  │ JobParameters │  │ JobRepository│                      │
-│  └──────┬───────┘  └───────────────┘  └──────┬───────┘                      │
-│         │                                     │                              │
-│         │         creates JobInstance ◄───────┤                              │
-│         │         creates JobExecution ◄──────┤                              │
-│         ▼                                     │                              │
-└─────────┼─────────────────────────────────────┼──────────────────────────────┘
-          │                                     │
-          ▼                                     │
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                  Job                                         │
-│                                                                              │
-│  Integrates:                                                                 │
-│  ┌──────────────┐  ┌──────────────┐                                         │
-│  │     Step     │  │ JobRepository│ ◄─────────────────────────────────────┐ │
-│  └──────┬───────┘  └──────────────┘   (updates JobExecution state)        │ │
-│         │                                                                  │ │
-│         ▼                                                                  │ │
-└─────────┼──────────────────────────────────────────────────────────────────┼─┘
-          │                                                                  │
-          ▼                                                                  │
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                  Step                                        │
-│                                                                              │
-│  Integrates:                                                                 │
-│  ┌──────────────┐  ┌─────────────────────────┐  ┌──────────────┐            │
-│  │   Tasklet    │  │PlatformTransactionManager│  │ JobRepository│            │
-│  └──────┬───────┘  └─────────────────────────┘  └──────────────┘            │
-│         │                     │                         │                    │
-│         │          manages transaction ◄────────────────┤                    │
-│         │          persists StepExecution ◄─────────────┘                    │
-│         ▼                                                                    │
-└─────────┼────────────────────────────────────────────────────────────────────┘
-          │
-          ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                Tasklet                                       │
-│                                                                              │
-│  Integrates:                                                                 │
-│  ┌──────────────────┐  ┌──────────────┐                                     │
-│  │  StepContribution │  │ ChunkContext │                                     │
-│  └──────────────────┘  └──────┬───────┘                                     │
-│                               │                                              │
-│                               ▼                                              │
-│                      ┌──────────────┐                                        │
-│                      │ JobParameters │ (accessed via ChunkContext)           │
-│                      └──────────────┘                                        │
-│                                                                              │
-│  Returns: RepeatStatus.FINISHED                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
 
 ### Execution Flow
 
