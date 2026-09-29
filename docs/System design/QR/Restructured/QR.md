@@ -54,7 +54,17 @@ More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20desi
 
 More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/PrivateKey.md
 
-## QR code generate dependencies handle
-Zxing
+## ZXing QR code generate dependencies handle
+### Components
+1. DynamicQrCodeUtil
+2. DynamicQrImageUtil
+3. QRCodeWriter
+4. BitMatrix
+5. MatrixToImageWriter
+6. MatrixToImageConfig
+7. BufferedImage
+8. Graphics2D
+9. ImageIO
+
 
 
