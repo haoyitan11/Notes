@@ -33,7 +33,7 @@ AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager.authorize(OAuth2Aut
 - Retrieves existing authorized clients from ReactiveOAuth2AuthorizedClientService.
 - Checks token validity and expiration.
 - Requests new access tokens when required.
-- Stores newly authorized clients.
+- Uses ReactiveOAuth2AuthorizedClientService to store and retrieve authorized clients.
 
 ### 2. ReactiveClientRegistrationRepository
 #### Purpose 
@@ -108,7 +108,9 @@ ReactiveOAuth2AuthorizedClientService.removeAuthorizedClient(registrationId,prin
 Handles the OAuth2 Client Credentials grant flow.
 
 #### Dependencies
+```java
 WebClientReactiveClientCredentialsTokenResponseClient
+```
 
 #### Function used : 
 Configure access token client:
@@ -124,64 +126,146 @@ ClientCredentialsReactiveOAuth2AuthorizedClientProvider.setAccessTokenResponseCl
 - Creates a new OAuth2AuthorizedClient
 
 ### 5. WebClientReactiveClientCredentialsTokenResponseClient
-Purpose : Executes the OAuth2 token endpoint request.
+#### Purpose
+Executes the OAuth2 token endpoint request.
 
-Functions Used :
-
-Request access token:
+#### Dependencies
 ```java
-getTokenResponse(clientCredentialsGrantRequest)
+WebClient
 ```
 
-Responsibilities
+#### Functions Used :
+Configure WebClient
+```java
+WebClientReactiveClientCredentialsTokenResponseClient.setWebClient(WebClient);
+```
+
+Request access token
+```java
+WebClientReactiveClientCredentialsTokenResponseClient.getTokenResponse(OAuth2ClientCredentialsGrantRequest);
+```
+
+#### Responsibilities
 - Sends HTTP POST request to token endpoint
 - Supplies Client ID and Client Secret
+- Uses MTLS-enabled WebClient
 - Receives OAuth2 token response
 - Converts response into OAuth2AccessTokenResponse
 
-### 6. OAuth2AuthorizedClient
-Purpose : Represents an authorized OAuth2 client
+### 6. WebClient
+#### Purpose
+HTTP client used for OAuth2 token requests and SCB business API requests.
 
-Dependency :
+#### Functions Used
+POST request
 ```java
-org.springframework.security.oauth2.client.OAuth2AuthorizedClient
-```
-Functions Used:
-
-Get access token:
-```java
-authorizedClient.getAccessToken()
+WebClient.post();
 ```
 
-Get client registration:
+Define endpoint
 ```java
-authorizedClient.getClientRegistration()
+WebClient.uri(reversalUrl);
 ```
 
-Responsibilities
-- Stores client registration
-- Stores access token
-- Stores authorization information
-- Returned after successful authorization
+Set Bearer token
+```java
+HttpHeaders.setBearerAuth(accessToken);
+```
 
-### 7. OAuth2AccessToken
-Purpose : Represents the OAuth2 access token
-Functions Used :
+Set request body
+```java
+WebClient.bodyValue(ScbAPIRequest);
+```
 
+Retrieve response
+```java
+WebClient.retrieve();
+```
+
+Convert response
+```java
+WebClient.bodyToMono(ScbAPIResponse.class);
+```
+
+#### Responsibilities
+- Sends OAuth2 token requests
+- Sends SCB reversal requests
+- Supports MTLS communication
+- Supports Web Proxy routing
+- Handles reactive HTTP communication
+
+### 7. OAuth2AuthorizeRequest
+#### Purpose
+Represents an authorization request submitted to the OAuth2 manager.
+
+#### Functions Used
+Specify registration
+```java
+OAuth2AuthorizeRequest.withClientRegistrationId(clientRegistrationId);
+```
+
+Specify principal
+```java
+OAuth2AuthorizeRequest.principal(principalName);
+```
+
+Build request
+```java
+OAuth2AuthorizeRequest.build();
+```
+
+#### Responsibilities
+- Identifies OAuth2 registration
+- Identifies principal
+- Triggers authorization process
+
+### 8. OAuth2AuthorizedClient
+#### Purpose
+Represents a successfully authorized OAuth2 client.
+
+#### Dependencies
+```java
+ClientRegistration
+OAuth2AccessToken
+```
+
+#### Functions Used :
 Get token value:
 ```java
-accessToken.getTokenValue()
+OAuth2AuthorizedClient.getAccessToken();
 ```
-Check expiry:
+Get registration:
 ```java
-accessToken.getExpiresAt()
+OAuth2AuthorizedClient.getClientRegistration();
 ```
 
-Responsibilities
+#### Responsibilities
+- Stores ClientRegistration
+- Stores OAuth2AccessToken
+- Returned after successful authorization
+- Stores authorization information for a specific client registration and principal.
+
+### 9. OAuth2AccessToken
+#### Purpose
+Represents the OAuth2 access token.
+
+#### Functions Used
+Get token value
+```java
+OAuth2AccessToken.getTokenValue();
+```
+
+Get expiry time
+```java
+OAuth2AccessToken.getExpiresAt();
+```
+
+#### Responsibilities
 - Holds bearer token value
 - Holds issue time
 - Holds expiry time
 - Used when calling protected APIs
+- Returned from OAuth2AuthorizedClient.getAccessToken()
 
 ## How OAuth2 token works inside manager
 <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/7ce2bebc-0708-4156-9ec9-731a7c467f02" />
