@@ -1,6 +1,6 @@
 # Spring Batch dependencies handle
 ## Components
-<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/084673dc-ca29-4640-9e36-d64dbed9af44" />
+<img width="1536" height="1024" alt="Designer (16)" src="https://github.com/user-attachments/assets/c3dcf510-8de8-4590-bc80-9fe0faa9ae3c" />
 
 ### 1. JobLauncher
 #### Purpose
