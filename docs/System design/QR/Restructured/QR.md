@@ -53,7 +53,7 @@ More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20desi
 More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/OAuth2.md
 
 ## Spring Batch dependencies handle
-### Components
+### Spring Batch Job components
 1. JobLauncher
 2. Job
 3. JobParameters
@@ -64,7 +64,11 @@ More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20desi
 8. StepBuilder
 9. Tasklet
 
-More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SpringBatch.md
+More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SpringBatchJob.md
+
+### Spring Batch Chunk components
+
+
 
 ## PrivateKey dependencies handle
 ### Components
