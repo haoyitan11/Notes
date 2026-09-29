@@ -160,7 +160,7 @@ Handles logo overlay rendering
 #### Functions Used
 Draw QR image:
 ```java
-new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
+Graphics2D.drawImage(qrImage,0,0,null);
 ```
 
 Draw logo image:
@@ -171,6 +171,7 @@ Graphics2D.drawImage(logoImage,x,y,null);
 #### Responsibilities
 - Renders QR image
 - Places logo at center
+- Supports image composition.
 
 ### 9. ImageIO
 #### Purpose
@@ -182,6 +183,12 @@ Load logo:
 ImageIO.read(InputStream);
 ```
 
+Write PNG:
+```java
+ImageIO.write(bufferedImage,"png",outputStream);
+```
+
 #### Responsibilities
 - Loads logo image
 - Writes PNG image
+- Supports image encoding and decoding.
