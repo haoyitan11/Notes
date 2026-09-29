@@ -1,103 +1,18 @@
 # Solace Message Broker Dependencies Handle
 ## Components
 
-
-
-### 1. CachingConnectionFactory
+### 1. JndiTemplate
 #### Purpose
-Acts as the central JMS connection manager that caches and manages Solace JMS connections.
+Provides JNDI context for Solace resource lookup.
 
-#### Dependencies
-ConnectionFactory
-
-#### Functions Used
-Create connection:
+#### XML Declaration
 ```java
-CachingConnectionFactory.createConnection();
+<bean id="solaceJndiTemplate"
+    class="org.springframework.jndi.JndiTemplate">
+</bean>
 ```
 
 #### Responsibilities
-- Central coordinator for JMS connection management
-- Wraps SolConnectionFactory.
-- Caches JMS connections for reuse.
-- Manages connection lifecycle.
-- Provides connections to JmsTemplate and listener containers.
+- Creates JNDI context
+- Looks up Solace resources
 
-### 2. SolConnectionFactory (ConnectionFactory)
-#### Purpose
-Provides the underlying Solace JMS connection implementation.
-
-#### Dependencies
-```java
-Solace Broker
-```
-
-#### Functions Used
-Create factory:
-```java
-SolJmsUtility.createConnectionFactory(host,vpn,username,password);
-```
-
-#### Responsibilities
-- Creates native Solace JMS connections.
-- Manages broker authentication.
-- Configures VPN access.
-- Manages broker communication.
-
-### 3. JmsTemplate
-#### Purpose
-Acts as the central JMS messaging operations manager.
-
-#### Dependencies
-```java
-CachingConnectionFactory
-Destination
-MessageCreator
-```
-
-#### Functions Used
-Send message:
-```java
-JmsTemplate.send(destination,MessageCreator);
-```
-
-Receive selected:
-```java
-JmsTemplate.receiveSelected(selector);
-```
-
-#### Responsibilities
-- Sends JMS messages.
-- Receives JMS messages.
-- Manages JMS sessions.
-- Provides request-reply messaging support.
-
-### 4. SolaceMessageSender
-#### Purpose
-- Handles outbound messaging to Solace Broker.
-
-#### Dependencies
-```java
-JmsTemplate
-MessageCreator
-Session
-Message
-Destination
-```
-
-#### Functions Used
-Send message:
-```java
-SolaceMessageSender.sendMessages(msg,destination);
-```
-
-Send with correlation:
-```java
-SolaceMessageSender.sendMessages(msg,destination,correlationId);
-```
-
-#### Responsibilities
-- Sends text messages.
-- Sets correlation IDs.
-- Sets reply destinations.
-- Supports request-reply messaging.
