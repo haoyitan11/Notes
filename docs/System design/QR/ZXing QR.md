@@ -94,6 +94,11 @@ Get height:
 BitMatrix.getHeight();
 ```
 
+Get module value:
+```java
+BitMatrix.get(x, y);
+```
+
 #### Responsibilities
 - Stores QR pattern data
 - Acts as input for image conversion
