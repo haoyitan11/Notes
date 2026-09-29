@@ -3,10 +3,15 @@
 <img width="1536" height="1024" alt="Designer (16)" src="https://github.com/user-attachments/assets/c3dcf510-8de8-4590-bc80-9fe0faa9ae3c" />
 
 ## Components
+
 ### 1. JobLauncher
+
 #### Purpose
+
 Acts as the central batch execution manager that starts and runs a Job.
+
 #### Dependencies
+
 ```java
 Job
 JobParameters
@@ -14,42 +19,52 @@ JobRepository
 ```
 
 #### Functions Used
+
 Run job:
+
 ```java
 JobLauncher.run(Job, JobParameters);
 ```
 
 #### Responsibilities
+
 - Central coordinator for batch execution.
-- Loads Job from Spring context.
-- Accepts JobParameters as runtime inputs.
-- Uses JobRepository to create JobInstance and JobExecution.
+- Integrates Job (defines what to execute).
+- Integrates JobParameters (runtime inputs).
+- Integrates JobRepository (creates JobInstance and JobExecution).
 - Starts Job execution.
 - Returns JobExecution holding the execution result.
 
 ### 2. Job
+
 #### Purpose
+
 Defines the workflow to execute.
 
 #### Dependencies
+
 ```java
 Step
 JobRepository
 ```
 
 #### Functions Used
+
 Execute steps:
+
 ```java
 Job.execute(JobExecution);
 ```
 
 #### Responsibilities
-- Contains one or more Step(s) to execute.
+
+- Integrates Step(s) (defines the work units to execute).
+- Integrates JobRepository (persists execution state).
 - Executed by JobLauncher.
-- Uses JobRepository to persist execution state.
-- Returns control to JobLauncher after all steps complete.
+- Iterates through and executes each Step in sequence.
 
 #### Configuration Source
+
 ```java
 @Bean
 public Job staticQrJob(JobRepository jobRepository, Step staticQrStep) {
@@ -59,64 +74,38 @@ public Job staticQrJob(JobRepository jobRepository, Step staticQrStep) {
 }
 ```
 
-### 3. JobBuilder
+### 3. Step
+
 #### Purpose
-Builds a fully configured Job.
 
-#### Dependencies
-```java
-JobRepository
-Step
-```
-
-#### Functions Used
-Constructor:
-```java
-new JobBuilder("jobName", jobRepository);
-```
-
-Configure steps:
-```java
-JobBuilder.start(Step);
-JobBuilder.flow(Step).next(Step).end();
-```
-
-Build job:
-```java
-JobBuilder.build();
-```
-
-#### Responsibilities
-- Accepts JobRepository for metadata persistence.
-- Accepts Step(s) to define the workflow.
-- Integrates JobRepository and Step(s) into a Job.
-- Creates a fully configured Job.
-
-### 4. Step
-#### Purpose
 Defines a unit of work to be executed within a Job.
 
 #### Dependencies
+
 ```java
-Tasklet (or ItemReader, ItemProcessor, ItemWriter)
+Tasklet
 PlatformTransactionManager
 JobRepository
 ```
 
 #### Functions Used
+
 Execute tasklet:
+
 ```java
 Step.execute(StepExecution);
 ```
 
 #### Responsibilities
-- Contains Tasklet or chunk-based components (ItemReader/ItemProcessor/ItemWriter).
-- Uses PlatformTransactionManager for transaction boundaries.
-- Uses JobRepository to persist StepExecution state.
-- Executes the contained Tasklet or chunk processing.
+
+- Integrates Tasklet (the actual business logic to execute).
+- Integrates PlatformTransactionManager (manages commit/rollback boundaries).
+- Integrates JobRepository (persists StepExecution state).
+- Executed by Job.
+- Calls Tasklet.execute() within a transaction.
 
 #### Configuration Source
-Tasklet-based:
+
 ```java
 @Bean
 public Step staticQrStep(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
@@ -126,219 +115,135 @@ public Step staticQrStep(JobRepository jobRepository, PlatformTransactionManager
 }
 ```
 
-Chunk-based:
-```java
-@Bean
-public Step getRefundExceptionStep() {
-    return new StepBuilder("getRefundExceptionStep", jobRepository)
-            .<RefundExceptionRecord, RefundExceptionRecord>chunk(chunkSize, transactionManager)
-            .reader(transactionsReader(to_be_injected))
-            .processor(transactionDataProcessor())
-            .writer(transactionsFileWriter(to_be_injected))
-            .build();
-}
-```
+### 4. Tasklet
 
-### 5. StepBuilder
 #### Purpose
-Builds a fully configured Step.
+
+Executes the actual batch business logic.
 
 #### Dependencies
-```java
-JobRepository
-Tasklet (or ItemReader, ItemProcessor, ItemWriter)
-PlatformTransactionManager
-```
 
-#### Functions Used
-Constructor:
-```java
-new StepBuilder("stepName", jobRepository);
-```
-
-Configure tasklet:
-```java
-StepBuilder.tasklet(Tasklet, PlatformTransactionManager);
-```
-
-Configure chunk:
-```java
-StepBuilder.<I, O>chunk(chunkSize, PlatformTransactionManager)
-           .reader(ItemReader)
-           .processor(ItemProcessor)
-           .writer(ItemWriter);
-```
-
-Build step:
-```java
-StepBuilder.build();
-```
-
-#### Responsibilities
-- Accepts JobRepository for metadata persistence.
-- Accepts Tasklet or ItemReader/ItemProcessor/ItemWriter for business logic.
-- Accepts PlatformTransactionManager for transaction management.
-- Integrates all dependencies into a Step.
-- Creates a fully configured Step.
-
-### 6. Tasklet
-#### Purpose
-Executes the actual batch business logic in a single execution unit.
-
-#### Dependencies
 ```java
 StepContribution
 ChunkContext
 ```
 
 #### Functions Used
+
 Execute:
+
 ```java
 Tasklet.execute(StepContribution, ChunkContext);
 ```
 
 Access job parameters:
+
 ```java
 chunkContext.getStepContext().getJobParameters().get("inputDateStr");
 ```
 
 Return status:
+
 ```java
 return RepeatStatus.FINISHED;
 ```
 
 #### Responsibilities
-- Receives StepContribution to report back step metrics.
-- Receives ChunkContext to access JobParameters and step context.
-- Executes batch processing logic (file generation, database operations, SFTP).
-- Returns RepeatStatus to indicate completion.
+
+- Integrates StepContribution (reports step metrics back to Step).
+- Integrates ChunkContext (provides access to JobParameters).
+- Executed by Step.
+- Performs batch processing logic (file generation, database operations, SFTP).
+- Returns RepeatStatus.FINISHED when complete.
 
 #### Configuration Source
+
 ```java
 @Bean
-public Tasklet creditAdjustmentFileTasklet() {
-    return new CreditAdjustmentTasklet();
+public Tasklet staticQrFileJobTasklet() {
+    return new StaticQrFileTasklet();
 }
 ```
 
-### 7. ItemReader / ItemProcessor / ItemWriter
+### 5. JobRepository
+
 #### Purpose
-Handles chunk-oriented batch processing: read items, process them, and write results.
 
-#### Dependencies
-```java
-DataSource (for database readers)
-FileSystemResource (for file writers)
-JobParameters (via @Value injection)
-```
-
-#### Functions Used
-Reader:
-```java
-ItemReader.read();
-```
-
-Processor:
-```java
-ItemProcessor.process(item);
-```
-
-Writer:
-```java
-ItemWriter.write(chunk);
-```
-
-#### Responsibilities
-- **ItemReader**: Reads data from source one item at a time, returns null when exhausted.
-- **ItemProcessor**: Transforms or filters each item, returns null to skip.
-- **ItemWriter**: Writes chunk of processed items to destination.
-- Works together within a Step, managed by chunk transaction boundaries.
-
-#### Configuration Source
-```java
-@Bean
-@StepScope
-ItemReader<RefundExceptionRecord> transactionsReader(@Value("#{jobParameters[inputDateStr]}") String inputDateStr) {
-    return new RefundExceptionReader(inputDateStr);
-}
-
-@Bean
-@StepScope
-ItemProcessor<RefundExceptionRecord, RefundExceptionRecord> transactionDataProcessor() {
-    return new RefundExceptionProcessor(refundDataContainer());
-}
-
-@Bean
-@StepScope
-public FlatFileItemWriter<RefundExceptionRecord> transactionsFileWriter(@Value("#{jobParameters[filename]}") String filename) {
-    FlatFileItemWriter<RefundExceptionRecord> writer = new FlatFileItemWriter<>();
-    writer.setResource(new FileSystemResource(generatedFolder + filename));
-    return writer;
-}
-```
-
-### 8. JobRepository
-#### Purpose
 Stores and manages Spring Batch execution metadata.
 
 #### Dependencies
+
 ```java
 DataSource
 PlatformTransactionManager
 ```
 
 #### Functions Used
+
 Create job execution:
+
 ```java
 JobRepository.createJobExecution(JobInstance, JobParameters, String);
 ```
 
 Update execution:
+
 ```java
 JobRepository.update(JobExecution);
 JobRepository.update(StepExecution);
 ```
 
 #### Responsibilities
-- Uses DataSource to persist batch metadata to database.
-- Uses PlatformTransactionManager for metadata transaction management.
-- Stores JobInstance, JobExecution, StepExecution.
-- Provides execution history for restart and recovery.
 
-### 9. JobParameters
+- Integrates DataSource (persists batch metadata to database).
+- Integrates PlatformTransactionManager (manages metadata transactions).
+- Used by JobLauncher (to create JobInstance and JobExecution).
+- Used by Job (to update JobExecution state).
+- Used by Step (to create and update StepExecution).
+- Stores JobInstance, JobExecution, StepExecution.
+
+### 6. JobParameters
+
 #### Purpose
-Stores runtime inputs for a batch execution and uniquely identifies a JobInstance.
+
+Stores runtime inputs for a batch execution.
 
 #### Dependencies
+
 ```java
 JobParametersBuilder
 ```
 
 #### Functions Used
+
 Add parameters:
+
 ```java
 JobParametersBuilder.addDate("runDate", new Date());
 JobParametersBuilder.addString("inputDateStr", day);
-JobParametersBuilder.addString("filename", "Refund_Exception_Report_" + day + ".csv");
 ```
 
 Build:
+
 ```java
 JobParametersBuilder.toJobParameters();
 ```
 
 #### Responsibilities
-- Built by JobParametersBuilder with typed parameters.
-- Passed to JobLauncher.run() to start execution.
-- Combined with Job name to identify unique JobInstance.
-- Accessible by Tasklet via ChunkContext.
-- Accessible by @StepScope beans via @Value("#{jobParameters[name]}").
 
-### 10. JobExecution
+- Built by JobParametersBuilder.
+- Passed to JobLauncher.run() as runtime inputs.
+- Combined with Job name to identify unique JobInstance.
+- Accessible by Tasklet via ChunkContext.getStepContext().getJobParameters().
+
+### 7. JobExecution
+
 #### Purpose
+
 Stores the execution result of a Job.
 
 #### Dependencies
+
 ```java
 JobInstance
 BatchStatus
@@ -346,24 +251,115 @@ ExitStatus
 ```
 
 #### Functions Used
+
 Get status:
+
 ```java
 JobExecution.getStatus();
 ```
 
 Get exceptions:
+
 ```java
 JobExecution.getAllFailureExceptions();
 ```
 
-Get job info:
-```java
-JobExecution.getJobInstance().getJobName();
+#### Responsibilities
+
+- Created by JobRepository when JobLauncher starts a Job.
+- Integrates JobInstance (identifies which Job + JobParameters).
+- Integrates BatchStatus (COMPLETED, FAILED, STOPPED).
+- Integrates ExitStatus and failure exceptions.
+- Returned by JobLauncher.run() for status checking.
+
+## How Spring Batch execution works inside the launcher
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              JobLauncher                                     │
+│                                                                              │
+│  Integrates:                                                                 │
+│  ┌──────────────┐  ┌───────────────┐  ┌──────────────┐                      │
+│  │     Job      │  │ JobParameters │  │ JobRepository│                      │
+│  └──────┬───────┘  └───────────────┘  └──────┬───────┘                      │
+│         │                                     │                              │
+│         │         creates JobInstance ◄───────┤                              │
+│         │         creates JobExecution ◄──────┤                              │
+│         ▼                                     │                              │
+└─────────┼─────────────────────────────────────┼──────────────────────────────┘
+          │                                     │
+          ▼                                     │
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                  Job                                         │
+│                                                                              │
+│  Integrates:                                                                 │
+│  ┌──────────────┐  ┌──────────────┐                                         │
+│  │     Step     │  │ JobRepository│ ◄─────────────────────────────────────┐ │
+│  └──────┬───────┘  └──────────────┘   (updates JobExecution state)        │ │
+│         │                                                                  │ │
+│         ▼                                                                  │ │
+└─────────┼──────────────────────────────────────────────────────────────────┼─┘
+          │                                                                  │
+          ▼                                                                  │
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                  Step                                        │
+│                                                                              │
+│  Integrates:                                                                 │
+│  ┌──────────────┐  ┌─────────────────────────┐  ┌──────────────┐            │
+│  │   Tasklet    │  │PlatformTransactionManager│  │ JobRepository│            │
+│  └──────┬───────┘  └─────────────────────────┘  └──────────────┘            │
+│         │                     │                         │                    │
+│         │          manages transaction ◄────────────────┤                    │
+│         │          persists StepExecution ◄─────────────┘                    │
+│         ▼                                                                    │
+└─────────┼────────────────────────────────────────────────────────────────────┘
+          │
+          ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                Tasklet                                       │
+│                                                                              │
+│  Integrates:                                                                 │
+│  ┌──────────────────┐  ┌──────────────┐                                     │
+│  │  StepContribution │  │ ChunkContext │                                     │
+│  └──────────────────┘  └──────┬───────┘                                     │
+│                               │                                              │
+│                               ▼                                              │
+│                      ┌──────────────┐                                        │
+│                      │ JobParameters │ (accessed via ChunkContext)           │
+│                      └──────────────┘                                        │
+│                                                                              │
+│  Returns: RepeatStatus.FINISHED                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-#### Responsibilities
-- Created by JobRepository when JobLauncher starts a Job.
-- Contains reference to JobInstance (Job + JobParameters identity).
-- Tracks BatchStatus (COMPLETED, FAILED, STOPPED).
-- Stores ExitStatus and failure exceptions.
-- Returned by JobLauncher.run() for status checking.
+### Execution Flow
+
+1. **QRBatchJob** (scheduled method) builds **JobParameters** using **JobParametersBuilder**.
+
+2. **JobLauncher.run(job, jobParams)** is called:
+   - JobLauncher integrates **Job** (what to execute).
+   - JobLauncher integrates **JobParameters** (runtime inputs).
+   - JobLauncher integrates **JobRepository** to create **JobInstance** and **JobExecution**.
+
+3. **JobLauncher** delegates to **Job.execute()**:
+   - Job integrates **Step** (the work unit).
+   - Job integrates **JobRepository** to update **JobExecution** state.
+
+4. **Job** delegates to **Step.execute()**:
+   - Step integrates **Tasklet** (the business logic).
+   - Step integrates **PlatformTransactionManager** to manage transaction boundaries.
+   - Step integrates **JobRepository** to persist **StepExecution** state.
+
+5. **Step** calls **Tasklet.execute(StepContribution, ChunkContext)**:
+   - Tasklet integrates **StepContribution** to report metrics.
+   - Tasklet integrates **ChunkContext** to access **JobParameters**.
+
+6. **Tasklet** executes business logic and returns **RepeatStatus.FINISHED**.
+
+7. **Step** commits transaction via **PlatformTransactionManager**.
+
+8. **Job** updates **JobExecution** status via **JobRepository**.
+
+9. **JobLauncher** returns **JobExecution** to caller.
+
+10. **sendErrors(execution)** checks **JobExecution.getStatus()** for error handling.
