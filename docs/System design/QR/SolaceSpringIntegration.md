@@ -1,8 +1,10 @@
-# Solace Spring Integration Components
+# Solace Spring Integration
 
 ## Overview
 
 This document covers the Spring Integration components for asynchronous message processing flows.
+
+> **Note:** Spring Integration flows are configured via **XML only**. Java classes with `@ServiceActivator` are service implementations that process messages from the XML-configured flows.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
@@ -64,7 +66,9 @@ ConnectionFactory (solaceConnectionFactory)
 Destination (Queue from JndiObjectFactoryBean)
 ```
 
-#### XML Declaration (upi-proxy-transactions.xml)
+#### Configuration (XML Only)
+
+**Actual Usage (upi-proxy-transactions.xml)**
 
 ```xml
 <bean id="ap.processingRequestQueue" class="org.springframework.jndi.JndiObjectFactoryBean">
@@ -84,9 +88,8 @@ Destination (Queue from JndiObjectFactoryBean)
 </bean>
 ```
 
-#### Additional Listener Containers
+**Actual Usage (fx-hub-request.xml)**
 
-**FX Hub (fx-hub-request.xml):**
 ```xml
 <bean id="fx.processingRequestQueue" class="org.springframework.jndi.JndiObjectFactoryBean">
     <property name="jndiTemplate" ref="solaceJndiTemplate"/>
@@ -105,7 +108,8 @@ Destination (Queue from JndiObjectFactoryBean)
 </bean>
 ```
 
-**TSP Enroll (tsp-request-enroll.xml):**
+**Actual Usage (tsp-request-enroll.xml)**
+
 ```xml
 <bean id="tsp.processingRequestQueue" class="org.springframework.jndi.JndiObjectFactoryBean">
     <property name="jndiTemplate" ref="solaceJndiTemplate"/>
@@ -124,7 +128,8 @@ Destination (Queue from JndiObjectFactoryBean)
 </bean>
 ```
 
-**TSP Cardsm (tsp-request-cardsm.xml):**
+**Actual Usage (tsp-request-cardsm.xml)**
+
 ```xml
 <bean id="tspcardsm.processingRequestQueue" class="org.springframework.jndi.JndiObjectFactoryBean">
     <property name="jndiTemplate" ref="solaceJndiTemplate"/>
@@ -142,46 +147,6 @@ Destination (Queue from JndiObjectFactoryBean)
     <property name="idleTaskExecutionLimit" value="${high.usage.idle.taskexecution.limit}"/>
 </bean>
 ```
-
-#### Java Configuration (JmsConfiguration.java)
-
-```java
-@Bean
-public DefaultJmsListenerContainerFactory jmsListenerContainerFactory(
-        CachingConnectionFactory connectionFactory,
-        MessageConverter jackson2MessageConverter,
-        TaskExecutor defaultJmsExecutor) {
-    final DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
-    factory.setConnectionFactory(connectionFactory);
-    factory.setErrorHandler(new JmsExceptionHandler());
-    factory.setConcurrency(concurrentConsumersMin + "-" + concurrentConsumersMax);
-    factory.setReceiveTimeout(receiveTimeout);
-    factory.setMessageConverter(jackson2MessageConverter);
-    factory.setTaskExecutor(defaultJmsExecutor);
-    return factory;
-}
-
-@Bean
-public TaskExecutor defaultJmsExecutor() {
-    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-    executor.setCorePoolSize(concurrentConsumersMin);
-    executor.setMaxPoolSize(concurrentConsumersMax);
-    executor.setQueueCapacity(queueCapacity);
-    executor.setWaitForTasksToCompleteOnShutdown(true);
-    executor.setAwaitTerminationSeconds(timeoutInSec);
-    return executor;
-}
-```
-
-#### Properties
-
-| Property | Source | Description |
-|----------|--------|-------------|
-| concurrentConsumers | `${high.usage.concurrent.consumers}` | Initial consumer threads |
-| maxConcurrentConsumers | `${high.usage.max.concurrent.consumers}` | Maximum consumer threads |
-| idleConsumerLimit | `${high.usage.idle.consumer.limit}` | Idle consumers before scaling down |
-| receiveTimeout | `${high.usage.receive.timeout}` | Receive operation timeout |
-| idleTaskExecutionLimit | `${high.usage.idle.taskexecution.limit}` | Idle task limit |
 
 #### Responsibilities
 
@@ -204,7 +169,9 @@ Bridges JMS messages into Spring Integration channels for processing.
 DefaultMessageListenerContainer
 ```
 
-#### XML Declaration (upi-proxy-transactions.xml)
+#### Configuration (XML Only)
+
+**Actual Usage (upi-proxy-transactions.xml)**
 
 ```xml
 <int-jms:message-driven-channel-adapter
@@ -216,9 +183,8 @@ DefaultMessageListenerContainer
 />
 ```
 
-#### Additional Adapters
+**Actual Usage (fx-hub-request.xml)**
 
-**FX Hub (fx-hub-request.xml):**
 ```xml
 <int-jms:message-driven-channel-adapter
         id="fx.jmsIn"
@@ -229,7 +195,8 @@ DefaultMessageListenerContainer
 />
 ```
 
-**TSP Enroll (tsp-request-enroll.xml):**
+**Actual Usage (tsp-request-enroll.xml)**
+
 ```xml
 <int-jms:message-driven-channel-adapter
         id="tsp.jmsIn"
@@ -240,7 +207,8 @@ DefaultMessageListenerContainer
 />
 ```
 
-**TSP Cardsm (tsp-request-cardsm.xml):**
+**Actual Usage (tsp-request-cardsm.xml)**
+
 ```xml
 <int-jms:message-driven-channel-adapter
         id="tspcardsm.jmsIn"
@@ -255,7 +223,7 @@ DefaultMessageListenerContainer
 
 | Property | Value | Description |
 |----------|-------|-------------|
-| channel | jmsInChannel | Output Spring Integration channel |
+| channel | *jmsInChannel | Output Spring Integration channel |
 | extract-payload | true | Extracts message body (not full Message object) |
 | error-channel | errorChannel | Channel for error handling |
 
@@ -280,7 +248,9 @@ Provides message routing infrastructure between adapters and service activators.
 None (Infrastructure)
 ```
 
-#### XML Declaration (upi-proxy-transactions.xml)
+#### Configuration (XML Only)
+
+**Actual Usage (upi-proxy-transactions.xml)**
 
 ```xml
 <int:logging-channel-adapter id="apLog" level="INFO" log-full-message="true" logger-name="apLog"/>
@@ -294,9 +264,8 @@ None (Infrastructure)
 <int:channel id="ap.inChannel"/>
 ```
 
-#### Additional Channels
+**Actual Usage (fx-hub-request.xml)**
 
-**FX Hub (fx-hub-request.xml):**
 ```xml
 <int:logging-channel-adapter id="fxQueryLog" level="INFO" log-full-message="true" logger-name="fxQueryLog"/>
 
@@ -307,7 +276,8 @@ None (Infrastructure)
 </int:channel>
 ```
 
-**TSP Enroll (tsp-request-enroll.xml):**
+**Actual Usage (tsp-request-enroll.xml)**
+
 ```xml
 <int:logging-channel-adapter id="tspLog" level="INFO" log-full-message="true" logger-name="tspLog"/>
 
@@ -320,7 +290,8 @@ None (Infrastructure)
 <int:channel id="tsp.inChannel"/>
 ```
 
-**TSP Cardsm (tsp-request-cardsm.xml):**
+**Actual Usage (tsp-request-cardsm.xml)**
+
 ```xml
 <int:logging-channel-adapter id="tspcardsmLog" level="INFO" log-full-message="true" logger-name="tspcardsmLog"/>
 
@@ -333,7 +304,7 @@ None (Infrastructure)
 <int:channel id="tspcardsm.inChannel"/>
 ```
 
-#### Output Channels (common.xml)
+**Output Channels (common.xml)**
 
 ```xml
 <int:channel id="outputChannel" />
@@ -365,7 +336,9 @@ Input Channel
 Output Channel
 ```
 
-#### XML Declaration (upi-proxy-transactions.xml)
+#### Configuration (XML Only)
+
+**Actual Usage (upi-proxy-transactions.xml)**
 
 ```xml
 <int:json-to-object-transformer 
@@ -375,9 +348,8 @@ Output Channel
 </int:json-to-object-transformer>
 ```
 
-#### Additional Transformers
+**Actual Usage (tsp-request-enroll.xml)**
 
-**TSP Enroll (tsp-request-enroll.xml):**
 ```xml
 <int:json-to-object-transformer 
     input-channel="tsp.jmsInChannel" 
@@ -386,7 +358,8 @@ Output Channel
 </int:json-to-object-transformer>
 ```
 
-**TSP Cardsm (tsp-request-cardsm.xml):**
+**Actual Usage (tsp-request-cardsm.xml)**
+
 ```xml
 <int:json-to-object-transformer 
     input-channel="tspcardsm.jmsInChannel" 
@@ -395,7 +368,7 @@ Output Channel
 </int:json-to-object-transformer>
 ```
 
-**Note:** FX Hub flow does NOT use json-to-object-transformer - processes raw String directly.
+> **Note:** FX Hub flow does NOT use json-to-object-transformer - processes raw String directly.
 
 #### Responsibilities
 
@@ -419,7 +392,9 @@ Input Channel
 Output Channel
 ```
 
-#### XML Declaration (upi-proxy-transactions.xml)
+#### Configuration (XML Only)
+
+**Actual Usage (upi-proxy-transactions.xml)**
 
 ```xml
 <int:service-activator
@@ -430,9 +405,8 @@ Output Channel
 </int:service-activator>
 ```
 
-#### Additional Service Activators
+**Actual Usage (fx-hub-request.xml)**
 
-**FX Hub (fx-hub-request.xml):**
 ```xml
 <int:service-activator
         input-channel="fx.jmsInChannel"
@@ -442,7 +416,8 @@ Output Channel
 </int:service-activator>
 ```
 
-**TSP Enroll (tsp-request-enroll.xml):**
+**Actual Usage (tsp-request-enroll.xml)**
+
 ```xml
 <int:service-activator
         input-channel="tsp.inChannel"
@@ -452,7 +427,8 @@ Output Channel
 </int:service-activator>
 ```
 
-**TSP Cardsm (tsp-request-cardsm.xml):**
+**Actual Usage (tsp-request-cardsm.xml)**
+
 ```xml
 <int:service-activator
         input-channel="tspcardsm.inChannel"
@@ -470,7 +446,7 @@ Output Channel
 
 ---
 
-### 6. @ServiceActivator (Annotation)
+### 6. @ServiceActivator (Java Annotation)
 
 #### Purpose
 
@@ -482,14 +458,14 @@ Marks a method as a Spring Integration service activator handler.
 @Service annotation
 ```
 
-#### Java Implementation (TransactionUpiProxyProcessingService.java)
+#### Implementation (Java Only)
+
+**Actual Usage (TransactionUpiProxyProcessingService.java)**
 
 ```java
 @Service
 public class TransactionUpiProxyProcessingService {
 
-    private final Logger logger = LoggerFactory.getLogger(TransactionUpiProxyProcessingService.class);
-    
     @Autowired
     private GetUPIRequestURI getUPIRequestURI;
     
@@ -499,8 +475,9 @@ public class TransactionUpiProxyProcessingService {
     @ServiceActivator
     public UpiProxyRequest process(UpiProxyRequest upiProxyRequest) {
         logger.info("TransactionUpiProxyProcessingService process method start");
-        
+
         String upiRestUrl = getUPIRequestURI.getUpiRequestUrl(upiProxyRequest.getTransactionType());
+        
         String upiProxyResponse = "";
         try {
             upiProxyResponse = exchangeService.getUPIResponse(
@@ -513,6 +490,7 @@ public class TransactionUpiProxyProcessingService {
         } catch (Exception e) {
             logger.error("Exception occurred while processing ", e);
         }
+        
         upiProxyRequest.setUpiProxyResponseJsonData(upiProxyResponse);
         logger.info("TransactionUpiProxyProcessingService process method end");
         return upiProxyRequest;
@@ -520,14 +498,11 @@ public class TransactionUpiProxyProcessingService {
 }
 ```
 
-#### Additional Service Implementations
+**Actual Usage (FxQueryUpiProxyProcessingService.java)**
 
-**FxQueryUpiProxyProcessingService.java:**
 ```java
 @Service
 public class FxQueryUpiProxyProcessingService {
-
-    private Logger logger = LoggerFactory.getLogger(FxQueryUpiProxyProcessingService.class);
 
     @Autowired
     private ExchangeService exchangeService;
@@ -541,6 +516,7 @@ public class FxQueryUpiProxyProcessingService {
     @ServiceActivator
     public String process(String fxQueryRequest) throws ParseException {
         logger.info("FxQueryUpiProxyProcessingService process method start:" + fxQueryRequest);
+        
         FxQueryUPIRequest fxReq = (FxQueryUPIRequest) UtillComponents
                 .getObjectFromString(fxQueryRequest, FxQueryUPIRequest.class);
         String netsInsID = fxReq.getMsgInfo().getInsID();
@@ -548,19 +524,22 @@ public class FxQueryUpiProxyProcessingService {
         String upiRestUrl = getUPIRequestURI.getUpiRequestUrl("EXCHANGE_RATE_INQUIRY");
 
         String upiProxyResponse = exchangeService.getUPIResponse(fxQueryRequest, upiRestUrl, netsInsID);
+        
+        FxQueryUPIResponse fxResp = (FxQueryUPIResponse) UtillComponents
+                .getObjectFromString(upiProxyResponse, FxQueryUPIResponse.class);
         // ... process response
+        
         logger.info("FxQueryUpiProxyProcessingService process method end" + upiProxyResponse);
         return upiProxyResponse;
     }
 }
 ```
 
-**TspUpiProxyProcessingService.java:**
+**Actual Usage (TspUpiProxyProcessingService.java)**
+
 ```java
 @Service
 public class TspUpiProxyProcessingService {
-
-    private Logger logger = LoggerFactory.getLogger(TspUpiProxyProcessingService.class);
 
     @Autowired
     private ExchangeService exchangeService;
@@ -571,22 +550,43 @@ public class TspUpiProxyProcessingService {
     @Autowired
     private KeyInfoService keyInfoService;
     
+    @Value("#{${nets.upi.appgateway.instId.map}}")
+    private Map<String, String> instIdMap;
+    
     @ServiceActivator
     public String process(CardEnrollmentUPIRequestTsp tspRequest) throws ParseException {
         logger.info("TspUpiProxyProcessingService process method start");
-        // ... encryption and REST call logic
+        
+        String netsInsID = tspRequest.getMsgInfo().getInsID();
+        String upiInsId = instIdMap.get(netsInsID) == null ? netsInsID : instIdMap.get(netsInsID);
+        
+        String upiRestUrl = getUPIRequestURI.getUpiRequestUrl(tspRequest.getMsgInfo().getMsgType());
+        
+        // Retrieve keys based on insID for different banks
+        KeyInfo keyInfo = keyInfoService.findById(tspRequest.getMsgInfo().getInsID());
+        
+        // Encrypt sensitive data
+        String publicStr = keyInfo.getUaisEncPublickey();
+        if (tspRequest.getTrxInfo().getCvmInfo() != null) {
+            String cvmInforStr = UtillComponents.getStringFromObject(tspRequest.getTrxInfo().getCvmInfo());
+            String encryptCvmInfo = JweUtil.encryptJwe(cvmInforStr, publicStr, keyInfo.getUaisEncCertid());
+            // ... set encrypted value
+        }
+        
+        // Call UPI service and process response
+        String tspResponse = exchangeService.getUPIResponse(tspRequestUpiStr, upiRestUrl, keyInfo.getInsCode());
+        
         logger.info("TspUpiProxyProcessingService process method end" + tspResponse);
         return tspResponse;
     }
 }
 ```
 
-**LifecycleManagementUpiProxyProcessingService.java:**
+**Actual Usage (LifecycleManagementUpiProxyProcessingService.java)**
+
 ```java
 @Service
 public class LifecycleManagementUpiProxyProcessingService {
-
-    private Logger logger = LoggerFactory.getLogger(LifecycleManagementUpiProxyProcessingService.class);
 
     @Autowired
     private ExchangeService exchangeService;
@@ -594,12 +594,22 @@ public class LifecycleManagementUpiProxyProcessingService {
     @Autowired
     private GetUPIRequestURI getUPIRequestURI;
     
+    @Value("#{${nets.upi.appgateway.instId.map}}")
+    private Map<String, String> instIdMap;
+    
     @ServiceActivator
     public String process(LifecycleManagementUPIRequest request) throws ParseException {
         logger.info("LifecycleManagementUpiProxyProcessingService process method start");
+
         String upiRestUrl = getUPIRequestURI.getUpiRequestUrl(request.getMsgInfo().getMsgType());
+
         String requestString = UtillComponents.getStringFromObject(request);
+        String netsInsID = request.getMsgInfo().getInsID();
+        String upiInsId = instIdMap.get(netsInsID) == null ? netsInsID : instIdMap.get(netsInsID);
+        
         String tspResponse = exchangeService.getUPIResponse(requestString, upiRestUrl, request.getMsgInfo().getInsID());
+        tspResponse = tspResponse.replaceAll(upiInsId, netsInsID);
+        
         logger.info("LifecycleManagementUpiProxyProcessingService process method end" + tspResponse);
         return tspResponse;
     }
@@ -634,7 +644,9 @@ Input Channel
 Output Channel
 ```
 
-#### XML Declaration (common.xml)
+#### Configuration (XML Only)
+
+**Actual Usage (common.xml)**
 
 ```xml
 <int:object-to-json-transformer 
@@ -663,7 +675,9 @@ ConnectionFactory
 Input Channel
 ```
 
-#### XML Declaration - Dynamic Destination (common.xml)
+#### Configuration (XML Only)
+
+**Actual Usage - Dynamic Destination (common.xml)**
 
 ```xml
 <int-jms:outbound-channel-adapter 
@@ -675,22 +689,22 @@ Input Channel
 </int-jms:outbound-channel-adapter>
 ```
 
-#### XML Declaration - Static Destinations
+**Actual Usage - Static Destination (fx-hub-request.xml)**
 
-**TSP Cardsm (tsp-request-cardsm.xml):**
 ```xml
-<int:channel id="jsonJMSOutChannelCardsm" />
+<int:channel id="jsonJMSOutChannelFx" />
 
 <int-jms:outbound-channel-adapter 
-    id="outputChannelCardsm"
+    id="outputChannelFx"
     pub-sub-domain="true" 
-    destination-expression="'${solace.tsp.response.topic.name.cardsm}'"
-    channel="jsonJMSOutChannelCardsm" 
+    destination-expression="'${solace.upiproxy.to.fx.topic.name}'"
+    channel="jsonJMSOutChannelFx" 
     connection-factory="solaceCachedConnectionFactory">
 </int-jms:outbound-channel-adapter>
 ```
 
-**TSP Enroll (tsp-request-enroll.xml):**
+**Actual Usage - Static Destination (tsp-request-enroll.xml)**
+
 ```xml
 <int:channel id="jsonJMSOutChannelCardEnroll" />
 
@@ -703,15 +717,16 @@ Input Channel
 </int-jms:outbound-channel-adapter>
 ```
 
-**FX Hub (fx-hub-request.xml):**
+**Actual Usage - Static Destination (tsp-request-cardsm.xml)**
+
 ```xml
-<int:channel id="jsonJMSOutChannelFx" />
+<int:channel id="jsonJMSOutChannelCardsm" />
 
 <int-jms:outbound-channel-adapter 
-    id="outputChannelFx"
+    id="outputChannelCardsm"
     pub-sub-domain="true" 
-    destination-expression="'${solace.upiproxy.to.fx.topic.name}'"
-    channel="jsonJMSOutChannelFx" 
+    destination-expression="'${solace.tsp.response.topic.name.cardsm}'"
+    channel="jsonJMSOutChannelCardsm" 
     connection-factory="solaceCachedConnectionFactory">
 </int-jms:outbound-channel-adapter>
 ```
@@ -734,128 +749,30 @@ Input Channel
 
 ---
 
-## Message Flow Pattern: Asynchronous Request Processing
-
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                    SPRING INTEGRATION MESSAGE FLOW                               │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                  │
-│  Solace Queue                                                                    │
-│       │                                                                          │
-│       ▼                                                                          │
-│  ┌────────────────────────────┐                                                 │
-│  │ DefaultMessageListener     │  Concurrent consumers receive from queue        │
-│  │ Container                  │                                                  │
-│  └────────────────────────────┘                                                 │
-│       │                                                                          │
-│       ▼                                                                          │
-│  ┌────────────────────────────┐                                                 │
-│  │ message-driven-channel-    │  Converts JMS → Spring Integration message      │
-│  │ adapter                    │  extract-payload="true"                         │
-│  └────────────────────────────┘                                                 │
-│       │                                                                          │
-│       ▼                                                                          │
-│  ┌────────────────────────────┐                                                 │
-│  │ jmsInChannel              │  With wire-tap for logging                       │
-│  └────────────────────────────┘                                                 │
-│       │                                                                          │
-│       ▼                                                                          │
-│  ┌────────────────────────────┐                                                 │
-│  │ json-to-object-transformer│  JSON String → Domain Object                     │
-│  └────────────────────────────┘                                                 │
-│       │                                                                          │
-│       ▼                                                                          │
-│  ┌────────────────────────────┐                                                 │
-│  │ inChannel                 │                                                   │
-│  └────────────────────────────┘                                                 │
-│       │                                                                          │
-│       ▼                                                                          │
-│  ┌────────────────────────────┐                                                 │
-│  │ service-activator         │  @ServiceActivator method processes request      │
-│  │ (ProcessingService)       │  Calls external REST APIs                        │
-│  └────────────────────────────┘                                                 │
-│       │                                                                          │
-│       ▼                                                                          │
-│  ┌────────────────────────────┐                                                 │
-│  │ outputChannel             │                                                   │
-│  └────────────────────────────┘                                                 │
-│       │                                                                          │
-│       ▼                                                                          │
-│  ┌────────────────────────────┐                                                 │
-│  │ object-to-json-transformer│  Domain Object → JSON String                     │
-│  └────────────────────────────┘                                                 │
-│       │                                                                          │
-│       ▼                                                                          │
-│  ┌────────────────────────────┐                                                 │
-│  │ jmsOutChannel             │                                                   │
-│  └────────────────────────────┘                                                 │
-│       │                                                                          │
-│       ▼                                                                          │
-│  ┌────────────────────────────┐                                                 │
-│  │ outbound-channel-adapter  │  destination-expression="headers['jms_replyTo']" │
-│  └────────────────────────────┘                                                 │
-│       │                                                                          │
-│       ▼                                                                          │
-│  Solace Topic (ReplyTo)                                                         │
-│                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────┘
-```
-
----
 
 ## Flow Summary Table
 
-| Flow | Config File | Queue Property | Service | Output |
-|------|-------------|----------------|---------|--------|
-| UPI Proxy Transactions | upi-proxy-transactions.xml | `solace.upi.proxy.transaction.request.queue.name` | TransactionUpiProxyProcessingService | `headers['jms_replyTo']` |
-| FX Hub Query | fx-hub-request.xml | `solace.fx.query.request.queue.name` | FxQueryUpiProxyProcessingService | `${solace.upiproxy.to.fx.topic.name}` |
-| TSP Enroll | tsp-request-enroll.xml | `solace.tsp.request.queue.name.enroll` | TspUpiProxyProcessingService | `${solace.tsp.response.topic.name.enroll}` |
-| TSP Card Management | tsp-request-cardsm.xml | `solace.tsp.request.queue.name.cardsm` | LifecycleManagementUpiProxyProcessingService | `${solace.tsp.response.topic.name.cardsm}` |
+| Flow | Config File | Input Type | Service | Output Destination |
+|------|-------------|------------|---------|---------------------|
+| UPI Proxy Transactions | upi-proxy-transactions.xml | `UpiProxyRequest` | TransactionUpiProxyProcessingService | `headers['jms_replyTo']` (dynamic) |
+| FX Hub Query | fx-hub-request.xml | `String` (raw JSON) | FxQueryUpiProxyProcessingService | `${solace.upiproxy.to.fx.topic.name}` (static) |
+| TSP Enroll | tsp-request-enroll.xml | `CardEnrollmentUPIRequestTsp` | TspUpiProxyProcessingService | `${solace.tsp.response.topic.name.enroll}` (static) |
+| TSP Card Management | tsp-request-cardsm.xml | `LifecycleManagementUPIRequest` | LifecycleManagementUpiProxyProcessingService | `${solace.tsp.response.topic.name.cardsm}` (static) |
 
 ---
 
-## Bean Dependencies
+## Implementation Summary
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    ConnectionFactory                             │
-│                  (solaceConnectionFactory)                       │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-            ┌───────────────┴───────────────┐
-            ▼                               ▼
-┌───────────────────────────┐   ┌─────────────────────────────────┐
-│ DefaultMessageListener    │   │ outbound-channel-adapter        │
-│ Container(s)              │   │ (jmsOut, outputChannel*)        │
-│ - ap.messageListener...   │   └─────────────────────────────────┘
-│ - fx.messageListener...   │
-│ - tsp.messageListener...  │
-│ - tspcardsm.message...    │
-└───────────────┬───────────┘
-                │
-                ▼
-┌───────────────────────────┐
-│ message-driven-channel-   │
-│ adapter(s)                │
-│ - ap.jmsIn                │
-│ - fx.jmsIn                │
-│ - tsp.jmsIn               │
-│ - tspcardsm.jmsIn         │
-└───────────────┬───────────┘
-                │
-                ▼
-┌───────────────────────────┐
-│ Spring Integration        │
-│ Channels & Transformers   │
-└───────────────┬───────────┘
-                │
-                ▼
-┌───────────────────────────┐
-│ @Service beans            │
-│ (@ServiceActivator)       │
-└───────────────────────────┘
-```
+| Component | Config Type | Config File | Implementation |
+|-----------|-------------|-------------|----------------|
+| DefaultMessageListenerContainer | XML | Various flow XML files | Spring Framework |
+| message-driven-channel-adapter | XML | Various flow XML files | Spring Integration |
+| Spring Integration Channels | XML | Various flow XML files | Spring Integration |
+| json-to-object-transformer | XML | Various flow XML files | Spring Integration |
+| service-activator | XML | Various flow XML files | Spring Integration |
+| @ServiceActivator methods | Java | *ProcessingService.java | Local implementation |
+| object-to-json-transformer | XML | common.xml | Spring Integration |
+| outbound-channel-adapter | XML | Various flow XML files | Spring Integration |
 
 ---
 
@@ -863,12 +780,12 @@ Input Channel
 
 | File | Contents |
 |------|----------|
+| `spring-context.xml` | Imports all flow XML files, ConnectionFactory beans |
 | `upi-proxy-transactions.xml` | Spring Integration flow for UPI proxy transactions |
 | `fx-hub-request.xml` | Spring Integration flow for FX queries |
 | `tsp-request-enroll.xml` | Spring Integration flow for TSP enrollment |
 | `tsp-request-cardsm.xml` | Spring Integration flow for TSP card management |
-| `common.xml` | Shared output channels, object-to-json transformer, outbound-channel-adapter |
-| `JmsConfiguration.java` | DefaultJmsListenerContainerFactory, TaskExecutor |
+| `common.xml` | Shared output channels, object-to-json transformer, dynamic outbound-channel-adapter |
 
 ---
 
@@ -902,24 +819,30 @@ solace.tsp.response.topic.name.cardsm=P101/G/A/SUB/RES/TRX/UPIPROXY00/CARDSM/TSP
 ### Consumer Properties
 
 ```properties
-# High Usage (UPI Proxy, TSP)
-high.usage.concurrent.consumers=10
-high.usage.max.concurrent.consumers=20
-high.usage.idle.consumer.limit=5
+# High Usage (UPI Proxy, TSP Enroll, TSP Cardsm)
+high.usage.concurrent.consumers=4
+high.usage.max.concurrent.consumers=8
+high.usage.idle.consumer.limit=4
 high.usage.receive.timeout=5000
-high.usage.idle.taskexecution.limit=10
+high.usage.idle.taskexecution.limit=20
 
 # Low Usage (FX Hub)
 low.usage.concurrent.consumers=2
-low.usage.max.concurrent.consumers=5
+low.usage.max.concurrent.consumers=4
 low.usage.idle.consumer.limit=2
 low.usage.receive.timeout=5000
-low.usage.idle.taskexecution.limit=5
-
-# JMS Listener Factory
-jms.concurrent.consumers.min=2
-jms.concurrent.consumers.max=10
-jms.concurrent.executor.queue.capacity=100
-jms.receive.timeout=30000
-jms.listener.gracefulshutdown.timeout.second=20
+low.usage.idle.taskexecution.limit=20
 ```
+
+---
+
+## Key Differences Between Flows
+
+| Aspect | UPI Proxy Transactions | FX Hub | TSP Enroll | TSP Cardsm |
+|--------|------------------------|--------|------------|------------|
+| Input Transformation | json-to-object | None (raw String) | json-to-object | json-to-object |
+| Input Type | `UpiProxyRequest` | `String` | `CardEnrollmentUPIRequestTsp` | `LifecycleManagementUPIRequest` |
+| Output Transformation | object-to-json | None | None | None |
+| Output Destination | Dynamic (`jms_replyTo`) | Static topic | Static topic | Static topic |
+| Consumer Profile | High usage | Low usage | High usage | High usage |
+| Connection Factory | solaceConnectionFactory | solaceCachedConnectionFactory | solaceCachedConnectionFactory | solaceCachedConnectionFactory |
