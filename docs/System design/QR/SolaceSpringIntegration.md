@@ -1,5 +1,8 @@
 # Solace Spring Integration
 
+## Purpose
+Receives messages from Solace queues, transforms JSON payloads into Java objects, invokes business services, transforms responses back into JSON, and publishes responses to Solace destinations.
+
 ## Components
 <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/f9295e69-6938-4c4a-a433-8ffc71c4ab0d" />
 
