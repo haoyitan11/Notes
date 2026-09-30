@@ -31,7 +31,7 @@ Provides direct JMS-based messaging capabilities for sending and receiving messa
 8. outbound-channel-adapter
 
 #### Purpose
-Receive message from topic then convert from JSON to java object?
+Receive message from topic then convert from JSON to java object
 
 ## Database
 1. MySQL
