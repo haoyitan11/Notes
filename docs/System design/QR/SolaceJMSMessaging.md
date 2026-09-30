@@ -1,229 +1,53 @@
 # Solace JMS Messaging Components
-
-## Overview
-
-This document covers the JMS messaging components for synchronous request-reply pattern using JmsTemplate.
-
-> **Note:** JMS messaging components are configured via **XML only**. Java classes are implementation classes that use the XML-configured beans.
-
-```
-┌─────────────────────────────────────────────────────────────────────────────────────┐
-│                         SOLACE JMS MESSAGING COMPONENTS                              │
-├─────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                      │
-│  ┌─────────────────────────────────────────────────────────────────────────────┐    │
-│  │                           PRODUCER LAYER                                     │    │
-│  │                                                                              │    │
-│  │  ┌─────────────────────┐         ┌─────────────────────────────┐            │    │
-│  │  │  Producer           │         │  SolaceMessageSender        │            │    │
-│  │  │  JmsTemplate        │────────►│  (nps-qr-common library)    │            │    │
-│  │  │  (pubSubDomain=true)│         │  - sendMessages(msg, corrId,│            │    │
-│  │  └─────────────────────┘         │    replyTo, destination)    │            │    │
-│  │           │                      └─────────────────────────────┘            │    │
-│  │           │                                                                  │    │
-│  │           ▼                      ┌─────────────────────────────┐            │    │
-│  │  ┌─────────────────────┐         │  SolaceMessageSenderOneWay  │            │    │
-│  │  │  MessageCreator     │────────►│  (Local implementation)     │            │    │
-│  │  │  - createMessage()  │         │  - sendMessages(msg, dest)  │            │    │
-│  │  │  - setCorrelationID │         │  - sendMessages(msg, dest,  │            │    │
-│  │  │  - setReplyTo       │         │    correlationId)           │            │    │
-│  │  └─────────────────────┘         └─────────────────────────────┘            │    │
-│  └─────────────────────────────────────────────────────────────────────────────┘    │
-│                                                                                      │
-│  ┌─────────────────────────────────────────────────────────────────────────────┐    │
-│  │                           CONSUMER LAYER                                     │    │
-│  │                                                                              │    │
-│  │  ┌─────────────────────┐         ┌─────────────────────────────┐            │    │
-│  │  │  Receiver           │         │  SolaceMessageReceiver      │            │    │
-│  │  │  JmsTemplate        │────────►│  (nps-qr-common library)    │            │    │
-│  │  │  (defaultDestination│         │  - receiveMessage(corrId)   │            │    │
-│  │  │   receiveTimeout)   │         └─────────────────────────────┘            │    │
-│  │  └─────────────────────┘                                                     │    │
-│  │           │                      ┌─────────────────────────────┐            │    │
-│  │           │                      │  SolaceReversalMessage      │            │    │
-│  │           ▼                      │  Receiver                   │            │    │
-│  │  ┌─────────────────────┐         │  (Local implementation)     │            │    │
-│  │  │  receiveSelected()  │────────►│  - receiveMessage(corrId)   │            │    │
-│  │  │  JMS Selector:      │         │  - JMS Selector filtering   │            │    │
-│  │  │  "JMSCorrelationID  │         └─────────────────────────────┘            │    │
-│  │  │   = '<corrId>'"     │                                                     │    │
-│  │  └─────────────────────┘                                                     │    │
-│  └─────────────────────────────────────────────────────────────────────────────┘    │
-│                                                                                      │
-└─────────────────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
 ## Components
 
-### 1. Producer JmsTemplate
+### 1. SolaceMessageSender
 
 #### Purpose
 
-Provides outbound JMS operations for sending messages to topics.
+Handles outbound message sending to Solace message broker with support for request-reply patterns.
 
 #### Dependencies
 
 ```java
-CachingConnectionFactory
+JmsTemplate
 ```
 
-#### Configuration (XML Only)
+#### Source File
 
-**Actual Usage (upi-request-adapter.xml)**
+`com.nets.nps.qr.common.solace.SolaceMessageSender`
 
-```xml
-<bean id="producerJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
-    <constructor-arg ref="solaceCachedConnectionFactory" />
-    <property name="pubSubDomain" value="true" />
-</bean>
-```
-
-#### Functions Used
-
-```java
-jmsTemplate.send(String destination, MessageCreator messageCreator);
-```
-
-#### Responsibilities
-
-- Sends JMS messages to topics
-- Creates and manages JMS sessions internally
-- Provides send operations with MessageCreator callback
-
----
-
-### 2. Receiver JmsTemplate
-
-#### Purpose
-
-Provides inbound JMS receive operations with selector support.
-
-#### Dependencies
-
-```java
-CachingConnectionFactory
-Queue (from JndiObjectFactoryBean)
-```
-
-#### Configuration (XML Only)
-
-**Actual Usage (upi-request-adapter.xml)**
-
-```xml
-<bean id="upiAdapterReqMessageReceiverJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
-    <property name="connectionFactory" ref="solaceCachedConnectionFactory" />
-    <property name="defaultDestination" ref="upiAdapterReq.consumerQueue" />
-    <property name="receiveTimeout" value="${upi.message.receive.timeout}" />
-</bean>
-
-<bean id="reversalMessageReceiverJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
-    <property name="connectionFactory" ref="solaceCachedConnectionFactory" />
-    <property name="defaultDestination" ref="reversal.consumerQueue" />
-    <property name="receiveTimeout" value="${upi.message.receive.timeout}" />
-</bean>
-
-<bean id="processorMessageReceiverJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
-    <property name="connectionFactory" ref="solaceCachedConnectionFactory" />
-    <property name="defaultDestination" ref="processor.consumerQueue" />
-    <property name="receiveTimeout" value="${upi.message.receive.timeout}" />
-</bean>
-```
-
-#### Functions Used
-
-```java
-Message message = jmsTemplate.receiveSelected(String messageSelector);
-```
-
-#### Responsibilities
-
-- Receives response messages from queue
-- Filters messages using JMS selectors (correlation ID)
-- Provides synchronous receive with configurable timeout
-
----
-
-### 3. MessageCreator
-
-#### Purpose
-
-Functional interface for creating JMS messages within a session context.
-
-#### Dependencies
-
-```java
-Session (provided by JmsTemplate)
-```
-
-#### Functions Used
-
-```java
-Message createMessage(Session session) throws JMSException;
-```
-
-#### Actual Usage (SolaceMessageSenderOneWay.java)
-
-```java
-getJmsTemplate().send(destination, new MessageCreator() {
-    public Message createMessage(Session session) throws JMSException {
-        Message message = session.createTextMessage(msg);
-        message.setJMSCorrelationID(correlationId);
-        return message;
-    }
-});
-```
-
-#### Responsibilities
-
-- Creates TextMessage with payload
-- Sets JMS headers (CorrelationID, ReplyTo)
-
----
-
-### 4. SolaceMessageSenderOneWay (Local Implementation)
-
-#### Purpose
-
-Handles outbound messaging with optional correlation support.
-
-#### Dependencies
-
-```java
-JmsTemplate (producerJmsTemplate)
-```
-
-#### Configuration (XML + Java Implementation)
-
-**Bean Declaration (upi-request-adapter.xml)**
-
-```xml
-<bean id="upiDebitMessageProducer"
-    class="com.nets.upi.processing.integration.upi.proxy.service.impl.SolaceMessageSenderOneWay">
-    <property name="jmsTemplate" ref="producerJmsTemplate" />
-</bean>
-```
-
-**Java Implementation (SolaceMessageSenderOneWay.java)**
+#### Actual Implementation
 
 ```java
 @Component
-public class SolaceMessageSenderOneWay {
-    
+public class SolaceMessageSender {
+
     private JmsTemplate jmsTemplate;
 
+    public void sendMessages(final String msg, String correlationId, String replyToTopic, String destination) {
+        jmsTemplate.send(destination, new MessageCreator() {
+            public Message createMessage(Session session) throws JMSException {
+                Message message = session.createTextMessage(msg);
+                message.setJMSCorrelationID(correlationId);
+                Topic jmsReplyDestination = session.createTopic(replyToTopic);
+                message.setJMSReplyTo(jmsReplyDestination);
+                return message;
+            }
+        });
+    }
+
     public void sendMessages(final String msg, String destination) {
-        getJmsTemplate().send(destination, new MessageCreator() {
+        jmsTemplate.send(destination, new MessageCreator() {
             public Message createMessage(Session session) throws JMSException {
                 Message message = session.createTextMessage(msg);
                 return message;
             }
         });
     }
-    
+
     public void sendMessages(final String msg, String destination, String correlationId) {
-        getJmsTemplate().send(destination, new MessageCreator() {
+        jmsTemplate.send(destination, new MessageCreator() {
             public Message createMessage(Session session) throws JMSException {
                 Message message = session.createTextMessage(msg);
                 message.setJMSCorrelationID(correlationId);
@@ -242,454 +66,461 @@ public class SolaceMessageSenderOneWay {
 }
 ```
 
-#### Actual Usage (UpiDebitIssuerAdapterCommunicationHandler.java)
+#### Available Methods
 
-```java
-@Qualifier("upiDebitMessageProducer")
-@Autowired
-private SolaceMessageSenderOneWay solaceMessageSenderOneway;
-
-@Value("${solace.upiproxy.mpqrc.request.issueAdapter.topic.name}")
-private String mpqrcPaymentDestination;
-
-// Send message with correlation ID
-solaceMessageSenderOneway.sendMessages(
-    mapper.writeValueAsString(upiProxyRequest), 
-    mpqrcPaymentDestination, 
-    correlationId
-);
-```
+| Method Signature | Purpose |
+|------------------|---------|
+| `sendMessages(msg, correlationId, replyToTopic, destination)` | Send with correlation ID and reply-to topic |
+| `sendMessages(msg, destination)` | Send simple message without headers |
+| `sendMessages(msg, destination, correlationId)` | Send with correlation ID only |
 
 #### Responsibilities
 
-- Sends outbound text messages to specified topic
-- Optionally sets `JMSCorrelationID` for request-reply pattern
+- Sends text messages to Solace destinations
 
----
-
-### 5. SolaceMessageSender (External Library)
-
-#### Purpose
-
-Handles outbound messaging with reply-to topic support (from `nps-qr-common` library).
-
-#### Dependencies
-
-```java
-JmsTemplate (producerJmsTemplate)
-```
-
-#### Configuration (XML Only)
-
-**Actual Usage (upi-request-adapter.xml)**
-
-```xml
-<bean id="upiAdapterReqMessageProducer"
-    class="com.nets.nps.qr.common.solace.SolaceMessageSender">
-    <property name="jmsTemplate" ref="producerJmsTemplate" />
-</bean>
-```
-
-#### Actual Usage (UpiDebitIssuerAdapterCommunicationHandler.java)
-
-```java
-@Qualifier("upiAdapterReqMessageProducer")
-@Autowired
-private SolaceMessageSender solaceMessageSender;
-
-@Value("${solace.upiproxy.processor.request.topic.name}")
-private String processorResultDestination;
-
-@Value("${solace.upiproxy.processor.response.topic.name}")
-private String processorReplyToTopic;
-
-// Send message with correlation ID and reply-to topic
-solaceMessageSender.sendMessages(
-    mapper.writeValueAsString(upiProxyRequest), 
-    correlationId,
-    processorReplyToTopic, 
-    processorResultDestination
-);
-```
-
-#### Actual Usage (ProcessorCommunicationHandler.java)
-
-```java
-@Qualifier("upiAdapterReqMessageProducer")
-@Autowired
-private SolaceMessageSender solaceMessageSender;
-
-public UpiProxyRequest sendAndReceiveResponse(UpiProxyRequest upiProxyRequest, String correlationId) 
-        throws JsonProcessingException {
-    ObjectMapper mapper = new ObjectMapper();
-    solaceMessageSender.sendMessages(
-        mapper.writeValueAsString(upiProxyRequest), 
-        correlationId, 
-        processorReplyToTopic, 
-        processorResultDestination
-    );
-    // ... receive response
-}
-```
-
-#### Responsibilities
-
-- Sends outbound text messages
 - Sets `JMSCorrelationID` for request-reply matching
+
 - Sets `JMSReplyTo` header for response routing
 
+- Creates JMS TextMessage from string content
+
 ---
 
-### 6. SolaceMessageReceiver (External Library)
+### 2. SolaceMessageReceiver
 
 #### Purpose
 
-Receives response messages using correlation ID filtering (from `nps-qr-common` library).
+Handles inbound message receiving from Solace message broker using correlation ID filtering.
 
 #### Dependencies
 
 ```java
-JmsTemplate (Receiver JmsTemplate)
+JmsTemplate
 ```
 
-#### Configuration (XML Only)
+#### Source File
 
-**Actual Usage (upi-request-adapter.xml)**
+`com.nets.nps.qr.common.solace.SolaceMessageReceiver`
 
-```xml
-<bean id="upiAdapterReqMessageReceiver"
-    class="com.nets.nps.qr.common.solace.SolaceMessageReceiver">
-    <property name="jmsTemplate" ref="upiAdapterReqMessageReceiverJmsTemplate" />
-</bean>
-
-<bean id="reversalMessageReceiver"
-    class="com.nets.nps.qr.common.solace.SolaceMessageReceiver">
-    <property name="jmsTemplate" ref="reversalMessageReceiverJmsTemplate" />
-</bean>
-
-<bean id="processorMessageReceiver"
-    class="com.nets.nps.qr.common.solace.SolaceMessageReceiver">
-    <property name="jmsTemplate" ref="processorMessageReceiverJmsTemplate" />
-</bean>
-```
-
-#### Actual Usage (UpiDebitIssuerAdapterCommunicationHandler.java)
-
-```java
-@Qualifier("upiAdapterReqMessageReceiver")
-@Autowired
-private SolaceMessageReceiver solaceMessageReceiver;
-
-@Qualifier("processorMessageReceiver")
-@Autowired
-private SolaceMessageReceiver processorSolaceMessageReceiver;
-
-// Receive message by correlation ID
-String response = solaceMessageReceiver.receiveMessage(correlationId);
-
-// Or from processor queue
-String response = processorSolaceMessageReceiver.receiveMessage(correlationId);
-```
-
-#### Responsibilities
-
-- Receives messages filtered by correlation ID using JMS selector
-- Extracts TextMessage payload
-- Returns null if no message received within timeout
-
----
-
-### 7. SolaceReversalMessageReceiver (Local Implementation)
-
-#### Purpose
-
-Receives reversal response messages with correlation ID filtering.
-
-#### Dependencies
-
-```java
-JmsTemplate (reversalMessageReceiverJmsTemplate)
-```
-
-#### Configuration (XML + Java Implementation)
-
-**Bean Declaration (upi-request-adapter.xml)**
-
-```xml
-<bean id="solaceReversalMessageReceiver"
-    class="com.nets.upi.processing.integration.upi.proxy.service.impl.SolaceReversalMessageReceiver">
-    <property name="jmsTemplate" ref="reversalMessageReceiverJmsTemplate" />
-</bean>
-```
-
-**Java Implementation (SolaceReversalMessageReceiver.java)**
+#### Actual Implementation
 
 ```java
 @Component
-public class SolaceReversalMessageReceiver {
+public class SolaceMessageReceiver {
 
-    private static final ApsLogger logger = new ApsLogger(SolaceReversalMessageReceiver.class);
-    
-    protected JmsTemplate jmsTemplateReversal;
+    private static final Logger logger = LoggerFactory.getLogger(SolaceMessageReceiver.class);
+
+    protected JmsTemplate jmsTemplate;
 
     public String receiveMessage(String correlationId) {
-        logger.info("SolaceReversalMessageReceiver trying to receive message correlation id:" + correlationId);
+        logger.info("SolaceMessageReceiver trying to receive message with correlation id: {}", correlationId);
+
         String resCorrelationId = "JMSCorrelationID = '" + correlationId + "'";
-        Message message = getJmsTemplate().receiveSelected(resCorrelationId);
-        if (message instanceof TextMessage) {
-            TextMessage txtMsg = (TextMessage) message;
-            try {
-                Object msgTextObj = txtMsg.getText();
-                return msgTextObj.toString();
-            } catch (JMSException e) {
-                logger.error("SolaceReversalMessageReceiver Receiving message Error");
-                e.printStackTrace();
+
+        try {
+            Message message = jmsTemplate.receiveSelected(resCorrelationId);
+
+            if (Objects.nonNull(message) && message instanceof TextMessage) {
+                TextMessage txtMsg = (TextMessage) message;
+                return txtMsg.getText();
             }
+        } catch (JmsException | JMSException e) {
+            logger.error("SolaceMessageReceiver Receiving message Error with correlation id: {}", correlationId, e);
         }
+
         return null;
     }
 
     public JmsTemplate getJmsTemplate() {
-        return jmsTemplateReversal;
+        return jmsTemplate;
     }
 
     public void setJmsTemplate(JmsTemplate jmsTemplate) {
-        this.jmsTemplateReversal = jmsTemplate;
+        this.jmsTemplate = jmsTemplate;
     }
 }
 ```
 
-#### Actual Usage (UpiDebitIssuerAdapterCommunicationHandler.java)
+#### Available Methods
 
-```java
-public String sendToReversalAndGetResponse(String reversalRequestStr, String correlationId)
-        throws IOException {
-    solaceMessageSender.sendMessages(reversalRequestStr, correlationId,
-            reversalReplyToTopic, reversalDestination);
-    String response = solaceReversalMessageReceiver.receiveMessage(correlationId);
-    return response;
-}
-
-public String sendToRefundAndGetResponse(String reversalRequestStr, String correlationId)
-        throws IOException {
-    solaceMessageSender.sendMessages(reversalRequestStr, correlationId,
-            reversalReplyToTopic, reversalInternalDestination);
-    String response = solaceReversalMessageReceiver.receiveMessage(correlationId);
-    return response;
-}
-```
+| Method Signature | Purpose |
+|------------------|---------|
+| `receiveMessage(correlationId)` | Receive message filtered by correlation ID |
 
 #### Responsibilities
 
-- Receives messages filtered by correlation ID
+- Receives messages filtered by correlation ID using JMS selector
+
 - Builds JMS selector string: `JMSCorrelationID = '<correlationId>'`
+
 - Extracts text content from TextMessage
 
----
-
-### 8. Message (TextMessage)
-
-#### Purpose
-
-Carries payload and JMS headers between sender and receiver.
-
-#### JMS Headers
-
-| Header | Purpose |
-|--------|---------|
-| JMSCorrelationID | Links request to response |
-| JMSReplyTo | Destination for response |
-| JMSMessageID | Unique message identifier |
-| JMSTimestamp | Message send time |
-
-#### Actual Usage - Setting Headers (Sender)
-
-```java
-public Message createMessage(Session session) throws JMSException {
-    Message message = session.createTextMessage(msg);
-    message.setJMSCorrelationID(correlationId);
-    message.setJMSReplyTo(session.createTopic(replyToTopic));
-    return message;
-}
-```
-
-#### Actual Usage - Getting Content (Receiver)
-
-```java
-if (message instanceof TextMessage) {
-    TextMessage txtMsg = (TextMessage) message;
-    String payload = txtMsg.getText();
-}
-```
+- Returns `null` if no message received within timeout
 
 ---
 
-### 9. Session
+### 3. ReplyToJmsForwardingService
 
 #### Purpose
 
-Provides JMS context for creating messages and destinations.
+Manages JMS reply-to destination forwarding for multi-hop message routing in Spring Integration flows.
 
-#### Functions Used
+#### Dependencies
 
 ```java
-TextMessage message = session.createTextMessage(String text);
-Topic topic = session.createTopic(String topicName);
-Queue queue = session.createQueue(String queueName);
+CachingConnectionFactory (qualified as "solaceCachedConnectionFactory")
+APSRequestWrapper
 ```
 
-#### Actual Usage
+#### Source File
+
+`com.nets.nps.qr.common.integration.service.impl.ReplyToJmsForwardingService`
+
+#### Actual Implementation
 
 ```java
-getJmsTemplate().send(destination, new MessageCreator() {
-    public Message createMessage(Session session) throws JMSException {
-        Message message = session.createTextMessage(msg);
-        message.setJMSCorrelationID(correlationId);
-        return message;
+@Service
+public class ReplyToJmsForwardingService {
+
+    private static final ApsLogger logger = new ApsLogger(ReplyToJmsForwardingService.class);
+
+    @Autowired(required = false)
+    @Qualifier("solaceCachedConnectionFactory")
+    private CachingConnectionFactory connectionFactory;
+    
+    private Map<String, Destination> topicDestinationCache = new HashMap<String, Destination>();
+    
+    public Destination getCachedTopicDestination(Object responseTopicObj) throws JMSException {
+        
+        Destination returnTopicDestination = null;
+        
+        if (responseTopicObj instanceof String) {
+            String newResponseQueueString = (String) responseTopicObj;
+            
+            if (!StringUtils.isEmpty(newResponseQueueString)) {
+                
+                if (!topicDestinationCache.containsKey(newResponseQueueString)) {
+                    Connection cachedConnection = connectionFactory.createConnection();
+                    Destination newResponseTopic = cachedConnection.createSession(false, Session.AUTO_ACKNOWLEDGE)
+                            .createTopic(newResponseQueueString);
+                    
+                    topicDestinationCache.put(newResponseQueueString, newResponseTopic);
+                }
+                returnTopicDestination = topicDestinationCache.get(newResponseQueueString);
+            }
+            
+        } else if (responseTopicObj instanceof Destination) {
+            returnTopicDestination = (Destination) responseTopicObj;
+        }
+        
+        return returnTopicDestination;
     }
-});
+    
+    @ServiceActivator
+    public Message<APSRequestWrapper> handle(Message<APSRequestWrapper> input) throws BaseBusinessException, JMSException {
+
+        APSRequestWrapper payload = input.getPayload();
+        
+        Object responseTopicObj = input.getHeaders().get("responseTopic");
+        
+        Destination newResponseTopic = getCachedTopicDestination(responseTopicObj);
+        
+        Object originalJmsReplyToObj = input.getHeaders().get("jms_replyTo");
+        String originalJmsReplyTo = "";
+        
+        if (originalJmsReplyToObj instanceof String) {
+            originalJmsReplyTo = (String) originalJmsReplyToObj;
+        } else if (originalJmsReplyToObj instanceof Destination) {
+            originalJmsReplyTo = ((Destination) originalJmsReplyToObj).toString();
+        }
+
+        if (null != newResponseTopic) {
+            input = MessageBuilder.withPayload(payload)
+                    .copyHeaders(input.getHeaders())
+                    .setHeader("jms_replyTo", newResponseTopic)
+                    .build();
+            logger.info("Forwarding Reply to JMS:" + input.getHeaders());
+            
+            if (null != originalJmsReplyTo) {
+                String replyToJms = originalJmsReplyTo;
+
+                logger.info("Storing original reply to JMS:" + replyToJms, payload);
+                payload.getReplyStack().push(replyToJms);
+            }
+        }
+        
+        return input;
+    }
+}
 ```
+
+#### Available Methods
+
+| Method Signature | Purpose |
+|------------------|---------|
+| `getCachedTopicDestination(responseTopicObj)` | Get or create cached topic destination |
+| `handle(Message<APSRequestWrapper>)` | Spring Integration service activator |
+
+#### Responsibilities
+
+- Caches topic destinations for reuse
+
+- Forwards messages with modified reply-to headers
+
+- Stores original reply-to in wrapper stack for multi-hop routing
+
+- Supports Spring Integration `@ServiceActivator` pattern
 
 ---
 
-## Message Flow Pattern: Synchronous Request-Reply
+### 4. ReplyToJmsReplyService
 
+#### Purpose
+
+Restores original JMS reply-to destinations from reply stack for response routing.
+
+#### Dependencies
+
+```java
+APSRequestWrapper
 ```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                    REQUEST-REPLY MESSAGE FLOW                                    │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                  │
-│  1. Build Request                                                                │
-│     ┌────────────────────────────────────────────────┐                          │
-│     │ ObjectMapper mapper = new ObjectMapper();      │                          │
-│     │ String json = mapper.writeValueAsString(req);  │                          │
-│     │ String correlationId = UUID.randomUUID();      │                          │
-│     └────────────────────────────────────────────────┘                          │
-│                          │                                                       │
-│                          ▼                                                       │
-│  2. Send Message                                                                 │
-│     ┌────────────────────────────────────────────────┐                          │
-│     │ solaceMessageSender.sendMessages(              │                          │
-│     │     json,                                      │                          │
-│     │     correlationId,                             │                          │
-│     │     replyToTopic,                              │                          │
-│     │     destinationTopic                           │                          │
-│     │ );                                             │                          │
-│     └────────────────────────────────────────────────┘                          │
-│                          │                                                       │
-│                          ▼                                                       │
-│     ┌────────────────────────────────────────────────┐                          │
-│     │           Solace Topic (Destination)           │                          │
-│     │     JMSCorrelationID = correlationId           │                          │
-│     │     JMSReplyTo = replyToTopic                  │                          │
-│     └────────────────────────────────────────────────┘                          │
-│                          │                                                       │
-│                          ▼                                                       │
-│                   [External System Processes]                                    │
-│                          │                                                       │
-│                          ▼                                                       │
-│     ┌────────────────────────────────────────────────┐                          │
-│     │           Solace Queue (Response)              │                          │
-│     │     JMSCorrelationID = correlationId           │                          │
-│     └────────────────────────────────────────────────┘                          │
-│                          │                                                       │
-│                          ▼                                                       │
-│  3. Receive Response                                                             │
-│     ┌────────────────────────────────────────────────┐                          │
-│     │ String response = solaceMessageReceiver        │                          │
-│     │     .receiveMessage(correlationId);            │                          │
-│     │                                                │                          │
-│     │ // Internal: JMS Selector                      │                          │
-│     │ // "JMSCorrelationID = '<correlationId>'"      │                          │
-│     └────────────────────────────────────────────────┘                          │
-│                          │                                                       │
-│                          ▼                                                       │
-│  4. Process Response                                                             │
-│     ┌────────────────────────────────────────────────┐                          │
-│     │ if (response != null) {                        │                          │
-│     │     ResponseObj resp = mapper.readValue(       │                          │
-│     │         response, ResponseObj.class);          │                          │
-│     │ }                                              │                          │
-│     └────────────────────────────────────────────────┘                          │
-│                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────┘
+
+#### Source File
+
+`com.nets.nps.qr.common.integration.service.impl.ReplyToJmsReplyService`
+
+#### Actual Implementation
+
+```java
+@Service
+public class ReplyToJmsReplyService {
+
+    private static final ApsLogger logger = new ApsLogger(ReplyToJmsReplyService.class);
+
+    @ServiceActivator
+    public Message<APSRequestWrapper> handle(Message<APSRequestWrapper> input) throws BaseBusinessException {
+        APSRequestWrapper payload = input.getPayload();
+
+        if (payload.getReplyStack().isEmpty()) {
+            return null;
+        }
+
+        String replyToJmsString = payload.getReplyStack().pop();
+        logger.info("Setting Reply to JMS:" + replyToJmsString, payload);
+
+        return MessageBuilder.withPayload(payload)
+                .copyHeaders(input.getHeaders())
+                .setHeader("jms_replyTo", replyToJmsString)
+                .build();
+    }
+}
 ```
+
+#### Available Methods
+
+| Method Signature | Purpose |
+|------------------|---------|
+| `handle(Message<APSRequestWrapper>)` | Spring Integration service activator for reply routing |
+
+#### Responsibilities
+
+- Retrieves original reply-to from stack
+
+- Sets reply-to header for response routing
+
+- Returns `null` if reply stack is empty
 
 ---
 
-## Bean Dependencies
+### 5. GracefulShutdownThread
 
+#### Purpose
+
+Manages graceful shutdown of JMS message listeners to prevent message loss.
+
+#### Dependencies
+
+```java
+DefaultMessageListenerContainer
+ConfigurableApplicationContext
 ```
-┌─────────────────────────────────────┐
-│      CachingConnectionFactory       │
-│   (solaceCachedConnectionFactory)   │
-└───────────────┬─────────────────────┘
-                │
-    ┌───────────┴───────────┐
-    ▼                       ▼
-┌─────────────────┐   ┌─────────────────────────────┐
-│ Producer        │   │ Receiver JmsTemplate(s)     │
-│ JmsTemplate     │   │ - upiAdapterReqMessage...   │
-│                 │   │ - reversalMessage...        │
-└────────┬────────┘   │ - processorMessage...       │
-         │            └──────────────┬──────────────┘
-         │                           │
-    ┌────┴────┐              ┌───────┴───────┐
-    ▼         ▼              ▼               ▼
-┌────────┐ ┌────────┐   ┌────────────┐  ┌────────────┐
-│Solace  │ │Solace  │   │Solace      │  │Solace      │
-│Message │ │Message │   │Message     │  │Reversal    │
-│Sender  │ │Sender  │   │Receiver    │  │Message     │
-│        │ │OneWay  │   │(external)  │  │Receiver    │
-└────────┘ └────────┘   └────────────┘  └────────────┘
+
+#### Source File
+
+`com.nets.nps.qr.common.integration.service.impl.GracefulShutdownThread`
+
+#### Actual Implementation
+
+```java
+public class GracefulShutdownThread extends Thread {
+
+    private static final Logger logger = LoggerFactory.getLogger(GracefulShutdownThread.class);
+    
+    private List<DefaultMessageListenerContainer> jmsMessageListeners = new ArrayList<>();
+    private ConfigurableApplicationContext context;
+    
+    public GracefulShutdownThread(ConfigurableApplicationContext context, 
+            DefaultMessageListenerContainer... jmsMessageListeners) {
+        this.context = context;
+        this.jmsMessageListeners = Arrays.asList(jmsMessageListeners);
+    }
+    
+    public GracefulShutdownThread(ConfigurableApplicationContext context) {
+        this.context = context;
+        Arrays.asList(context.getBeanNamesForType(DefaultMessageListenerContainer.class))
+            .forEach(s -> this.jmsMessageListeners.add(
+                    (DefaultMessageListenerContainer) context.getBean(s)));
+    }
+    
+    public void run() {
+
+        for (DefaultMessageListenerContainer listener : jmsMessageListeners) {
+            listener.stop();
+        }
+        
+        try {
+            logger.info("Sleep start");
+            sleep(20000);
+            logger.info("Sleep end. System Shutdown Complete");
+        } catch (Throwable e) {
+            logger.error("Sleep interupted", e);
+        }
+        
+        context.close();
+    }
+}
 ```
+
+#### Available Constructors
+
+| Constructor | Purpose |
+|-------------|---------|
+| `GracefulShutdownThread(context, listeners...)` | With explicit listener list |
+| `GracefulShutdownThread(context)` | Auto-discover all listeners from context |
+
+#### Responsibilities
+
+- Stops all message listener containers
+
+- Provides 20-second grace period before shutdown
+
+- Closes application context
+
+- Auto-discovers `DefaultMessageListenerContainer` beans if not specified
 
 ---
 
-## Implementation Summary
+---
 
-| Component | Config Type | Config File | Implementation |
-|-----------|-------------|-------------|----------------|
-| Producer JmsTemplate | XML | upi-request-adapter.xml | Spring Framework |
-| Receiver JmsTemplate(s) | XML | upi-request-adapter.xml | Spring Framework |
-| SolaceMessageSender | XML | upi-request-adapter.xml | nps-qr-common library |
-| SolaceMessageSenderOneWay | XML + Java | upi-request-adapter.xml | Local implementation |
-| SolaceMessageReceiver | XML | upi-request-adapter.xml | nps-qr-common library |
-| SolaceReversalMessageReceiver | XML + Java | upi-request-adapter.xml | Local implementation |
+## JMS Headers Reference
+
+| Header | Purpose | Set By |
+|--------|---------|--------|
+| `JMSCorrelationID` | Links request to response | SolaceMessageSender |
+| `JMSReplyTo` | Destination for response | SolaceMessageSender |
+| `JMSMessageID` | Unique message identifier | Solace Broker |
+| `JMSTimestamp` | Message send time | Solace Broker |
+| `jms_replyTo` | Spring Integration header | ReplyToJmsForwardingService |
 
 ---
 
-## Configuration Files
+## Configuration by Consuming Projects
 
-| File | Contents |
-|------|----------|
-| `upi-request-adapter.xml` | Producer/Receiver JmsTemplate beans, SolaceMessageSender/Receiver beans |
+Since this is a library, consuming projects must configure the JMS beans.
+
+### Option A: XML Configuration
+
+```xml
+<!-- Connection Factory -->
+<bean id="solaceCachedConnectionFactory" 
+      class="org.springframework.jms.connection.CachingConnectionFactory">
+    <constructor-arg ref="solaceConnectionFactory" />
+    <property name="sessionCacheSize" value="10" />
+</bean>
+
+<!-- Producer JmsTemplate -->
+<bean id="producerJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+    <constructor-arg ref="solaceCachedConnectionFactory" />
+    <property name="pubSubDomain" value="true" />
+</bean>
+
+<!-- Receiver JmsTemplate -->
+<bean id="receiverJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+    <property name="connectionFactory" ref="solaceCachedConnectionFactory" />
+    <property name="defaultDestination" ref="responseQueue" />
+    <property name="receiveTimeout" value="${message.receive.timeout}" />
+</bean>
+
+<!-- Message Sender Bean -->
+<bean id="solaceMessageSender" 
+      class="com.nets.nps.qr.common.solace.SolaceMessageSender">
+    <property name="jmsTemplate" ref="producerJmsTemplate" />
+</bean>
+
+<!-- Message Receiver Bean -->
+<bean id="solaceMessageReceiver" 
+      class="com.nets.nps.qr.common.solace.SolaceMessageReceiver">
+    <property name="jmsTemplate" ref="receiverJmsTemplate" />
+</bean>
+```
+
+### Option B: Java Configuration
+
+```java
+@Configuration
+public class SolaceConfig {
+
+    @Bean
+    @Qualifier("solaceCachedConnectionFactory")
+    public CachingConnectionFactory solaceCachedConnectionFactory(
+            ConnectionFactory solaceConnectionFactory) {
+        CachingConnectionFactory factory = new CachingConnectionFactory();
+        factory.setTargetConnectionFactory(solaceConnectionFactory);
+        factory.setSessionCacheSize(10);
+        return factory;
+    }
+
+    @Bean
+    public JmsTemplate producerJmsTemplate(
+            @Qualifier("solaceCachedConnectionFactory") CachingConnectionFactory cf) {
+        JmsTemplate template = new JmsTemplate(cf);
+        template.setPubSubDomain(true);
+        return template;
+    }
+
+    @Bean
+    public JmsTemplate receiverJmsTemplate(
+            @Qualifier("solaceCachedConnectionFactory") CachingConnectionFactory cf,
+            @Value("${message.receive.timeout}") long timeout) {
+        JmsTemplate template = new JmsTemplate(cf);
+        template.setReceiveTimeout(timeout);
+        return template;
+    }
+
+    @Bean
+    public SolaceMessageSender solaceMessageSender(JmsTemplate producerJmsTemplate) {
+        SolaceMessageSender sender = new SolaceMessageSender();
+        sender.setJmsTemplate(producerJmsTemplate);
+        return sender;
+    }
+
+    @Bean
+    public SolaceMessageReceiver solaceMessageReceiver(JmsTemplate receiverJmsTemplate) {
+        SolaceMessageReceiver receiver = new SolaceMessageReceiver();
+        receiver.setJmsTemplate(receiverJmsTemplate);
+        return receiver;
+    }
+}
+```
+
+## Component Summary
+
+| Component | Type | Purpose |
+|-----------|------|---------|
+| SolaceMessageSender | Producer | Sends messages with correlation and reply-to support |
+| SolaceMessageReceiver | Consumer | Receives messages by correlation ID selector |
+| ReplyToJmsForwardingService | Integration | Multi-hop reply-to forwarding |
+| ReplyToJmsReplyService | Integration | Reply stack management |
+| GracefulShutdownThread | Lifecycle | Clean listener shutdown |
 
 ---
-
-## Properties Reference
-
-### Queue/Topic Properties
-
-```properties
-# Debit Request/Response
-solace.upiproxy.request.issueAdapter.topic.name=P101/G/A/LOC/REQ/TRX/UPIADP00/PAY/UPI/NIL/V1/JSON/>
-solace.upiproxy.mpqrc.request.issueAdapter.topic.name=P101/G/A/LOC/REQ/TRX/UPIADP00/PAY/DEBITREQUEST/NIL/V1/JSON/>
-solace.upiproxy.debit.response.queue.name=Q.CPS.00.P101.RES.JSON.LOC.DEBITRESPONSE.CPSPRO.CPSADP
-
-# Processor Communication
-solace.upiproxy.processor.request.topic.name=P101/G/A/LOC/REQ/TRX/UPIADP00/PAY/UPI/NIL/V1/JSON/>
-solace.upiproxy.processor.response.queue.name=Q.CPS.00.P101.RES.JSON.LOC.UPI.CPSADP.UPIPROXY
-solace.upiproxy.processor.response.topic.name=P101/G/A/LOC/RES/TRX/UPIADP00/PAY/UPI/NIL/V1/JSON/>
-
-# Reversal Communication
-solace.upiproxy.request.reversal.topic.name=P101/G/A/LOC/REQ/TRX/CPSINB00/PAY/INTERNALREVERSAL/NIL/V1/JSON/>
-solace.upiproxy.adapter.request.reversal.topic.name=P101/G/A/LOC/REQ/TRX/CPSPRO00/PAY/PAYLAH/NIL/V1/JSON/>
-solace.upiproxy.response.reversal.topic.name=P101/G/A/LOC/RES/TRX/CPSADP00/PAY/DEBITRESPONSE/NIL/V1/JSON/>
-```
-
-### Timeout Properties
-
-```properties
-upi.message.receive.timeout=30000
-```
