@@ -1,56 +1,5 @@
 # Solace Spring Integration
 
-## Overview
-
-This document covers the Spring Integration components for asynchronous message processing flows.
-
-> **Note:** Spring Integration flows are configured via **XML only**. Java classes with `@ServiceActivator` are service implementations that process messages from the XML-configured flows.
-
-```
-┌─────────────────────────────────────────────────────────────────────────────────────┐
-│                      SOLACE SPRING INTEGRATION COMPONENTS                            │
-├─────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                      │
-│  ┌─────────────────────────────────────────────────────────────────────────────┐    │
-│  │                         INBOUND LAYER                                        │    │
-│  │                                                                              │    │
-│  │  Solace Queue ──► DefaultMessageListenerContainer ──► message-driven-       │    │
-│  │                   (Concurrent Consumers)              channel-adapter        │    │
-│  │                                                       (extract-payload=true) │    │
-│  └─────────────────────────────────────────────────────────────────────────────┘    │
-│                                          │                                           │
-│                                          ▼                                           │
-│  ┌─────────────────────────────────────────────────────────────────────────────┐    │
-│  │                         CHANNEL LAYER                                        │    │
-│  │                                                                              │    │
-│  │  jmsInChannel ──► json-to-object-transformer ──► inChannel                   │    │
-│  │  (wire-tap)       (JSON → Domain Object)                                     │    │
-│  └─────────────────────────────────────────────────────────────────────────────┘    │
-│                                          │                                           │
-│                                          ▼                                           │
-│  ┌─────────────────────────────────────────────────────────────────────────────┐    │
-│  │                         PROCESSING LAYER                                     │    │
-│  │                                                                              │    │
-│  │  service-activator ──► @ServiceActivator method ──► Business Logic          │    │
-│  │  (ProcessingService)   process(Request)              (REST API calls)        │    │
-│  └─────────────────────────────────────────────────────────────────────────────┘    │
-│                                          │                                           │
-│                                          ▼                                           │
-│  ┌─────────────────────────────────────────────────────────────────────────────┐    │
-│  │                         OUTBOUND LAYER                                       │    │
-│  │                                                                              │    │
-│  │  outputChannel ──► object-to-json-transformer ──► outbound-channel-adapter  │    │
-│  │                    (Domain Object → JSON)         (destination-expression)   │    │
-│  └─────────────────────────────────────────────────────────────────────────────┘    │
-│                                          │                                           │
-│                                          ▼                                           │
-│                                   Solace Topic                                       │
-│                                                                                      │
-└─────────────────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
 ## Components
 
 ### 1. DefaultMessageListenerContainer
