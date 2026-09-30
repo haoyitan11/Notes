@@ -22,8 +22,8 @@ More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20desi
 2. message-driven-channel-adapter
 3. Spring Integration Channels
 4. json-to-object-transformer
-5. service-activator
-6. @ServiceActivator
+5. service-activator (XML config)
+6. @ServiceActivator (Java annotation
 7. object-to-json-transformer
 8. outbound-channel-adapter
 
