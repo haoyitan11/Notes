@@ -312,37 +312,6 @@ JndiTemplate
 - Enables dynamic destination lookup
 - Supports both Queue and Topic resolution
 
----
-
-## Bean Dependencies
-
-```
-┌─────────────────────────┐
-│     JndiTemplate        │  ◄── Root Bean (No Dependencies)
-│  (solaceJndiTemplate)   │
-└───────────┬─────────────┘
-            │
-            ▼
-┌───────────────────────────────────────────────────────────┐
-│                  JndiObjectFactoryBean                     │
-├───────────────────────────┬───────────────────────────────┤
-│  solaceConnectionFactory  │  *.consumerQueue              │
-│  (ConnectionFactory)      │  (Queue lookups)              │
-└───────────────────────────┴───────────────────────────────┘
-            │
-            ▼
-┌─────────────────────────────────┐
-│    CachingConnectionFactory     │
-│  (solaceCachedConnectionFactory)│
-└─────────────────────────────────┘
-            │
-            ▼
-    [JMS Messaging Layer]
-    [Spring Integration Layer]
-```
-
----
-
 ## Configuration Files
 
 | File | Contents |
