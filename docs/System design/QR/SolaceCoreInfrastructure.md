@@ -1,5 +1,8 @@
 # Solace Core Infrastructure
 
+## Purpose
+Provides the foundational connectivity layer between the application and Solace Broker.
+
 ## Components
 <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/e8c0924f-7ecf-490d-b328-478a48920e35" />
 
