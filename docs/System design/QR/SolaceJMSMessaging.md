@@ -1,4 +1,8 @@
 # Solace JMS Messaging Components
+
+## Purpose
+Provides direct JMS-based messaging capabilities for sending and receiving messages through Solace.
+
 ## Components
 
 <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/9160b1e9-4e71-48a0-a81c-6fea3746215a" />
