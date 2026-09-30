@@ -1,6 +1,8 @@
 # Payment Service Provider QR System Design
 ## Solace Message Broker
 ### Solace Core Infrasutrcture Components
+### Solace JMS Messaging Components
+### Solace Spring Integration Components
 
 ## Database
 1. MySQL
