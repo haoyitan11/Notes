@@ -784,14 +784,3 @@ low.usage.idle.taskexecution.limit=20
 ```
 
 ---
-
-## Key Differences Between Flows
-
-| Aspect | UPI Proxy Transactions | FX Hub | TSP Enroll | TSP Cardsm |
-|--------|------------------------|--------|------------|------------|
-| Input Transformation | json-to-object | None (raw String) | json-to-object | json-to-object |
-| Input Type | `UpiProxyRequest` | `String` | `CardEnrollmentUPIRequestTsp` | `LifecycleManagementUPIRequest` |
-| Output Transformation | object-to-json | None | None | None |
-| Output Destination | Dynamic (`jms_replyTo`) | Static topic | Static topic | Static topic |
-| Consumer Profile | High usage | Low usage | High usage | High usage |
-| Connection Factory | solaceConnectionFactory | solaceCachedConnectionFactory | solaceCachedConnectionFactory | solaceCachedConnectionFactory |
