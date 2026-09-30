@@ -1,11 +1,12 @@
 # Solace Core Infrastructure
 ## Components
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/f1d2ee7a-506a-42b6-9c64-afabdb952d23" />
 
 ### 1. JndiTemplate
 
 #### Purpose
 
-Provides JNDI context for Solace resource lookup with SSL certificate authentication support.
+Provides JNDI context for Solace resource lookup.
 
 #### Dependencies
 
@@ -13,165 +14,45 @@ Provides JNDI context for Solace resource lookup with SSL certificate authentica
 None (Root Bean)
 ```
 
-#### Configuration Source
-
-**Java Configuration (Production - SolaceConfiguration.java):**
+#### Java Declaration (SolaceConfiguration.java)
 
 ```java
-@Configuration
-@Profile("!local")
-public class SolaceConfiguration {
+@Bean
+public JndiTemplate jndiTemplate() {
+    Properties props = new Properties();
+    props.put(InitialContext.PROVIDER_URL, url);
+    props.put(InitialContext.INITIAL_CONTEXT_FACTORY, SolJNDIInitialContextFactory.class.getName());
+    props.put(InitialContext.SECURITY_PRINCIPAL, username);
+    props.put(SupportedProperty.SOLACE_JMS_VPN, vpn);
+    // SSL properties for production...
 
-    @Value("${solace.url}")
-    private String url;
-
-    @Value("${solace.username}")
-    private String username;
-
-    @Value("${solace.vpn}")
-    private String vpn;
-
-    @Value("${solace.jms.ssl.validate_certificate}")
-    private String certificate;
-
-    @Value("${solace.jms.ssl.keystore}")
-    private String keystore;
-
-    @Value("${solace.jms.ssl.keystore.password}")
-    private String keystorePassword;
-
-    @Value("${solace.jms.ssl.authentication.scheme}")
-    private String authenticationScheme;
-
-    @Value("${solace.jms.ssl.privatekey.alias}")
-    private String privateKeyAlias;
-
-    @Value("${solace.jms.ssl.privatekey.password}")
-    private String privateKeyPassword;
-
-    @Value("${solace.jms.ssl.truststore}")
-    private String trustStore;
-
-    @Value("${solace.jms.ssl.truststore.password}")
-    private String trustStorePassword;
-
-    @Bean
-    public JndiTemplate jndiTemplate() {
-        Properties props = new Properties();
-        props.put(InitialContext.PROVIDER_URL, url);
-        props.put(InitialContext.INITIAL_CONTEXT_FACTORY, SolJNDIInitialContextFactory.class.getName());
-        props.put(InitialContext.SECURITY_PRINCIPAL, username);
-        props.put(SupportedProperty.SOLACE_JMS_VPN, vpn);
-        props.put(SupportedProperty.SOLACE_JMS_SSL_VALIDATE_CERTIFICATE, true);
-        props.put(SupportedProperty.SOLACE_JMS_SSL_VALIDATE_CERTIFICATE_HOST, false);
-        props.put(SupportedProperty.SOLACE_JMS_AUTHENTICATION_SCHEME, authenticationScheme);
-        props.put(SupportedProperty.SOLACE_JMS_SSL_KEY_STORE, keystore);
-        props.put(SupportedProperty.SOLACE_JMS_SSL_KEY_STORE_PASSWORD, keystorePassword);
-        props.put(SupportedProperty.SOLACE_JMS_SSL_PRIVATE_KEY_ALIAS, privateKeyAlias);
-        props.put(SupportedProperty.SOLACE_JMS_SSL_PRIVATE_KEY_PASSWORD, privateKeyPassword);
-        props.put(SupportedProperty.SOLACE_JMS_SSL_TRUST_STORE, trustStore);
-        props.put(SupportedProperty.SOLACE_JMS_SSL_TRUST_STORE_PASSWORD, trustStorePassword);
-
-        JndiTemplate jndi = new JndiTemplate();
-        jndi.setEnvironment(props);
-        return jndi;
-    }
+    JndiTemplate jndi = new JndiTemplate();
+    jndi.setEnvironment(props);
+    return jndi;
 }
 ```
 
-**Java Configuration (Local - LocalSolaceConfiguration.java):**
+#### Functions Used
 
 ```java
-@Configuration
-@Profile("local")
-public class LocalSolaceConfiguration {
-
-    @Value("${solace.url}")
-    private String url;
-
-    @Value("${solace.username}")
-    private String username;
-
-    @Value("${solace.vpn}")
-    private String vpn;
-
-    @Value("${solace.password}")
-    private String password;
-
-    @Bean
-    public JndiTemplate jndiTemplate() {
-        Properties props = new Properties();
-        props.put(InitialContext.PROVIDER_URL, url);
-        props.put(InitialContext.INITIAL_CONTEXT_FACTORY, SolJNDIInitialContextFactory.class.getName());
-        props.put(InitialContext.SECURITY_PRINCIPAL, username);
-        props.put(InitialContext.SECURITY_CREDENTIALS, password);
-        props.put(SupportedProperty.SOLACE_JMS_VPN, vpn);
-
-        JndiTemplate jndi = new JndiTemplate();
-        jndi.setEnvironment(props);
-        return jndi;
-    }
-}
-```
-
-**XML Declaration (spring-context.xml) - Alternative Profile-based:**
-
-```xml
-<beans profile="dev">
-    <bean id="solaceJndiTemplate" class="org.springframework.jndi.JndiTemplate">
-        <property name="environment">
-            <map>
-                <entry key="java.naming.provider.url" value="${solace.url}" />
-                <entry key="java.naming.factory.initial" 
-                       value="com.solacesystems.jndi.SolJNDIInitialContextFactory" />
-                <entry key="java.naming.security.principal" value="${solace.username}" />
-                <entry key="java.naming.security.credentials" value="${solace.password}" />
-                <entry key="Solace_JMS_VPN" value="${solace.vpn}" />
-            </map>
-        </property>
-    </bean>
-</beans>
-
-<beans profile="SIT,UAT,PROD">
-    <bean id="solaceJndiTemplate" class="org.springframework.jndi.JndiTemplate">
-        <property name="environment">
-            <map>
-                <entry key="java.naming.provider.url" value="${solace.url}" />
-                <entry key="java.naming.factory.initial" 
-                       value="com.solacesystems.jndi.SolJNDIInitialContextFactory" />
-                <entry key="java.naming.security.principal" value="${solace.username}" />
-                <entry key="Solace_JMS_VPN" value="${solace.vpn}" />
-                <entry key="Solace_JMS_SSL_ValidateCertificate" value-type="java.lang.Boolean" 
-                       value="${Solace_JMS_SSL_ValidateCertificate}" />
-                <entry key="Solace_JMS_SSL_ValidateCertificateHost" value-type="java.lang.Boolean" 
-                       value="false" />
-                <entry key="Solace_JMS_SSL_KeyStore" value="${Solace_JMS_SSL_KeyStore}" />
-                <entry key="Solace_JMS_SSL_KeyStorePassword" value="${Solace_JMS_SSL_KeyStorePassword}" />
-                <entry key="Solace_JMS_Authentication_Scheme" value="${Solace_JMS_Authentication_Scheme}" />
-                <entry key="Solace_JMS_SSL_PrivateKeyAlias" value="${Solace_JMS_SSL_PrivateKeyAlias}" />
-                <entry key="Solace_JMS_SSL_TrustStore" value="${Solace_JMS_SSL_TrustStore}" />
-                <entry key="Solace_JMS_SSL_TrustStorePassword" value="${Solace_JMS_SSL_TrustStorePassword}" />
-                <entry key="Solace_JMS_SSL_PrivateKeyPassword" value="${Solace_JMS_SSL_PrivateKeyPassword}" />
-            </map>
-        </property>
-    </bean>
-</beans>
+JndiTemplate jndi = new JndiTemplate();
+jndi.setEnvironment(Properties props);
 ```
 
 #### Responsibilities
 
 - Creates JNDI context with Solace broker connection details
 - Provides lookup capability for Solace-managed resources
-- Configures authentication (username/password for local, SSL certificates for production)
+- Configures authentication credentials
 - Establishes connection to Solace VPN
 
 ---
 
-### 2. JndiObjectFactoryBean
+### 2. JndiObjectFactoryBean (ConnectionFactory)
 
 #### Purpose
 
-Looks up ConnectionFactory and Queue from Solace JNDI.
+Looks up ConnectionFactory from Solace JNDI.
 
 #### Dependencies
 
@@ -189,7 +70,7 @@ JndiTemplate
 </bean>
 ```
 
-#### Java Configuration (JmsConfiguration.java)
+#### Java Declaration (JmsConfiguration.java)
 
 ```java
 @Bean
@@ -202,10 +83,44 @@ public JndiObjectFactoryBean connectionFactory(JndiTemplate jndiTemplate) {
 }
 ```
 
-#### Actual Usage - Queue Lookup (upi-request-adapter.xml)
+#### Functions Used
+
+```java
+JndiObjectFactoryBean jndiFactory = new JndiObjectFactoryBean();
+jndiFactory.setJndiTemplate(JndiTemplate jndiTemplate);
+jndiFactory.setJndiName(String jndiName);
+jndiFactory.setProxyInterface(Class<?> proxyInterface);
+```
+
+#### Responsibilities
+
+- Retrieves Solace ConnectionFactory via JNDI lookup
+- Exposes ConnectionFactory as Spring bean
+- Acts as bridge between JNDI and Spring context
+
+---
+
+### 3. JndiObjectFactoryBean (Queue)
+
+#### Purpose
+
+Looks up Queue destinations from Solace JNDI.
+
+#### Dependencies
+
+```java
+JndiTemplate
+```
+
+#### Actual Usage (upi-request-adapter.xml)
 
 ```xml
 <bean id="upiAdapterReq.consumerQueue" class="org.springframework.jndi.JndiObjectFactoryBean">
+    <property name="jndiTemplate" ref="solaceJndiTemplate" />
+    <property name="jndiName" value="${solace.upiproxy.debit.response.queue.name}" />
+</bean>
+
+<bean id="reversal.consumerQueue" class="org.springframework.jndi.JndiObjectFactoryBean">
     <property name="jndiTemplate" ref="solaceJndiTemplate" />
     <property name="jndiName" value="${solace.upiproxy.debit.response.queue.name}" />
 </bean>
@@ -214,26 +129,48 @@ public JndiObjectFactoryBean connectionFactory(JndiTemplate jndiTemplate) {
     <property name="jndiTemplate" ref="solaceJndiTemplate" />
     <property name="jndiName" value="${solace.upiproxy.processor.response.queue.name}" />
 </bean>
+```
 
-<bean id="reversal.consumerQueue" class="org.springframework.jndi.JndiObjectFactoryBean">
-    <property name="jndiTemplate" ref="solaceJndiTemplate" />
-    <property name="jndiName" value="${solace.upiproxy.debit.response.queue.name}" />
+#### Actual Usage (Spring Integration XML files)
+
+```xml
+<!-- upi-proxy-transactions.xml -->
+<bean id="ap.processingRequestQueue" class="org.springframework.jndi.JndiObjectFactoryBean">
+    <property name="jndiTemplate" ref="solaceJndiTemplate"/>
+    <property name="jndiName" value="${solace.upi.proxy.transaction.request.queue.name}"/>
+</bean>
+
+<!-- fx-hub-request.xml -->
+<bean id="fx.processingRequestQueue" class="org.springframework.jndi.JndiObjectFactoryBean">
+    <property name="jndiTemplate" ref="solaceJndiTemplate"/>
+    <property name="jndiName" value="${solace.fx.query.request.queue.name}"/>
+</bean>
+
+<!-- tsp-request-enroll.xml -->
+<bean id="tsp.processingRequestQueue" class="org.springframework.jndi.JndiObjectFactoryBean">
+    <property name="jndiTemplate" ref="solaceJndiTemplate"/>
+    <property name="jndiName" value="${solace.tsp.request.queue.name.enroll}"/>
+</bean>
+
+<!-- tsp-request-cardsm.xml -->
+<bean id="tspcardsm.processingRequestQueue" class="org.springframework.jndi.JndiObjectFactoryBean">
+    <property name="jndiTemplate" ref="solaceJndiTemplate"/>
+    <property name="jndiName" value="${solace.tsp.request.queue.name.cardsm}"/>
 </bean>
 ```
 
 #### Responsibilities
 
-- Retrieves Solace-managed JMS objects via JNDI lookup
-- Exposes ConnectionFactory and Queue as Spring beans
-- Acts as bridge between JNDI and Spring context
+- Retrieves Solace Queue via JNDI lookup
+- Exposes Queue as Spring bean for JmsTemplate and Listener containers
 
 ---
 
-### 3. CachingConnectionFactory
+### 4. CachingConnectionFactory
 
 #### Purpose
 
-Acts as the central JMS connection manager that caches connections and sessions for performance.
+Caches connections and sessions for performance.
 
 #### Dependencies
 
@@ -254,7 +191,7 @@ ConnectionFactory (from JndiObjectFactoryBean)
 </bean>
 ```
 
-#### Java Configuration (JmsConfiguration.java)
+#### Java Declaration (JmsConfiguration.java)
 
 ```java
 @Bean
@@ -268,58 +205,67 @@ public CachingConnectionFactory cachedConnectionFactoryfinal(ConnectionFactory c
 }
 ```
 
-#### Properties
+#### Functions Used
 
-| Property | Value | Description |
-|----------|-------|-------------|
-| sessionCacheSize | 10 | Number of JMS sessions to cache |
-| reconnectOnException | true | Auto-reconnect on connection failure |
-| cacheConsumers | false | Consumer caching disabled for dynamic destinations |
+```java
+CachingConnectionFactory cachedConnectionFactory = new CachingConnectionFactory();
+cachedConnectionFactory.setTargetConnectionFactory(ConnectionFactory connectionFactory);
+cachedConnectionFactory.setSessionCacheSize(int sessionCacheSize);
+cachedConnectionFactory.setReconnectOnException(boolean reconnectOnException);
+cachedConnectionFactory.setCacheConsumers(boolean cacheConsumers);
+```
 
 #### Responsibilities
 
 - Wraps Solace ConnectionFactory
 - Caches JMS sessions for improved performance
 - Manages connection lifecycle with auto-reconnect
-- Provides thread-safe session management
 
 ---
 
-### 4. JndiDestinationResolver
+## Bean Dependencies
 
-#### Purpose
-
-Resolves destination names to actual Solace Queue/Topic objects via JNDI.
-
-#### Dependencies
-
-```java
-JndiTemplate
+```
+┌─────────────────────────┐
+│     JndiTemplate        │  ◄── Root Bean (No Dependencies)
+│  (solaceJndiTemplate)   │
+└───────────┬─────────────┘
+            │
+            ├───────────────────────────────────────────────────────┐
+            │                                                       │
+            ▼                                                       ▼
+┌───────────────────────────────┐       ┌───────────────────────────────────────┐
+│  JndiObjectFactoryBean        │       │  JndiObjectFactoryBean (Queues)       │
+│  (solaceConnectionFactory)    │       │  - upiAdapterReq.consumerQueue        │
+│  [ConnectionFactory Lookup]   │       │  - reversal.consumerQueue             │
+└───────────────┬───────────────┘       │  - processor.consumerQueue            │
+                │                       │  - ap.processingRequestQueue          │
+                ▼                       │  - fx.processingRequestQueue          │
+┌───────────────────────────────┐       │  - tsp.processingRequestQueue         │
+│  CachingConnectionFactory     │       │  - tspcardsm.processingRequestQueue   │
+│  (solaceCachedConnectionFactory)      └───────────────────────────────────────┘
+│  [Session Caching]            │
+└───────────────┬───────────────┘
+                │
+                ▼
+        [JMS Messaging Layer]
+        [Spring Integration Layer]
 ```
 
-#### XML Declaration (spring-context.xml)
-
-```xml
-<bean id="jndiDestinationResolver"
-      class="org.springframework.jms.support.destination.JndiDestinationResolver">
-    <property name="jndiTemplate" ref="solaceJndiTemplate"/>
-</bean>
-```
-
-#### Responsibilities
-
-- Resolves string destination names to JMS Destination objects
-- Enables dynamic destination lookup
-- Supports both Queue and Topic resolution
+---
 
 ## Configuration Files
 
 | File | Contents |
 |------|----------|
-| `SolaceConfiguration.java` | JndiTemplate bean (Production with SSL) |
-| `LocalSolaceConfiguration.java` | JndiTemplate bean (Local with password) |
-| `JmsConfiguration.java` | ConnectionFactory, CachingConnectionFactory beans |
-| `spring-context.xml` | XML-based JndiTemplate (profile-based), ConnectionFactory, CachingConnectionFactory |
+| `SolaceConfiguration.java` | JndiTemplate bean |
+| `JmsConfiguration.java` | JndiObjectFactoryBean (ConnectionFactory), CachingConnectionFactory |
+| `spring-context.xml` | XML-based beans (JndiTemplate, ConnectionFactory, CachingConnectionFactory) |
+| `upi-request-adapter.xml` | JndiObjectFactoryBean (Consumer Queues) |
+| `upi-proxy-transactions.xml` | JndiObjectFactoryBean (ap.processingRequestQueue) |
+| `fx-hub-request.xml` | JndiObjectFactoryBean (fx.processingRequestQueue) |
+| `tsp-request-enroll.xml` | JndiObjectFactoryBean (tsp.processingRequestQueue) |
+| `tsp-request-cardsm.xml` | JndiObjectFactoryBean (tspcardsm.processingRequestQueue) |
 
 ---
 
@@ -331,32 +277,19 @@ JndiTemplate
 solace.url=smfs://<broker-host>:<port>
 solace.username=<username>
 solace.vpn=<vpn-name>
-solace.password=<password>  # Local only
 solace.connection.factory=jndi/cf/<connection-factory-name>
 ```
 
-### SSL Properties (Production)
+### Queue Properties
 
 ```properties
-Solace_JMS_SSL_ValidateCertificate=true
-Solace_JMS_SSL_KeyStore=/path/to/keystore.jks
-Solace_JMS_SSL_KeyStorePassword=ENC(<encrypted>)
-Solace_JMS_Authentication_Scheme=AUTHENTICATION_SCHEME_CLIENT_CERTIFICATE
-Solace_JMS_SSL_PrivateKeyAlias=<alias>
-Solace_JMS_SSL_TrustStore=/path/to/truststore.jks
-Solace_JMS_SSL_TrustStorePassword=ENC(<encrypted>)
-Solace_JMS_SSL_PrivateKeyPassword=ENC(<encrypted>)
-```
+# Consumer Queues
+solace.upiproxy.debit.response.queue.name=Q.CPS.00.P101.RES.JSON.LOC.DEBITRESPONSE.CPSPRO.CPSADP
+solace.upiproxy.processor.response.queue.name=Q.CPS.00.P101.RES.JSON.LOC.UPI.CPSADP.UPIPROXY
 
-### Alternative SSL Properties (Java Config)
-
-```properties
-solace.jms.ssl.validate_certificate=true
-solace.jms.ssl.keystore=/path/to/keystore.jks
-solace.jms.ssl.keystore.password=ENC(<encrypted>)
-solace.jms.ssl.authentication.scheme=AUTHENTICATION_SCHEME_CLIENT_CERTIFICATE
-solace.jms.ssl.privatekey.alias=<alias>
-solace.jms.ssl.privatekey.password=ENC(<encrypted>)
-solace.jms.ssl.truststore=/path/to/truststore.jks
-solace.jms.ssl.truststore.password=ENC(<encrypted>)
+# Listener Queues
+solace.upi.proxy.transaction.request.queue.name=Q.CPS.00.P101.REQ.JSON.LOC.UPI.CPSADP.UPIPROXY
+solace.fx.query.request.queue.name=Q.CPS.00.P101.REQ.JSON.SUB.FXHUB.FXENQRATE.UPI.CNY
+solace.tsp.request.queue.name.enroll=Q.CPS.00.P101.REQ.JSON.SUB.TSP.ENROLL.UPIPROXY
+solace.tsp.request.queue.name.cardsm=Q.CPS.00.P101.REQ.JSON.SUB.TSP.CARDSM.UPIPROXY
 ```
