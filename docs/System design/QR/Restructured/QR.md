@@ -6,12 +6,16 @@
 3. ConnectionFactory
 4. CachingConnectionFactory
 
+More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SolaceCoreInfrastructure.md
+
 ### Solace JMS Messaging Components
 1. JmsTemplate
 2. SolaceMessageSender
 3. SolaceMessageReceiver
 4. ReplyToJmsForwardingService
 5. ReplyToJmsReplyService
+
+More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SolaceJMSMessaging.md
 
 ### Solace Spring Integration Components
 1. DefaultMessageListenerContainer
@@ -23,6 +27,7 @@
 7. object-to-json-transformer
 8. outbound-channel-adapter
 
+More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SolaceSpringIntegration.md
 
 ## Database
 1. MySQL
