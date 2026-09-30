@@ -4,6 +4,8 @@
 
 This document covers the JMS messaging components for synchronous request-reply pattern using JmsTemplate.
 
+> **Note:** JMS messaging components are configured via **XML only**. Java classes are implementation classes that use the XML-configured beans.
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
 │                         SOLACE JMS MESSAGING COMPONENTS                              │
@@ -67,7 +69,9 @@ Provides outbound JMS operations for sending messages to topics.
 CachingConnectionFactory
 ```
 
-#### XML Declaration (upi-request-adapter.xml)
+#### Configuration (XML Only)
+
+**Actual Usage (upi-request-adapter.xml)**
 
 ```xml
 <bean id="producerJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
@@ -76,37 +80,10 @@ CachingConnectionFactory
 </bean>
 ```
 
-#### Java Configuration (JmsConfiguration.java)
+#### Functions Used
 
 ```java
-@Bean
-public JmsTemplate jmsTemplate(CachingConnectionFactory connectionFactory, 
-                               MessageConverter jackson2MessageConverter) {
-    final JmsTemplate jmsTemplate = new JmsTemplate(connectionFactory);
-    jmsTemplate.setPubSubDomain(true);
-    jmsTemplate.setMessageConverter(jackson2MessageConverter);
-    jmsTemplate.setReceiveTimeout(receiveTimeout);
-    return jmsTemplate;
-}
-```
-
-#### Properties
-
-| Property | Value | Description |
-|----------|-------|-------------|
-| pubSubDomain | true | Uses Topic mode (publish-subscribe) |
-| messageConverter | jackson2MessageConverter | JSON message converter |
-
-#### Actual Usage
-
-```java
-jmsTemplate.send(destination, new MessageCreator() {
-    public Message createMessage(Session session) throws JMSException {
-        Message message = session.createTextMessage(msg);
-        message.setJMSCorrelationID(correlationId);
-        return message;
-    }
-});
+jmsTemplate.send(String destination, MessageCreator messageCreator);
 ```
 
 #### Responsibilities
@@ -114,7 +91,6 @@ jmsTemplate.send(destination, new MessageCreator() {
 - Sends JMS messages to topics
 - Creates and manages JMS sessions internally
 - Provides send operations with MessageCreator callback
-- Handles message conversion automatically
 
 ---
 
@@ -122,7 +98,7 @@ jmsTemplate.send(destination, new MessageCreator() {
 
 #### Purpose
 
-Provides inbound JMS receive operations with selector support for correlation-based message retrieval.
+Provides inbound JMS receive operations with selector support.
 
 #### Dependencies
 
@@ -131,7 +107,9 @@ CachingConnectionFactory
 Queue (from JndiObjectFactoryBean)
 ```
 
-#### XML Declaration (upi-request-adapter.xml)
+#### Configuration (XML Only)
+
+**Actual Usage (upi-request-adapter.xml)**
 
 ```xml
 <bean id="upiAdapterReqMessageReceiverJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
@@ -153,19 +131,10 @@ Queue (from JndiObjectFactoryBean)
 </bean>
 ```
 
-#### Properties
-
-| Property | Source | Description |
-|----------|--------|-------------|
-| connectionFactory | `solaceCachedConnectionFactory` | Cached connection factory |
-| defaultDestination | Queue bean | Default queue for receiving |
-| receiveTimeout | `${upi.message.receive.timeout}` | Timeout for blocking receive |
-
-#### Actual Usage
+#### Functions Used
 
 ```java
-String resCorrelationId = "JMSCorrelationID = '" + correlationId + "'";
-Message message = jmsTemplate.receiveSelected(resCorrelationId);
+Message message = jmsTemplate.receiveSelected(String messageSelector);
 ```
 
 #### Responsibilities
@@ -173,7 +142,6 @@ Message message = jmsTemplate.receiveSelected(resCorrelationId);
 - Receives response messages from queue
 - Filters messages using JMS selectors (correlation ID)
 - Provides synchronous receive with configurable timeout
-- Supports request-reply pattern
 
 ---
 
@@ -189,12 +157,10 @@ Functional interface for creating JMS messages within a session context.
 Session (provided by JmsTemplate)
 ```
 
-#### Interface Definition
+#### Functions Used
 
 ```java
-public interface MessageCreator {
-    Message createMessage(Session session) throws JMSException;
-}
+Message createMessage(Session session) throws JMSException;
 ```
 
 #### Actual Usage (SolaceMessageSenderOneWay.java)
@@ -213,15 +179,14 @@ getJmsTemplate().send(destination, new MessageCreator() {
 
 - Creates TextMessage with payload
 - Sets JMS headers (CorrelationID, ReplyTo)
-- Sets custom properties if needed
 
 ---
 
-### 4. SolaceMessageSenderOneWay
+### 4. SolaceMessageSenderOneWay (Local Implementation)
 
 #### Purpose
 
-Application-level component that handles outbound messaging to Solace topics with optional correlation support.
+Handles outbound messaging with optional correlation support.
 
 #### Dependencies
 
@@ -229,7 +194,9 @@ Application-level component that handles outbound messaging to Solace topics wit
 JmsTemplate (producerJmsTemplate)
 ```
 
-#### XML Declaration (upi-request-adapter.xml)
+#### Configuration (XML + Java Implementation)
+
+**Bean Declaration (upi-request-adapter.xml)**
 
 ```xml
 <bean id="upiDebitMessageProducer"
@@ -238,7 +205,7 @@ JmsTemplate (producerJmsTemplate)
 </bean>
 ```
 
-#### Java Implementation (SolaceMessageSenderOneWay.java)
+**Java Implementation (SolaceMessageSenderOneWay.java)**
 
 ```java
 @Component
@@ -297,8 +264,6 @@ solaceMessageSenderOneway.sendMessages(
 
 - Sends outbound text messages to specified topic
 - Optionally sets `JMSCorrelationID` for request-reply pattern
-- Provides simple one-way messaging capability
-- Uses MessageCreator for message construction
 
 ---
 
@@ -306,7 +271,7 @@ solaceMessageSenderOneway.sendMessages(
 
 #### Purpose
 
-Application-level component from `nps-qr-common` library that handles outbound messaging with reply-to topic support.
+Handles outbound messaging with reply-to topic support (from `nps-qr-common` library).
 
 #### Dependencies
 
@@ -314,7 +279,9 @@ Application-level component from `nps-qr-common` library that handles outbound m
 JmsTemplate (producerJmsTemplate)
 ```
 
-#### XML Declaration (upi-request-adapter.xml)
+#### Configuration (XML Only)
+
+**Actual Usage (upi-request-adapter.xml)**
 
 ```xml
 <bean id="upiAdapterReqMessageProducer"
@@ -370,7 +337,6 @@ public UpiProxyRequest sendAndReceiveResponse(UpiProxyRequest upiProxyRequest, S
 - Sends outbound text messages
 - Sets `JMSCorrelationID` for request-reply matching
 - Sets `JMSReplyTo` header for response routing
-- Supports request-reply messaging pattern
 
 ---
 
@@ -378,7 +344,7 @@ public UpiProxyRequest sendAndReceiveResponse(UpiProxyRequest upiProxyRequest, S
 
 #### Purpose
 
-Application-level component from `nps-qr-common` library that receives response messages using correlation ID filtering.
+Receives response messages using correlation ID filtering (from `nps-qr-common` library).
 
 #### Dependencies
 
@@ -386,7 +352,9 @@ Application-level component from `nps-qr-common` library that receives response 
 JmsTemplate (Receiver JmsTemplate)
 ```
 
-#### XML Declaration (upi-request-adapter.xml)
+#### Configuration (XML Only)
+
+**Actual Usage (upi-request-adapter.xml)**
 
 ```xml
 <bean id="upiAdapterReqMessageReceiver"
@@ -416,10 +384,6 @@ private SolaceMessageReceiver solaceMessageReceiver;
 @Autowired
 private SolaceMessageReceiver processorSolaceMessageReceiver;
 
-@Qualifier("reversalMessageReceiver")
-@Autowired
-private SolaceMessageReceiver solaceReversalMessageReceiver;
-
 // Receive message by correlation ID
 String response = solaceMessageReceiver.receiveMessage(correlationId);
 
@@ -431,16 +395,15 @@ String response = processorSolaceMessageReceiver.receiveMessage(correlationId);
 
 - Receives messages filtered by correlation ID using JMS selector
 - Extracts TextMessage payload
-- Handles receive timeout gracefully
 - Returns null if no message received within timeout
 
 ---
 
-### 7. SolaceReversalMessageReceiver
+### 7. SolaceReversalMessageReceiver (Local Implementation)
 
 #### Purpose
 
-Application-level component for receiving reversal response messages with correlation ID filtering.
+Receives reversal response messages with correlation ID filtering.
 
 #### Dependencies
 
@@ -448,7 +411,18 @@ Application-level component for receiving reversal response messages with correl
 JmsTemplate (reversalMessageReceiverJmsTemplate)
 ```
 
-#### Java Implementation (SolaceReversalMessageReceiver.java)
+#### Configuration (XML + Java Implementation)
+
+**Bean Declaration (upi-request-adapter.xml)**
+
+```xml
+<bean id="solaceReversalMessageReceiver"
+    class="com.nets.upi.processing.integration.upi.proxy.service.impl.SolaceReversalMessageReceiver">
+    <property name="jmsTemplate" ref="reversalMessageReceiverJmsTemplate" />
+</bean>
+```
+
+**Java Implementation (SolaceReversalMessageReceiver.java)**
 
 ```java
 @Component
@@ -461,20 +435,16 @@ public class SolaceReversalMessageReceiver {
     public String receiveMessage(String correlationId) {
         logger.info("SolaceReversalMessageReceiver trying to receive message correlation id:" + correlationId);
         String resCorrelationId = "JMSCorrelationID = '" + correlationId + "'";
-        logger.info("getJmsTemplate value ::" + getJmsTemplate());
         Message message = getJmsTemplate().receiveSelected(resCorrelationId);
         if (message instanceof TextMessage) {
             TextMessage txtMsg = (TextMessage) message;
             try {
                 Object msgTextObj = txtMsg.getText();
-                logger.info("msgTextObj :: " + msgTextObj.toString());
                 return msgTextObj.toString();
             } catch (JMSException e) {
                 logger.error("SolaceReversalMessageReceiver Receiving message Error");
                 e.printStackTrace();
             }
-        } else {
-            return null;
         }
         return null;
     }
@@ -494,29 +464,17 @@ public class SolaceReversalMessageReceiver {
 ```java
 public String sendToReversalAndGetResponse(String reversalRequestStr, String correlationId)
         throws IOException {
-    logger.info("inside sendToReversalAndGetResponse");
     solaceMessageSender.sendMessages(reversalRequestStr, correlationId,
             reversalReplyToTopic, reversalDestination);
     String response = solaceReversalMessageReceiver.receiveMessage(correlationId);
-    if (response != null) {
-        logger.info("Response from sendToReversalAndGetResponse :: ");
-    } else {
-        logger.info("No response For Reversal ");
-    }
     return response;
 }
 
 public String sendToRefundAndGetResponse(String reversalRequestStr, String correlationId)
         throws IOException {
-    logger.info("inside sendToRefundAndGetResponse");
     solaceMessageSender.sendMessages(reversalRequestStr, correlationId,
             reversalReplyToTopic, reversalInternalDestination);
     String response = solaceReversalMessageReceiver.receiveMessage(correlationId);
-    if (response != null) {
-        logger.info("Response from sendToRefundAndGetResponse :: ");
-    } else {
-        logger.info("No response For Refund ");
-    }
     return response;
 }
 ```
@@ -526,7 +484,6 @@ public String sendToRefundAndGetResponse(String reversalRequestStr, String corre
 - Receives messages filtered by correlation ID
 - Builds JMS selector string: `JMSCorrelationID = '<correlationId>'`
 - Extracts text content from TextMessage
-- Handles JMS exceptions gracefully
 
 ---
 
@@ -562,16 +519,8 @@ public Message createMessage(Session session) throws JMSException {
 if (message instanceof TextMessage) {
     TextMessage txtMsg = (TextMessage) message;
     String payload = txtMsg.getText();
-    String correlationId = message.getJMSCorrelationID();
-    Destination replyTo = message.getJMSReplyTo();
 }
 ```
-
-#### Responsibilities
-
-- Stores message payload
-- Stores Correlation ID for request-reply matching
-- Stores Reply-To destination for response routing
 
 ---
 
@@ -584,10 +533,7 @@ Provides JMS context for creating messages and destinations.
 #### Functions Used
 
 ```java
-// Create messages
 TextMessage message = session.createTextMessage(String text);
-
-// Create destinations
 Topic topic = session.createTopic(String topicName);
 Queue queue = session.createQueue(String queueName);
 ```
@@ -599,17 +545,10 @@ getJmsTemplate().send(destination, new MessageCreator() {
     public Message createMessage(Session session) throws JMSException {
         Message message = session.createTextMessage(msg);
         message.setJMSCorrelationID(correlationId);
-        message.setJMSReplyTo(session.createTopic(replyToTopic));
         return message;
     }
 });
 ```
-
-#### Responsibilities
-
-- Creates JMS messages (TextMessage, BytesMessage, etc.)
-- Creates dynamic destinations (Topic, Queue)
-- Provides transactional context
 
 ---
 
@@ -707,12 +646,24 @@ getJmsTemplate().send(destination, new MessageCreator() {
 
 ---
 
+## Implementation Summary
+
+| Component | Config Type | Config File | Implementation |
+|-----------|-------------|-------------|----------------|
+| Producer JmsTemplate | XML | upi-request-adapter.xml | Spring Framework |
+| Receiver JmsTemplate(s) | XML | upi-request-adapter.xml | Spring Framework |
+| SolaceMessageSender | XML | upi-request-adapter.xml | nps-qr-common library |
+| SolaceMessageSenderOneWay | XML + Java | upi-request-adapter.xml | Local implementation |
+| SolaceMessageReceiver | XML | upi-request-adapter.xml | nps-qr-common library |
+| SolaceReversalMessageReceiver | XML + Java | upi-request-adapter.xml | Local implementation |
+
+---
+
 ## Configuration Files
 
 | File | Contents |
 |------|----------|
-| `upi-request-adapter.xml` | Producer/Receiver JmsTemplate beans, SolaceMessageSender/Receiver beans, Queue lookups |
-| `JmsConfiguration.java` | JmsTemplate with MessageConverter |
+| `upi-request-adapter.xml` | Producer/Receiver JmsTemplate beans, SolaceMessageSender/Receiver beans |
 
 ---
 
@@ -735,15 +686,10 @@ solace.upiproxy.processor.response.topic.name=P101/G/A/LOC/RES/TRX/UPIADP00/PAY/
 solace.upiproxy.request.reversal.topic.name=P101/G/A/LOC/REQ/TRX/CPSINB00/PAY/INTERNALREVERSAL/NIL/V1/JSON/>
 solace.upiproxy.adapter.request.reversal.topic.name=P101/G/A/LOC/REQ/TRX/CPSPRO00/PAY/PAYLAH/NIL/V1/JSON/>
 solace.upiproxy.response.reversal.topic.name=P101/G/A/LOC/RES/TRX/CPSADP00/PAY/DEBITRESPONSE/NIL/V1/JSON/>
-
-# TSP Card Status Notification
-solace.tsp.request.topic.name.cardsn=P101/G/A/SUB/RES/TRX/UPIPROXY00/CARDSM/TSP/NIL/V1/JSON/>
-solace.tsp.response.topic.name.cardsn=P101/G/A/SUB/RES/TRX/UPIPROXY00/CARDSM/TSP/NIL/V1/JSON/>
 ```
 
 ### Timeout Properties
 
 ```properties
 upi.message.receive.timeout=30000
-jms.receive.timeout=30000
 ```
