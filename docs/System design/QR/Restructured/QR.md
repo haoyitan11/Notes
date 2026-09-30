@@ -1,30 +1,6 @@
 # Payment Service Provider QR System Design
 ## Solace Message Broker
-### Components
-#### Connection Layer
-1. JndiTemplate
-2. JndiObjectFactoryBean
-3. CachingConnectionFactory
-
-#### Messaging Layer
-4. Producer JmsTemplate
-5. SolaceMessageSender
-6. MessageCreator
-7. Session
-8. Message (TextMessage)
-9. Destination (Topic/Queue)
-
-#### Consumer Layer
-10. Receiver JmsTemplate
-11. SolaceMessageReceiver
-
-#### Spring Integration Layer
-12. DefaultMessageListenerContainer
-13. message-driven-channel-adapter
-14. JsonMsgServiceImpl
-15. outbound-channel-adapter
-
-More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/Solace.md
+### Solace Core Infrasutrcture Components
 
 ## Database
 1. MySQL
