@@ -1,6 +1,7 @@
 # Solace Core Infrastructure
+
 ## Components
-<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/f1d2ee7a-506a-42b6-9c64-afabdb952d23" />
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/e8c0924f-7ecf-490d-b328-478a48920e35" />
 
 ### 1. JndiTemplate
 
@@ -14,7 +15,11 @@ Provides JNDI context for Solace resource lookup.
 None (Root Bean)
 ```
 
-#### Java Declaration (SolaceConfiguration.java)
+#### Implementation Options
+
+> **Choose ONE approach** - XML OR Java, not both.
+
+**Option A: Java Configuration (SolaceConfiguration.java)**
 
 ```java
 @Bean
@@ -24,7 +29,7 @@ public JndiTemplate jndiTemplate() {
     props.put(InitialContext.INITIAL_CONTEXT_FACTORY, SolJNDIInitialContextFactory.class.getName());
     props.put(InitialContext.SECURITY_PRINCIPAL, username);
     props.put(SupportedProperty.SOLACE_JMS_VPN, vpn);
-    // SSL properties for production...
+    // SSL properties...
 
     JndiTemplate jndi = new JndiTemplate();
     jndi.setEnvironment(props);
@@ -32,11 +37,21 @@ public JndiTemplate jndiTemplate() {
 }
 ```
 
-#### Functions Used
+**Option B: XML Configuration (spring-context.xml)**
 
-```java
-JndiTemplate jndi = new JndiTemplate();
-jndi.setEnvironment(Properties props);
+```xml
+<bean id="solaceJndiTemplate" class="org.springframework.jndi.JndiTemplate">
+    <property name="environment">
+        <map>
+            <entry key="java.naming.provider.url" value="${solace.url}" />
+            <entry key="java.naming.factory.initial" 
+                   value="com.solacesystems.jndi.SolJNDIInitialContextFactory" />
+            <entry key="java.naming.security.principal" value="${solace.username}" />
+            <entry key="Solace_JMS_VPN" value="${solace.vpn}" />
+            <!-- SSL properties... -->
+        </map>
+    </property>
+</bean>
 ```
 
 #### Responsibilities
@@ -44,7 +59,6 @@ jndi.setEnvironment(Properties props);
 - Creates JNDI context with Solace broker connection details
 - Provides lookup capability for Solace-managed resources
 - Configures authentication credentials
-- Establishes connection to Solace VPN
 
 ---
 
@@ -60,17 +74,11 @@ Looks up ConnectionFactory from Solace JNDI.
 JndiTemplate
 ```
 
-#### XML Declaration (spring-context.xml)
+#### Implementation Options
 
-```xml
-<bean id="solaceConnectionFactory" class="org.springframework.jndi.JndiObjectFactoryBean" 
-      lazy-init="default" autowire="default">
-    <property name="jndiTemplate" ref="solaceJndiTemplate"/>
-    <property name="jndiName" value="${solace.connection.factory}"/>
-</bean>
-```
+> **Choose ONE approach** - XML OR Java, not both.
 
-#### Java Declaration (JmsConfiguration.java)
+**Option A: Java Configuration (JmsConfiguration.java)**
 
 ```java
 @Bean
@@ -83,20 +91,20 @@ public JndiObjectFactoryBean connectionFactory(JndiTemplate jndiTemplate) {
 }
 ```
 
-#### Functions Used
+**Option B: XML Configuration (spring-context.xml)**
 
-```java
-JndiObjectFactoryBean jndiFactory = new JndiObjectFactoryBean();
-jndiFactory.setJndiTemplate(JndiTemplate jndiTemplate);
-jndiFactory.setJndiName(String jndiName);
-jndiFactory.setProxyInterface(Class<?> proxyInterface);
+```xml
+<bean id="solaceConnectionFactory" class="org.springframework.jndi.JndiObjectFactoryBean" 
+      lazy-init="default" autowire="default">
+    <property name="jndiTemplate" ref="solaceJndiTemplate"/>
+    <property name="jndiName" value="${solace.connection.factory}"/>
+</bean>
 ```
 
 #### Responsibilities
 
 - Retrieves Solace ConnectionFactory via JNDI lookup
 - Exposes ConnectionFactory as Spring bean
-- Acts as bridge between JNDI and Spring context
 
 ---
 
@@ -112,7 +120,11 @@ Looks up Queue destinations from Solace JNDI.
 JndiTemplate
 ```
 
-#### Actual Usage (upi-request-adapter.xml)
+#### Implementation
+
+> **XML Only** - Queue lookups are defined in XML configuration files.
+
+**Actual Usage (upi-request-adapter.xml)**
 
 ```xml
 <bean id="upiAdapterReq.consumerQueue" class="org.springframework.jndi.JndiObjectFactoryBean">
@@ -131,7 +143,7 @@ JndiTemplate
 </bean>
 ```
 
-#### Actual Usage (Spring Integration XML files)
+**Actual Usage (Spring Integration XML files)**
 
 ```xml
 <!-- upi-proxy-transactions.xml -->
@@ -178,20 +190,11 @@ Caches connections and sessions for performance.
 ConnectionFactory (from JndiObjectFactoryBean)
 ```
 
-#### XML Declaration (spring-context.xml)
+#### Implementation Options
 
-```xml
-<bean id="solaceCachedConnectionFactory" 
-      class="org.springframework.jms.connection.CachingConnectionFactory"
-      primary="true">
-    <property name="targetConnectionFactory" ref="solaceConnectionFactory"/>
-    <property name="sessionCacheSize" value="10"/>
-    <property name="reconnectOnException" value="true"/>
-    <property name="cacheConsumers" value="false"/>
-</bean>
-```
+> **Choose ONE approach** - XML OR Java, not both.
 
-#### Java Declaration (JmsConfiguration.java)
+**Option A: Java Configuration (JmsConfiguration.java)**
 
 ```java
 @Bean
@@ -205,14 +208,17 @@ public CachingConnectionFactory cachedConnectionFactoryfinal(ConnectionFactory c
 }
 ```
 
-#### Functions Used
+**Option B: XML Configuration (spring-context.xml)**
 
-```java
-CachingConnectionFactory cachedConnectionFactory = new CachingConnectionFactory();
-cachedConnectionFactory.setTargetConnectionFactory(ConnectionFactory connectionFactory);
-cachedConnectionFactory.setSessionCacheSize(int sessionCacheSize);
-cachedConnectionFactory.setReconnectOnException(boolean reconnectOnException);
-cachedConnectionFactory.setCacheConsumers(boolean cacheConsumers);
+```xml
+<bean id="solaceCachedConnectionFactory" 
+      class="org.springframework.jms.connection.CachingConnectionFactory"
+      primary="true">
+    <property name="targetConnectionFactory" ref="solaceConnectionFactory"/>
+    <property name="sessionCacheSize" value="10"/>
+    <property name="reconnectOnException" value="true"/>
+    <property name="cacheConsumers" value="false"/>
+</bean>
 ```
 
 #### Responsibilities
@@ -223,34 +229,14 @@ cachedConnectionFactory.setCacheConsumers(boolean cacheConsumers);
 
 ---
 
-## Bean Dependencies
+## Implementation Summary
 
-```
-┌─────────────────────────┐
-│     JndiTemplate        │  ◄── Root Bean (No Dependencies)
-│  (solaceJndiTemplate)   │
-└───────────┬─────────────┘
-            │
-            ├───────────────────────────────────────────────────────┐
-            │                                                       │
-            ▼                                                       ▼
-┌───────────────────────────────┐       ┌───────────────────────────────────────┐
-│  JndiObjectFactoryBean        │       │  JndiObjectFactoryBean (Queues)       │
-│  (solaceConnectionFactory)    │       │  - upiAdapterReq.consumerQueue        │
-│  [ConnectionFactory Lookup]   │       │  - reversal.consumerQueue             │
-└───────────────┬───────────────┘       │  - processor.consumerQueue            │
-                │                       │  - ap.processingRequestQueue          │
-                ▼                       │  - fx.processingRequestQueue          │
-┌───────────────────────────────┐       │  - tsp.processingRequestQueue         │
-│  CachingConnectionFactory     │       │  - tspcardsm.processingRequestQueue   │
-│  (solaceCachedConnectionFactory)      └───────────────────────────────────────┘
-│  [Session Caching]            │
-└───────────────┬───────────────┘
-                │
-                ▼
-        [JMS Messaging Layer]
-        [Spring Integration Layer]
-```
+| Component | Java Config | XML Config | Notes |
+|-----------|-------------|------------|-------|
+| JndiTemplate | ✅ SolaceConfiguration.java | ✅ spring-context.xml | Choose one |
+| JndiObjectFactoryBean (ConnectionFactory) | ✅ JmsConfiguration.java | ✅ spring-context.xml | Choose one |
+| JndiObjectFactoryBean (Queue) | ❌ | ✅ Various XML files | XML only |
+| CachingConnectionFactory | ✅ JmsConfiguration.java | ✅ spring-context.xml | Choose one |
 
 ---
 
@@ -258,14 +244,14 @@ cachedConnectionFactory.setCacheConsumers(boolean cacheConsumers);
 
 | File | Contents |
 |------|----------|
-| `SolaceConfiguration.java` | JndiTemplate bean |
-| `JmsConfiguration.java` | JndiObjectFactoryBean (ConnectionFactory), CachingConnectionFactory |
-| `spring-context.xml` | XML-based beans (JndiTemplate, ConnectionFactory, CachingConnectionFactory) |
-| `upi-request-adapter.xml` | JndiObjectFactoryBean (Consumer Queues) |
-| `upi-proxy-transactions.xml` | JndiObjectFactoryBean (ap.processingRequestQueue) |
-| `fx-hub-request.xml` | JndiObjectFactoryBean (fx.processingRequestQueue) |
-| `tsp-request-enroll.xml` | JndiObjectFactoryBean (tsp.processingRequestQueue) |
-| `tsp-request-cardsm.xml` | JndiObjectFactoryBean (tspcardsm.processingRequestQueue) |
+| `SolaceConfiguration.java` | JndiTemplate bean (Java approach) |
+| `JmsConfiguration.java` | ConnectionFactory, CachingConnectionFactory (Java approach) |
+| `spring-context.xml` | JndiTemplate, ConnectionFactory, CachingConnectionFactory (XML approach) |
+| `upi-request-adapter.xml` | Queue lookups (XML only) |
+| `upi-proxy-transactions.xml` | Queue lookup for UPI transactions |
+| `fx-hub-request.xml` | Queue lookup for FX queries |
+| `tsp-request-enroll.xml` | Queue lookup for TSP enrollment |
+| `tsp-request-cardsm.xml` | Queue lookup for TSP card management |
 
 ---
 
