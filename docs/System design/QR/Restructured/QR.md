@@ -1,8 +1,37 @@
 # Payment Service Provider QR System Design
 ## Solace Message Broker
 ### Solace Core Infrasutrcture Components
+1. JndiTemplate
+2. JndiObjectFactoryBean (ConnectionFactory Lookup)
+3. ConnectionFactory
+4. CachingConnectionFactory
+
+#### Purpose 
+Provides the foundational connectivity layer between the application and Solace Broker.
+
+
 ### Solace JMS Messaging Components
+1. JmsTemplate
+2. SolaceMessageSender
+3. SolaceMessageReceiver
+4. ReplyToJmsForwardingService
+5. ReplyToJmsReplyService
+
+#### Purpose
+Provides direct JMS-based messaging capabilities for sending and receiving messages through Solace.
+
 ### Solace Spring Integration Components
+1. DefaultMessageListenerContainer
+2. message-driven-channel-adapter
+3. Spring Integration Channels
+4. json-to-object-transformer
+5. service-activator
+6. @ServiceActivator
+7. object-to-json-transformer
+8. outbound-channel-adapter
+
+#### Purpose
+Receive message from topic then convert from JSON to java object?
 
 ## Database
 1. MySQL
