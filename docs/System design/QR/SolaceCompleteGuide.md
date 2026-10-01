@@ -1050,9 +1050,4 @@ server.gracefulshutdown.timeout.second=50
 
 ---
 
-## External Dependencies
 
-| Library | Package | Components |
-|---------|---------|------------|
-| com.solacesystems:sol-jms-jakarta | - | JMS implementation |
-| com.nets.nps.qr:nps-qr-common | com.nets.nps.qr.common.solace | SolaceMessageSender, SolaceMessageReceiver |
