@@ -79,7 +79,7 @@ JndiTemplate
 
 #### Implementation Options
 
-> **Choose ONE approach** - XML OR Java, not both.
+> **Choose ONE approach** - XML OR Java
 
 **Option A: Java Configuration (JmsConfiguration.java)**
 
