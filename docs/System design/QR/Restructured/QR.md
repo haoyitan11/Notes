@@ -3,7 +3,6 @@
 ## Solace Message Broker
 
 ### Core Infrastructure Components
-
 1. JndiTemplate
 2. JndiObjectFactoryBean
 3. ConnectionFactory
@@ -11,7 +10,6 @@
 5. JndiDestinationResolver
 
 ### JMS Messaging Components
-
 1. Producer JmsTemplate
 2. SolaceMessageSender
 3. SolaceMessageSenderOneWay
@@ -20,7 +18,6 @@
 6. SolaceMessageReceiver
 
 ### Spring Integration Components
-
 1. DefaultMessageListenerContainer
 2. MessageDrivenChannelAdapter
 3. Spring Integration Channels
@@ -31,7 +28,6 @@
 8. OutboundChannelAdapter
 
 ### Runtime
-
 1. Solace Broker (Topic / Queue)
 
 **More details on:** https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SolaceCompleteGuide.md
@@ -41,11 +37,9 @@
 ## Database
 
 ### Database
-
 1. MySQL
 
 ### Database Query Dependencies Handle
-
 1. JdbcTemplate
 2. Hibernate
 
@@ -54,10 +48,44 @@
 ## HTTP Clients Dependencies Handle
 
 ### Components
-
 1. Spring WebFlux (WebClient)
 2. Apache HttpClient (CloseableHttpClient)
 3. RestClient
+
+---
+
+## TLS WebClient Dependencies Handle
+
+### Part 1. One-Way TLS
+
+1. FileInputStream & ResourceUtils
+2. KeyStore (TrustStore)
+3. TrustManagerFactory
+4. SslContextBuilder
+5. HttpClient
+6. ReactorClientHttpConnector
+7. WebClient
+
+### Part 2. Mutual TLS (mTLS)
+
+1. FileInputStream (KeyStore)
+2. KeyStore (Client KeyStore)
+3. KeyManagerFactory
+4. FileInputStream (TrustStore)
+5. KeyStore (TrustStore)
+6. TrustManagerFactory
+7. SslContextBuilder
+8. ConnectionProvider
+9. HttpClient
+10. ReactorClientHttpConnector
+11. WebClient
+
+### Part 3. ExchangeFilterFunction
+
+1. Request Logging Filter
+2. Response Logging Filter
+
+**More details on:** https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/TLSWebClient.md
 
 ---
 
