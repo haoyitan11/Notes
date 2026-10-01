@@ -267,7 +267,7 @@ public static String getQrMerchantName(String name) {
 
 # Part 2: QR Image Generation
 
-![QR Image Generation](https://github.com/user-attachments/assets/image-generation-diagram)
+<img width="2400" height="2685" alt="image" src="https://github.com/user-attachments/assets/2748cab7-83c7-47e7-a878-e3bcc245216f" />
 
 ## Purpose
 
