@@ -34,7 +34,7 @@
 
 1. Solace Broker (Topic / Queue)
 
-More details on: https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SolaceCompleteGuide.md
+**More details on:** https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SolaceCompleteGuide.md
 
 ---
 
@@ -75,7 +75,7 @@ More details on: https://github.com/haoyitan11/Notes/blob/main/docs/System%20des
 8. OAuth2AuthorizedClient
 9. OAuth2AccessToken
 
-More details on: https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/OAuth2.md
+**More details on:** https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/OAuth2.md
 
 ---
 
@@ -107,7 +107,7 @@ More details on: https://github.com/haoyitan11/Notes/blob/main/docs/System%20des
 4. KeyStore.PrivateKeyEntry
 5. PrivateKey
 
-More details on: https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/GetPrivateKey.md
+**More details on:** https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/GetPrivateKey.md
 
 ---
 
@@ -138,7 +138,7 @@ More details on: https://github.com/haoyitan11/Notes/blob/main/docs/System%20des
 3. CertificateFactory
 4. X509Certificate
 
-More details on: https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/GetCertificate.md
+**More details on:** https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/GetCertificate.md
 
 ---
 
@@ -164,7 +164,7 @@ More details on: https://github.com/haoyitan11/Notes/blob/main/docs/System%20des
 7. Graphics2D
 8. ImageIO
 
-More details on: https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/ZXing%20QR.md
+**More details on:** https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/ZXing%20QR.md
 
 ---
 
@@ -197,4 +197,4 @@ More details on: https://github.com/haoyitan11/Notes/blob/main/docs/System%20des
 11. @JobScope
 12. @StepScope
 
-More details on: https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SpringBatchCompleteGuide.md
+**More details on:** https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SpringBatchCompleteGuide.md
