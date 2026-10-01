@@ -46,7 +46,7 @@ Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 - Registers Bouncy Castle with Java Security.
 - Provides cryptographic algorithms and ASN.1 implementations.
 - Supports PEM processing.
-- Used by **PEMParser** and **JcaPEMKeyConverter**.
+- Used by PEMParser and JcaPEMKeyConverter.
 
 ---
 
@@ -66,7 +66,7 @@ java.nio.file.Paths
 #### Actual Usage
 
 ```java
-String pemContent = new String(Files.readAllBytes(Paths.get(path)));
+String pem = new String(Files.readAllBytes(Paths.get(path)));
 ```
 
 #### Responsibilities
@@ -74,7 +74,7 @@ String pemContent = new String(Files.readAllBytes(Paths.get(path)));
 - Locates PEM file by path.
 - Reads file content into memory.
 - Converts file content into a String.
-- Used by **StringReader** for character stream creation.
+- Used by StringReader for character stream creation.
 
 ---
 
@@ -94,14 +94,14 @@ java.io.Reader
 #### Actual Usage
 
 ```java
-Reader reader = new StringReader(pemContent);
+Reader privateKeyReader = new StringReader(pem);
 ```
 
 #### Responsibilities
 
 - Wraps PEM String.
 - Exposes content as a Reader.
-- Supplies character stream to **PEMParser**.
+- Supplies character stream to PEMParser.
 
 ---
 
@@ -121,8 +121,8 @@ java.io.Reader
 #### Actual Usage
 
 ```java
-PEMParser parser = new PEMParser(reader);
-Object obj = parser.readObject();
+PEMParser privatePemParser = new PEMParser(privateKeyReader);
+Object privateObject = privatePemParser.readObject();
 ```
 
 #### Responsibilities
@@ -130,7 +130,7 @@ Object obj = parser.readObject();
 - Reads PEM content from Reader.
 - Detects PEM type (PKCS#1, PKCS#8, encrypted key).
 - Converts PEM text into Java objects.
-- Returns **PEMKeyPair** (PKCS#1) or **PrivateKeyInfo** (PKCS#8).
+- Returns PEMKeyPair (PKCS#1) or PrivateKeyInfo (PKCS#8).
 
 ---
 
@@ -149,9 +149,10 @@ org.bouncycastle.openssl.PEMKeyPair
 #### Actual Usage
 
 ```java
-if (obj instanceof PEMKeyPair) {
-    PEMKeyPair pemKeyPair = (PEMKeyPair) obj;
-    PrivateKeyInfo privateKeyInfo = pemKeyPair.getPrivateKeyInfo();
+if (privateObject instanceof PEMKeyPair) {
+    PEMKeyPair pemKeyPair = (PEMKeyPair) privateObject;
+    // Extract PrivateKeyInfo from the key pair
+    privateKey = converter.getPrivateKey(pemKeyPair.getPrivateKeyInfo());
 }
 ```
 
@@ -159,7 +160,7 @@ if (obj instanceof PEMKeyPair) {
 
 - Contains RSA public key information.
 - Contains RSA private key information.
-- Provides access to **PrivateKeyInfo**.
+- Provides access to PrivateKeyInfo via `getPrivateKeyInfo()`.
 - Used when PEM contains PKCS#1 format (`-----BEGIN RSA PRIVATE KEY-----`).
 
 ---
@@ -181,15 +182,16 @@ org.bouncycastle.asn1.pkcs.PrivateKeyInfo
 Obtained directly from PKCS#8 PEM:
 
 ```java
-if (obj instanceof PrivateKeyInfo) {
-    PrivateKeyInfo privateKeyInfo = (PrivateKeyInfo) obj;
+if (privateObject instanceof PrivateKeyInfo) {
+    PrivateKeyInfo privateKeyInfo = (PrivateKeyInfo) privateObject;
+    privateKey = converter.getPrivateKey(privateKeyInfo);
 }
 ```
 
 Or from PEMKeyPair (PKCS#1):
 
 ```java
-PrivateKeyInfo privateKeyInfo = pemKeyPair.getPrivateKeyInfo();
+privateKey = converter.getPrivateKey(pemKeyPair.getPrivateKeyInfo());
 ```
 
 #### Responsibilities
@@ -197,7 +199,7 @@ PrivateKeyInfo privateKeyInfo = pemKeyPair.getPrivateKeyInfo();
 - Holds private key metadata.
 - Holds ASN.1 encoded key data.
 - Intermediate representation used by Bouncy Castle.
-- Used by **JcaPEMKeyConverter** for PrivateKey generation.
+- Used by JcaPEMKeyConverter for PrivateKey generation.
 
 ---
 
@@ -217,15 +219,15 @@ org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 
 ```java
 JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
-PrivateKey privateKey = converter.getPrivateKey(privateKeyInfo);
+privateKey = converter.getPrivateKey(pemKeyPair.getPrivateKeyInfo());
 ```
 
 #### Responsibilities
 
-- Converts **PrivateKeyInfo** to Java **PrivateKey**.
-- Uses the registered Bouncy Castle provider.
+- Converts PrivateKeyInfo to Java PrivateKey.
+- Uses the registered Bouncy Castle provider ("BC").
 - Bridges Bouncy Castle APIs and Java Security APIs.
-- Returns standard **java.security.PrivateKey**.
+- Returns standard `java.security.PrivateKey`.
 
 ---
 
@@ -256,52 +258,55 @@ PrivateKey privateKey = converter.getPrivateKey(privateKeyInfo);
 
 ## Execution Flow
 
-1. **BouncyCastleProvider** is registered with Java Security:
+**Step 1:** BouncyCastleProvider is registered with Java Security:
 
-   ```java
-   Security.addProvider(new BouncyCastleProvider());
-   ```
+```java
+Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+```
 
-2. **Files.readString()** reads PEM file content:
+**Step 2:** Files.readAllBytes() reads PEM file content:
 
-   ```java
-   String pemContent = Files.readString(Paths.get(filePath));
-   ```
+```java
+String pem = new String(Files.readAllBytes(Paths.get(path)));
+```
 
-3. **StringReader** wraps PEM content as character stream:
+**Step 3:** StringReader wraps PEM content as character stream:
 
-   ```java
-   Reader reader = new StringReader(pemContent);
-   ```
+```java
+Reader privateKeyReader = new StringReader(pem);
+```
 
-4. **PEMParser** parses PEM content:
+**Step 4:** PEMParser parses PEM content:
 
-   ```java
-   PEMParser parser = new PEMParser(reader);
-   Object obj = parser.readObject();
-   ```
+```java
+PEMParser privatePemParser = new PEMParser(privateKeyReader);
+Object privateObject = privatePemParser.readObject();
+```
 
-5. **Object type** is checked and **PrivateKeyInfo** is obtained:
+**Step 5:** Object type is checked and PrivateKeyInfo is obtained:
 
-   ```java
-   PrivateKeyInfo privateKeyInfo;
-   
-   if (obj instanceof PEMKeyPair) {
-       // PKCS#1 format: -----BEGIN RSA PRIVATE KEY-----
-       PEMKeyPair pemKeyPair = (PEMKeyPair) obj;
-       privateKeyInfo = pemKeyPair.getPrivateKeyInfo();
-   } else if (obj instanceof PrivateKeyInfo) {
-       // PKCS#8 format: -----BEGIN PRIVATE KEY-----
-       privateKeyInfo = (PrivateKeyInfo) obj;
-   }
-   ```
+```java
+PrivateKey privateKey = null;
 
-6. **JcaPEMKeyConverter** converts to Java PrivateKey:
+if (privateObject instanceof PEMKeyPair) {
+    // PKCS#1 format: -----BEGIN RSA PRIVATE KEY-----
+    PEMKeyPair pemKeyPair = (PEMKeyPair) privateObject;
+    JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
+    privateKey = converter.getPrivateKey(pemKeyPair.getPrivateKeyInfo());
+} else if (privateObject instanceof PrivateKeyInfo) {
+    // PKCS#8 format: -----BEGIN PRIVATE KEY-----
+    PrivateKeyInfo privateKeyInfo = (PrivateKeyInfo) privateObject;
+    JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
+    privateKey = converter.getPrivateKey(privateKeyInfo);
+}
+```
 
-   ```java
-   JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
-   PrivateKey privateKey = converter.getPrivateKey(privateKeyInfo);
-   ```
+**Step 6:** Close the parser and return PrivateKey:
+
+```java
+privatePemParser.close();
+return privateKey;
+```
 
 ---
 
@@ -330,7 +335,6 @@ MIIEvQIBADANBgkqhkiG9w0BAQEFAAOCAQ8A...
 - No additional conversion needed before JcaPEMKeyConverter.
 
 ---
-
 # Part 2: Raw PKCS8 Binary File Loading (Native Java)
 
 ## Purpose
