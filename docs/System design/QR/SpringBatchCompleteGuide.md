@@ -1234,43 +1234,6 @@ sendErrors(execution);
 
 ---
 
-## Component Summary
-
-| Component | Class | Part | Purpose |
-|-----------|-------|------|---------|
-| JobLauncher | JobLauncher | Part 1 & 2 | Central batch execution manager |
-| JobParametersBuilder | JobParametersBuilder | Part 1 & 2 | Builds runtime parameters |
-| JobParameters | JobParameters | Part 1 & 2 | Runtime inputs |
-| Job | JobBuilder | Part 1 & 2 | Workflow definition |
-| RunIdIncrementer | RunIdIncrementer | Part 2 | Unique job instance generator |
-| Step | StepBuilder | Part 1 & 2 | Work unit definition |
-| Tasklet | Tasklet | Part 1 & 2 | Single operation business logic |
-| JobRepository | JobRepository | Part 1 & 2 | Batch metadata persistence |
-| JobExecution | JobExecution | Part 1 & 2 | Job execution result |
-| @StepScope | Annotation | Part 2 | Late binding scope |
-| @JobScope | Annotation | Part 2 | Job-level scope |
-| DataContainer | POJO | Part 2 | State accumulation |
-| ItemReader | RefundExceptionReader | Part 2 | Data reading |
-| ItemProcessor | RefundExceptionProcessor | Part 2 | Data transformation |
-| FlatFileItemWriter | FlatFileItemWriter | Part 2 | Data writing |
-| DelimitedLineAggregator | DelimitedLineAggregator | Part 2 | CSV line formatting |
-| BeanWrapperFieldExtractor | BeanWrapperFieldExtractor | Part 2 | Field extraction |
-| FlatFileHeaderCallback | FileHeaderWriter | Part 2 | File header writing |
-| FlatFileFooterCallback | FileFooterWriter | Part 2 | File footer writing |
-
----
-
-## Configuration Files
-
-| File | Purpose |
-|------|---------|
-| StaticQrJobConfig.java | Static QR job configuration (Tasklet-based) |
-| ReconciliationJobConfig.java | Reconciliation job configuration (Tasklet-based) |
-| CreditAdjustmentJobConfig.java | Credit adjustment job configuration (Tasklet-based) |
-| RefundReportJobConfig.java | Refund exception job configuration (Chunk-based) |
-
----
-
 ## Properties Reference
 
 ### Scheduling Properties
