@@ -317,6 +317,7 @@ Resolves destination names to JNDI-looked-up destinations.
 ---
 
 # Part 2: JMS Messaging
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/f3a99b74-4e35-451e-b01a-3f5b5d416baf" />
 
 ## Purpose
 
