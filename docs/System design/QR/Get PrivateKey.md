@@ -64,7 +64,7 @@ java.nio.file.Paths
 #### Actual Usage
 
 ```java
-String pemContent = Files.readString(Paths.get(filePath));
+String pemContent = new String(Files.readAllBytes(Paths.get(path)));
 ```
 
 #### Responsibilities
