@@ -1,6 +1,7 @@
 # Solace Complete Implementation Guide
 
 ## Overview
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/674a6316-6421-4ab5-a201-6c643e37feaf" />
 
 This document provides a complete guide for the Solace messaging implementation in the UPI Proxy application. It covers three layers:
 
@@ -8,12 +9,6 @@ This document provides a complete guide for the Solace messaging implementation 
 2. **JMS Messaging** - Direct JMS messaging capabilities (Synchronous Request-Reply)
 3. **Spring Integration** - Message flow processing with transformations (Asynchronous Processing)
 
-> **Important Configuration Notes:**
-> - **Core Infrastructure**: Uses **both** XML (`spring-context.xml`) and Java (`SolaceConfiguration.java`, `JmsConfiguration.java`) configuration
-> - **JMS Messaging**: XML configuration only (`upi-request-adapter.xml`) with Java implementation classes
-> - **Spring Integration**: XML configuration only (various flow XML files) with Java `@ServiceActivator` methods
-
----
 
 # Part 1: Core Infrastructure
 <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/53540487-1374-45ab-9549-310d58fb5ed2" />
