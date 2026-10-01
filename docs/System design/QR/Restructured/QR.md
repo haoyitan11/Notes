@@ -90,7 +90,7 @@ https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/PrivateKey
 
 ---
 
-## HTTP QR Processing
+## QR Processing
 
 ### ZXing QR Code Generate Dependencies Handle
 
