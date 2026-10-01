@@ -1,151 +1,284 @@
-# PrivateKey dependencies handle
+# PrivateKey Dependencies Handle
+
 ## Components
 <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/37d28281-919b-4266-9b8d-886703c73fdb" />
 
-### 1. BouncyCastleProvider
-Purpose : Acts as the cryptographic provider for PEM parsing and RSA key conversion.
-Dependency : 
-```java
-<dependency>
-<groupId>org.bouncycastle</groupId>
-<artifactId>bcprov-jdk18on</artifactId>
-<version>${bouncycastle.version}</version>
-</dependency>
-```
-Function used :
-```java
-Security.addProvider(new BouncyCastleProvider());
-```
-Responsibilities : 
-- Registers Bouncy Castle with Java Security.
-- Provides cryptographic algorithms and ASN.1 implementations.
-- Supports PEM processing.
-- Used by PEMParser and JcaPEMKeyConverter.
+### 1. FileInputStream & ResourceUtils
 
-### 2. Files & Paths
-Purpose : Loads the PEM file content from the filesystem.
-Dependencies
-```java
-java.nio.file.Files
-java.nio.file.Paths
-```
-Functions Used : Files.readString(Paths.get(filePath))
+#### Purpose
 
-Responsibilities : 
-- Locates PEM file
-- Reads file content into memory
-- Converts file content into a String
+Loads the KeyStore file content from the filesystem.
 
-Exceptions : IOException
+#### Dependencies
 
-### 3. Reader (StringReader)
-Purpose : Provides character stream access to the PEM content.
-Dependency 
 ```java
-java.io.StringReader
-```
-Functions Used : 
-```java
-new StringReader(pemContent)
-```
-Responsibilities :
-- Wraps PEM String
-- Exposes content as a Reader
-- Supplies character stream to PEMParser
-
-### 4. PEMParser
-Purpose : Parses PEM-formatted content into Bouncy Castle key objects.
-Dependency
-```java
-<dependency>
-<groupId>org.bouncycastle</groupId>
-<artifactId>bcpkix-jdk18on</artifactId>
-<version>${bouncycastle.version}</version>
-</dependency>
-```
-Function Used : 
-```java
-PEMParser parser = new PEMParser(reader);
-Object obj = parser.readObject();
+java.io.FileInputStream
+java.io.InputStream
+org.springframework.util.ResourceUtils
 ```
 
-Responsibilities : 
-- Reads PEM content
-- Detects PEM type
-- Converts PEM text into Java objects
+#### Actual Usage
 
-### 5A. PEMKeyPair
-Purpose : Represents a PKCS#1 RSA key pair.
-Dependency :
 ```java
-org.bouncycastle.openssl.PEMKeyPair
+try (InputStream inputStream = new FileInputStream(ResourceUtils.getFile(privateKeyStorePath))) {
+    // Load KeyStore from inputStream
+}
 ```
-Functions Used :
-```java
-pemKeyPair.getPrivateKeyInfo()
-```
-Responsibilities :
-- Contains RSA public key information
-- Contains RSA private key information
-- Provides access to PrivateKeyInfo
 
-### 5B. PrivateKeyInfo
-Purpose : Represents the ASN.1 private key structure.
-Dependency : 
-```java
-org.bouncycastle.asn1.pkcs.PrivateKeyInfo
-```
-Functions Used : 
-Obtained directly from
-```java
-(PrivateKeyInfo) obj
-```
-or from:
-```java
-pemKeyPair.getPrivateKeyInfo()
-```
-Responsibilities : 
-- Holds private key metadata.
-- Holds ASN.1 encoded key data.
-- Intermediate representation used by Bouncy Castle.
+#### Responsibilities
 
-### 6. JcaPEMKeyConverter
-Purpose : Converts Bouncy Castle key objects into standard Java Security objects.
-Dependency : 
-```java
-org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
-```
-Functions Used :
-```java
-new JcaPEMKeyConverter().setProvider("BC")
-converter.getPrivateKey(privateKeyInfo)
-```
-Responsibilities : 
-- Converts PrivateKeyInfo to Java PrivateKey
-- Uses the registered Bouncy Castle provider
-- Bridges Bouncy Castle APIs and Java Security APIs
+- Locates KeyStore file by path.
+- Opens file as InputStream.
+- Provides byte stream to KeyStore loader.
+- Used by **KeyStore** for file loading.
 
-### 7. PrivateKey
-Purpose : Final RSA private key object used by application code.
-Dependency : 
+---
+
+### 2. KeyStore
+
+#### Purpose
+
+Acts as the secure container that loads and stores private keys from JKS/PKCS12 files.
+
+#### Dependencies
+
+```java
+java.security.KeyStore
+java.io.InputStream
+```
+
+#### Actual Usage
+
+```java
+KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+keyStore.load(inputStream, keyStorePassword.toCharArray());
+```
+
+#### Responsibilities
+
+- Creates KeyStore instance with specified type (JKS, PKCS12).
+- Loads KeyStore data from InputStream.
+- Decrypts KeyStore using password.
+- Stores multiple key entries by alias.
+- Provides key retrieval methods.
+- Used by **KeyStore.getKey()** and **KeyStore.getEntry()** for PrivateKey extraction.
+
+---
+
+### 3. KeyStore.getKey()
+
+#### Purpose
+
+Extracts PrivateKey from KeyStore by alias and password.
+
+#### Dependencies
+
+```java
+java.security.KeyStore
+java.security.Key
+java.security.PrivateKey
+```
+
+#### Actual Usage
+
+```java
+PrivateKey privateKey = (PrivateKey) keyStore.getKey(alias, keyPassword.toCharArray());
+```
+
+#### Responsibilities
+
+- Looks up key entry by alias.
+- Decrypts key entry using key password.
+- Returns Key object (cast to PrivateKey).
+- Used by **SecurityService** for key initialization.
+
+---
+
+### 4. KeyStore.PrivateKeyEntry
+
+#### Purpose
+
+Alternative method to extract PrivateKey with associated certificate chain.
+
+#### Dependencies
+
+```java
+java.security.KeyStore
+java.security.KeyStore.PrivateKeyEntry
+java.security.KeyStore.PasswordProtection
+```
+
+#### Actual Usage
+
+```java
+KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(
+        alias, new KeyStore.PasswordProtection(keyPassword.toCharArray()));
+PrivateKey signingKey = privateKeyEntry.getPrivateKey();
+```
+
+#### Responsibilities
+
+- Retrieves complete key entry with certificate chain.
+- Wraps password in PasswordProtection object.
+- Returns PrivateKeyEntry containing PrivateKey.
+- Provides access to associated certificates.
+- Used by **JWTUtil** for key extraction.
+
+---
+
+### 5. PrivateKey
+
+#### Purpose
+
+Final RSA private key object used for cryptographic operations.
+
+#### Dependencies
+
 ```java
 java.security.PrivateKey
 ```
-Functions Used :
 
-Returned from:
+#### Actual Usage
+
 ```java
-converter.getPrivateKey(privateKeyInfo)
+// From KeyStore.getKey()
+PrivateKey privateKey = (PrivateKey) keyStore.getKey(alias, keyPassword.toCharArray());
+
+// From KeyStore.PrivateKeyEntry
+PrivateKey privateKey = privateKeyEntry.getPrivateKey();
 ```
-Used for signing : 
+
+Used for signing:
+
 ```java
+Signature signature = Signature.getInstance("SHA256withRSA");
 signature.initSign(privateKey);
 ```
-Used for decryption :
+
+Used for JWS:
+
 ```java
-cipher.init(Cipher.DECRYPT_MODE, privateKey);
+JWSSigner signer = new RSASSASigner(privateKey);
 ```
-Responsibilities : 
-- Digital signature generation.
-- Signature verification workflows.
-- RSA decryption operations.
+
+Used for JWE decryption:
+
+```java
+RSADecrypter decrypter = new RSADecrypter(privateKey);
+```
+
+#### Responsibilities
+
+- Digital signature generation (SHA256withRSA).
+- JWS signing (RS256, RS512).
+- JWE decryption (RSA-OAEP-256).
+- Certificate-based authentication.
+
+---
+
+## Execution Flow
+
+1. **FileInputStream** opens KeyStore file from filesystem:
+
+   ```java
+   InputStream inputStream = new FileInputStream(ResourceUtils.getFile(privateKeyStorePath));
+   ```
+
+2. **KeyStore.getInstance()** creates KeyStore instance:
+
+   ```java
+   KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+   ```
+
+3. **KeyStore.load()** loads and decrypts KeyStore from InputStream:
+
+   ```java
+   keyStore.load(inputStream, keyStorePassword.toCharArray());
+   ```
+
+4. **KeyStore.getKey()** or **KeyStore.getEntry()** extracts PrivateKey by alias:
+
+   ```java
+   // Method 1: Direct key retrieval
+   PrivateKey privateKey = (PrivateKey) keyStore.getKey(alias, keyPassword.toCharArray());
+   
+   // Method 2: Entry retrieval with certificate chain
+   KeyStore.PrivateKeyEntry entry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(
+           alias, new KeyStore.PasswordProtection(keyPassword.toCharArray()));
+   PrivateKey privateKey = entry.getPrivateKey();
+   ```
+
+5. **PrivateKey** is used for cryptographic operations:
+
+   ```java
+   // Signing
+   Signature signature = Signature.getInstance("SHA256withRSA");
+   signature.initSign(privateKey);
+   
+   // JWS Signing
+   JWSSigner signer = new RSASSASigner(privateKey);
+   
+   // JWE Decryption
+   RSADecrypter decrypter = new RSADecrypter(privateKey);
+   ```
+
+---
+
+## Configuration Source
+
+```java
+@Configuration
+public class KeyStoreConfiguration {
+
+    @Value("${private.key-store}")
+    String privateKeyStorePath;
+    
+    @Value("${private.key-store.password}")
+    String privateKeyStorePass;
+
+    @Bean
+    public KeyStore privateKeyStore() throws Exception {
+        try (InputStream inputStream = new FileInputStream(ResourceUtils.getFile(privateKeyStorePath))) {
+            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            keyStore.load(inputStream, privateKeyStorePass.toCharArray());
+            return keyStore;
+        }
+    }
+}
+```
+
+```java
+@Component
+public class SecurityService {
+
+    @Autowired
+    KeyStore privateKeyStore;
+
+    @Value("${bank.api.sign.private.alias}")
+    String signKeyAlias;
+    
+    @Value("${bank.api.sign.private.password}")
+    String signKeyPassword;
+
+    private PrivateKey privateKey;
+
+    @PostConstruct
+    public void init() {
+        this.privateKey = (PrivateKey) privateKeyStore.getKey(signKeyAlias, signKeyPassword.toCharArray());
+    }
+}
+```
+
+---
+
+## Properties Reference
+
+```properties
+# KeyStore Configuration
+private.key-store=/path/to/keystore.jks
+private.key-store.password=keystorePassword
+
+# Key Alias Configuration
+bank.api.sign.private.alias=signing-key
+bank.api.sign.private.password=keyPassword
+```
