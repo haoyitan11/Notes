@@ -114,24 +114,28 @@ https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/ZXing%20QR
 
 ### Spring Batch Job Components
 1. JobLauncher
-2. Job
-3. JobParameters
-4. JobExecution
-5. JobRepository
-6. JobBuilder
-7. Step
-8. StepBuilder
-9. Tasklet
+2. JobParameters
+3. Job
+4. Step
+5. Tasklet
+6. JobRepository
+7. JobExecution
+8. JobBuilder
+9. StepBuilder
 
 ### Spring Batch Chunk Components
-1. Chunk-Oriented Step
-2. ItemReader
-3. ItemProcessor
-4. ItemWriter (FlatFileItemWriter)
-5. FlatFileHeaderCallback
-6. FlatFileFooterCallback
-7. DataContainer
-8. @StepScope / @JobScope
+1. JobLauncher
+2. JobParameters
+3. Job
+4. Chunk-Oriented Step
+5. ItemReader
+6. ItemProcessor
+7. ItemWriter (FlatFileItemWriter)
+8. FlatFileHeaderCallback
+9. FlatFileFooterCallback
+10. DataContainer
+11. @JobScope
+12. @StepScope
 
 More details on:
 https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SpringBatchCompleteGuide.md
