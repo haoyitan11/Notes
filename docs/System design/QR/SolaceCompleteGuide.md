@@ -287,7 +287,7 @@ Provides direct JMS-based messaging capabilities for synchronous request-reply p
 
 Provides JMS operations for sending messages to Solace topics.
 
-### Configuration (upi-request-adapter.xml)
+### Configuration
 
 ```xml
 <bean id="producerJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
@@ -309,43 +309,43 @@ Provides JMS operations for sending messages to Solace topics.
 
 Provides inbound JMS receive operations with selector support.
 
-### Configuration (upi-request-adapter.xml)
+### Configuration
 
 ```xml
-<!-- UPI Adapter Request Receiver -->
-<bean id="upiAdapterReq.consumerQueue" class="org.springframework.jndi.JndiObjectFactoryBean">
+<!-- Request Receiver -->
+<bean id="Req.consumerQueue" class="org.springframework.jndi.JndiObjectFactoryBean">
     <property name="jndiTemplate" ref="solaceJndiTemplate" />
-    <property name="jndiName" value="${solace.upiproxy.debit.response.queue.name}" />
+    <property name="jndiName" value="${solace.response.queue.name}" />
 </bean>
 
-<bean id="upiAdapterReqMessageReceiverJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+<bean id="ReqMessageReceiverJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
     <property name="connectionFactory" ref="solaceCachedConnectionFactory" />
-    <property name="defaultDestination" ref="upiAdapterReq.consumerQueue" />
-    <property name="receiveTimeout" value="${upi.message.receive.timeout}" />
+    <property name="defaultDestination" ref="Req.consumerQueue" />
+    <property name="receiveTimeout" value="${message.receive.timeout}" />
 </bean>
 
 <!-- Reversal Message Receiver -->
 <bean id="reversal.consumerQueue" class="org.springframework.jndi.JndiObjectFactoryBean">
     <property name="jndiTemplate" ref="solaceJndiTemplate" />
-    <property name="jndiName" value="${solace.upiproxy.debit.response.queue.name}" />
+    <property name="jndiName" value="${solace.response.queue.name}" />
 </bean>
 
 <bean id="reversalMessageReceiverJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
     <property name="connectionFactory" ref="solaceCachedConnectionFactory" />
     <property name="defaultDestination" ref="reversal.consumerQueue" />
-    <property name="receiveTimeout" value="${upi.message.receive.timeout}" />
+    <property name="receiveTimeout" value="${message.receive.timeout}" />
 </bean>
 
 <!-- Processor Message Receiver -->
 <bean id="processor.consumerQueue" class="org.springframework.jndi.JndiObjectFactoryBean">
     <property name="jndiTemplate" ref="solaceJndiTemplate" />
-    <property name="jndiName" value="${solace.upiproxy.processor.response.queue.name}" />
+    <property name="jndiName" value="${solace.processor.response.queue.name}" />
 </bean>
 
 <bean id="processorMessageReceiverJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
     <property name="connectionFactory" ref="solaceCachedConnectionFactory" />
     <property name="defaultDestination" ref="processor.consumerQueue" />
-    <property name="receiveTimeout" value="${upi.message.receive.timeout}" />
+    <property name="receiveTimeout" value="${message.receive.timeout}" />
 </bean>
 ```
 
@@ -357,7 +357,7 @@ Provides inbound JMS receive operations with selector support.
 
 ---
 
-## 2.3 SolaceMessageSender (nps-qr-common Library)
+## 2.3 SolaceMessageSender
 
 ### Purpose
 
@@ -426,10 +426,10 @@ public class SolaceMessageSender {
 }
 ```
 
-### Bean Configuration (upi-request-adapter.xml)
+### Bean Configuration
 
 ```xml
-<bean id="upiAdapterReqMessageProducer"
+<bean id="ReqMessageProducer"
     class="com.nets.nps.qr.common.solace.SolaceMessageSender">
     <property name="jmsTemplate" ref="producerJmsTemplate" />
 </bean>
@@ -502,12 +502,12 @@ public class SolaceMessageReceiver {
 }
 ```
 
-### Bean Configuration (upi-request-adapter.xml)
+### Bean Configuration
 
 ```xml
-<bean id="upiAdapterReqMessageReceiver"
+<bean id="ReqMessageReceiver"
     class="com.nets.nps.qr.common.solace.SolaceMessageReceiver">
-    <property name="jmsTemplate" ref="upiAdapterReqMessageReceiverJmsTemplate" />
+    <property name="jmsTemplate" ref="ReqMessageReceiverJmsTemplate" />
 </bean>
 
 <bean id="reversalMessageReceiver"
@@ -539,8 +539,6 @@ Handles outbound messaging with optional correlation support (no reply-to).
 ### Implementation (SolaceMessageSenderOneWay.java)
 
 ```java
-package com.nets.upi.processing.integration.upi.proxy.service.impl;
-
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.Session;
@@ -583,11 +581,11 @@ public class SolaceMessageSenderOneWay {
 }
 ```
 
-### Bean Configuration (upi-request-adapter.xml)
+### Bean Configuration
 
 ```xml
-<bean id="upiDebitMessageProducer"
-    class="com.nets.upi.processing.integration.upi.proxy.service.impl.SolaceMessageSenderOneWay">
+<bean id="MessageProducer"
+    class="com.processing.integration.service.impl.SolaceMessageSenderOneWay">
     <property name="jmsTemplate" ref="producerJmsTemplate" />
 </bean>
 ```
@@ -611,12 +609,12 @@ Receives messages from Solace queues, transforms payloads, invokes business serv
 
 Provides asynchronous JMS consumption with concurrent consumers.
 
-### Configuration (upi-proxy-transactions.xml)
+### Configuration
 
 ```xml
 <bean id="ap.processingRequestQueue" class="org.springframework.jndi.JndiObjectFactoryBean">
     <property name="jndiTemplate" ref="solaceJndiTemplate"/>
-    <property name="jndiName" value="${solace.upi.proxy.transaction.request.queue.name}"/>
+    <property name="jndiName" value="${solace.proxy.transaction.request.queue.name}"/>
 </bean>
 
 <bean id="ap.messageListenerContainer"
@@ -645,7 +643,7 @@ Provides asynchronous JMS consumption with concurrent consumers.
 
 Bridges JMS messages into Spring Integration channels.
 
-### Configuration (upi-proxy-transactions.xml)
+### Configuration
 
 ```xml
 <int-jms:message-driven-channel-adapter
@@ -671,7 +669,7 @@ Bridges JMS messages into Spring Integration channels.
 
 Provides message routing infrastructure with logging.
 
-### Configuration (upi-proxy-transactions.xml)
+### Configuration
 
 ```xml
 <int:logging-channel-adapter id="apLog" level="INFO" log-full-message="true" logger-name="apLog"/>
@@ -699,13 +697,13 @@ Provides message routing infrastructure with logging.
 
 Transforms between JSON strings and Java objects.
 
-### Configuration (upi-proxy-transactions.xml)
+### Configuration
 
 ```xml
 <int:json-to-object-transformer 
     input-channel="ap.jmsInChannel" 
     output-channel="ap.inChannel"
-    type="com.nets.upi.domain.UpiProxyRequest">
+    type="com.domain.Request">
 </int:json-to-object-transformer>
 ```
 
@@ -735,33 +733,33 @@ Transforms between JSON strings and Java objects.
 
 Connects Spring Integration channels to business service methods.
 
-### Configuration (upi-proxy-transactions.xml)
+### Configuration
 
 ```xml
 <int:service-activator
         input-channel="ap.inChannel"
         output-channel="outputChannel"
-        ref="transactionUpiProxyProcessingService"
+        ref="transactionProcessingService"
         method="process">
 </int:service-activator>
 ```
 
-### Implementation (TransactionUpiProxyProcessingService.java)
+### Implementation
 
 ```java
 @Service
-public class TransactionUpiProxyProcessingService {
+public class TransactionProcessingService {
 
-    private final Logger logger = LoggerFactory.getLogger(TransactionUpiProxyProcessingService.class);
+    private final Logger logger = LoggerFactory.getLogger(TransactionProcessingService.class);
     
     @Autowired
-    private GetUPIRequestURI getUPIRequestURI;
+    private GetRequestURI getRequestURI;
     
     @Autowired
     private ExchangeService exchangeService;
 
     @ServiceActivator
-    public UpiProxyRequest process(UpiProxyRequest upiProxyRequest) {
+    public ProxyRequest process(UpiProxyRequest upiProxyRequest) {
         logger.info("TransactionUpiProxyProcessingService process method start");
 
         String upiRestUrl = getUPIRequestURI.getUpiRequestUrl(upiProxyRequest.getTransactionType());
