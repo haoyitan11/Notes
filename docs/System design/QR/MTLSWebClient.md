@@ -1,19 +1,19 @@
-# MTLS WebClient Dependencies Handle
+# TLS WebClient Dependencies Handle
 
 ## Overview
 
-This document provides a complete guide for building MTLS (Mutual TLS) WebClient in the application. It covers two SSL/TLS patterns:
+This document provides a complete guide for building TLS-enabled WebClient in the application. It covers two TLS patterns:
 
-1. **One-Way SSL** - Server certificate validation only (client trusts server)
+1. **One-Way TLS** - Server certificate validation only (client trusts server)
 2. **Mutual TLS (mTLS)** - Two-way certificate authentication (client and server authenticate each other)
 
 ---
 
-# Part 1: One-Way SSL (Server Certificate Validation)
+# Part 1: One-Way TLS (Server Certificate Validation)
 
 ## Purpose
 
-Provides SSL/TLS connectivity where only the server's certificate is validated. The client trusts the server but does not present its own certificate.
+Provides TLS connectivity where only the server's certificate is validated. The client trusts the server but does not present its own certificate.
 
 ## Components
 
@@ -125,7 +125,7 @@ trustManagerFactory.init(trustStore);
 
 - Creates TrustManagerFactory instance with specified algorithm.
 - Initializes with TrustStore containing trusted CA certificates.
-- Provides TrustManagers for SSL context.
+- Provides TrustManagers for TLS context.
 - Used by **SslContextBuilder** to configure server certificate validation.
 
 ---
@@ -134,7 +134,7 @@ trustManagerFactory.init(trustStore);
 
 #### Purpose
 
-Builds Netty SslContext for SSL/TLS connections.
+Builds Netty SslContext for TLS connections.
 
 #### Dependencies
 
@@ -154,7 +154,7 @@ SslContext sslContext = SslContextBuilder.forClient()
 
 #### Responsibilities
 
-- Creates SSL context for client connections.
+- Creates TLS context for client connections.
 - Configures TrustManager for server certificate validation.
 - Returns SslContext used by HttpClient.
 
@@ -162,7 +162,7 @@ SslContext sslContext = SslContextBuilder.forClient()
 
 ```java
 @Bean
-public SslContext oneWaySsLContext(KeyStore trustStore) throws Exception {
+public SslContext oneWayTlsContext(KeyStore trustStore) throws Exception {
     TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("SunX509");
     trustManagerFactory.init(trustStore);
 
@@ -178,7 +178,7 @@ public SslContext oneWaySsLContext(KeyStore trustStore) throws Exception {
 
 #### Purpose
 
-Reactor Netty HTTP client configured with SSL context.
+Reactor Netty HTTP client configured with TLS context.
 
 #### Dependencies
 
@@ -196,7 +196,7 @@ reactor.netty.transport.ProxyProvider
 ```java
 HttpClient httpClient = HttpClient.create()
         .disableRetry(true)
-        .secure(sslSpec -> sslSpec.sslContext(oneWaySsLContext))
+        .secure(sslSpec -> sslSpec.sslContext(oneWayTlsContext))
         .proxy(proxy -> proxy
                 .type(ProxyProvider.Proxy.HTTP)
                 .host(proxyHost)
@@ -211,7 +211,7 @@ HttpClient httpClient = HttpClient.create()
 #### Responsibilities
 
 - Creates reactive HTTP client.
-- Configures SSL/TLS with SslContext.
+- Configures TLS with SslContext.
 - Configures proxy settings.
 - Configures connection and read/write timeouts.
 - Used by **ReactorClientHttpConnector** to bridge to WebClient.
@@ -262,9 +262,9 @@ org.springframework.http.client.reactive.ReactorClientHttpConnector
 
 ```java
 @Bean(name = "token-client")
-public WebClient createTokenWebClient(SslContext oneWaySsLContext) {
+public WebClient createTokenWebClient(SslContext oneWayTlsContext) {
     return WebClient.builder()
-            .clientConnector(new ReactorClientHttpConnector(httpClient(oneWaySsLContext)))
+            .clientConnector(new ReactorClientHttpConnector(httpClient(oneWayTlsContext)))
             .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
             .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON.toString())
             .filter(logRequest())
@@ -281,7 +281,7 @@ public WebClient createTokenWebClient(SslContext oneWaySsLContext) {
 
 ---
 
-## Execution Flow (One-Way SSL)
+## Execution Flow (One-Way TLS)
 
 1. **KeyStore.load()** loads TrustStore from filesystem:
 
@@ -298,7 +298,7 @@ public WebClient createTokenWebClient(SslContext oneWaySsLContext) {
    trustManagerFactory.init(trustStore);
    ```
 
-3. **SslContextBuilder.forClient()** creates SSL context:
+3. **SslContextBuilder.forClient()** creates TLS context:
 
    ```java
    SslContext sslContext = SslContextBuilder.forClient()
@@ -306,7 +306,7 @@ public WebClient createTokenWebClient(SslContext oneWaySsLContext) {
            .build();
    ```
 
-4. **HttpClient.secure()** configures SSL:
+4. **HttpClient.secure()** configures TLS:
 
    ```java
    HttpClient httpClient = HttpClient.create()
@@ -417,7 +417,7 @@ keyManagerFactory.init(keyStore, charKeyPswd);
 - Creates KeyManagerFactory instance with specified algorithm.
 - Initializes with KeyStore containing client private key.
 - Uses key password to unlock private key entry.
-- Provides KeyManagers for SSL context.
+- Provides KeyManagers for TLS context.
 - Used by **SslContextBuilder** to configure client certificate presentation.
 
 #### Configuration Source
@@ -530,7 +530,7 @@ trustManagerFactory.init(trustStore);
 
 - Creates TrustManagerFactory instance with specified algorithm.
 - Initializes with TrustStore containing trusted CA certificates.
-- Provides TrustManagers for SSL context.
+- Provides TrustManagers for TLS context.
 - Used by **SslContextBuilder** to configure server certificate validation.
 
 #### Configuration Source
@@ -583,7 +583,7 @@ SslContext sslContext = SslContextBuilder.forClient()
 
 #### Responsibilities
 
-- Creates SSL context for client connections.
+- Creates TLS context for client connections.
 - Configures KeyManager for client certificate presentation.
 - Configures TrustManager for server certificate validation.
 - Returns SslContext used by HttpClient.
@@ -638,7 +638,7 @@ protected ConnectionProvider buildConnectionProvider(String name) {
 
 #### Purpose
 
-Reactor Netty HTTP client configured with mTLS SSL context.
+Reactor Netty HTTP client configured with mTLS context.
 
 #### Dependencies
 
@@ -890,11 +890,11 @@ public ExchangeFilterFunction logResponse() {
 
 # Summary
 
-## Comparison of SSL/TLS Patterns
+## Comparison of TLS Patterns
 
 | Pattern | KeyStore | TrustStore | Use Case |
 |---------|----------|------------|----------|
-| One-Way SSL | Not Required | Required | Client trusts server only |
+| One-Way TLS | Not Required | Required | Client trusts server only |
 | Mutual TLS (mTLS) | Required | Required | Both client and server authenticate |
 
 ## Component Summary
@@ -904,8 +904,8 @@ public ExchangeFilterFunction logResponse() {
 | KeyStore | Stores private key and certificates | mTLS client authentication |
 | TrustStore | Stores trusted CA certificates | Server certificate validation |
 | KeyManagerFactory | Provides client certificate | mTLS client authentication |
-| TrustManagerFactory | Validates server certificate | SSL/TLS handshake |
-| SslContextBuilder | Builds SSL context | Netty HttpClient configuration |
+| TrustManagerFactory | Validates server certificate | TLS handshake |
+| SslContextBuilder | Builds TLS context | Netty HttpClient configuration |
 | ConnectionProvider | Manages connection pool | HttpClient creation |
 | HttpClient | Reactor Netty HTTP client | WebClient transport |
 | ReactorClientHttpConnector | Bridges HttpClient to WebClient | WebClient configuration |
@@ -957,7 +957,7 @@ webproxy.truststore.password=truststorePassword
 webproxy.truststore.trust.manager.factory.algorithm=SunX509
 ```
 
-### One-Way SSL Configuration
+### One-Way TLS Configuration
 
 ```properties
 ssl.trust-store=/path/to/truststore.jks
@@ -968,7 +968,7 @@ ssl.trust-store.password=truststorePassword
 
 ## Bean Configuration Example
 
-### One-Way SSL WebClient
+### One-Way TLS WebClient
 
 ```java
 @Configuration
@@ -990,7 +990,7 @@ public class KeyStoreConfiguration {
     }
 
     @Bean
-    public SslContext oneWaySsLContext(KeyStore trustStore) throws Exception {
+    public SslContext oneWayTlsContext(KeyStore trustStore) throws Exception {
         TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("SunX509");
         trustManagerFactory.init(trustStore);
 
@@ -1004,9 +1004,9 @@ public class KeyStoreConfiguration {
 public class APIGatewayClient {
 
     @Bean
-    public HttpClient httpClient(SslContext oneWaySsLContext) {
+    public HttpClient httpClient(SslContext oneWayTlsContext) {
         return HttpClient.create()
-                .secure(sslSpec -> sslSpec.sslContext(oneWaySsLContext))
+                .secure(sslSpec -> sslSpec.sslContext(oneWayTlsContext))
                 .proxy(proxy -> proxy
                         .type(ProxyProvider.Proxy.HTTP)
                         .host(proxyHost)
@@ -1014,9 +1014,9 @@ public class APIGatewayClient {
     }
 
     @Bean(name = "token-client")
-    public WebClient createTokenWebClient(SslContext oneWaySsLContext) {
+    public WebClient createTokenWebClient(SslContext oneWayTlsContext) {
         return WebClient.builder()
-                .clientConnector(new ReactorClientHttpConnector(httpClient(oneWaySsLContext)))
+                .clientConnector(new ReactorClientHttpConnector(httpClient(oneWayTlsContext)))
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
                 .build();
     }
