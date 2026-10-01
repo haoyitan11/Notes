@@ -946,17 +946,6 @@ return new String(encodedBytes);
 
 # Configuration Summary
 
-## Configuration Files
-
-| File | Type | Layer | Purpose |
-|------|------|-------|---------|
-| DynamicQrCodeUtil.java | Java | Payload | QR data string generation |
-| DynamicQrImageUtil.java | Java | Image | QR image generation with logo |
-| DateUtil.java | Java | Utility | Julian timestamp generation |
-| /images/logo.png | Resource | Image | Logo overlay image |
-
----
-
 ## Class Summary
 
 | Class Name | Package | Layer | Purpose |
