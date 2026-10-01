@@ -53,6 +53,7 @@ This document provides a complete guide for the Solace messaging implementation 
 ---
 
 # Part 1: Core Infrastructure
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/53540487-1374-45ab-9549-310d58fb5ed2" />
 
 ## Purpose
 
