@@ -1268,9 +1268,6 @@ sendErrors(execution);
 | ReconciliationJobConfig.java | Reconciliation job configuration (Tasklet-based) |
 | CreditAdjustmentJobConfig.java | Credit adjustment job configuration (Tasklet-based) |
 | RefundReportJobConfig.java | Refund exception job configuration (Chunk-based) |
-| WeChatReconJobConfig.java | WeChat reconciliation job configuration |
-| WeChatTimingJobConfig.java | WeChat timing job configuration |
-| TenpayQueryBillFileJobConfig.java | Tenpay query bill job configuration |
 
 ---
 
@@ -1283,9 +1280,6 @@ batch.job.scheduling.daily.reconciliation.report=0 0 2 * * ?
 batch.job.scheduling.daily.static.qr.report=0 0 3 * * ?
 batch.job.scheduling.daily.creditadjustment.report=0 0 4 * * ?
 batch.job.scheduling.daily.refundexception.report=0 0 5 * * ?
-batch.job.scheduling.daily.wechat.recon.report=0 0 6 * * ?
-batch.job.scheduling.daily.wechat.timing.report=0 0 7 * * ?
-batch.job.scheduling.daily.tenpay.querybillfile.report=0 0 8 * * ?
 ```
 
 ### Processing Properties
