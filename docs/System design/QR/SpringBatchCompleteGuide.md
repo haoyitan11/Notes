@@ -1,12 +1,12 @@
-# Spring Batch Complete Implementation Guide
+# Spring Batch Dependencies Handle
 
 ## Overview
 
 This document provides a complete guide for the Spring Batch implementation in the application. It covers two processing patterns:
 
-1. **Tasklet-Based Processing** - Single operation batch execution (Synchronous Processing)
+1. **Tasklet-Based Processing** - Single operation batch execution
 
-2. **Chunk-Based Processing** - Large data processing with pagination (Asynchronous Processing)
+2. **Chunk-Based Processing** - Large data processing with pagination
 
 ---
 
@@ -22,32 +22,45 @@ Provides batch execution framework for simple operations where all logic execute
 
 ## Components
 
-### 1.1 @Scheduled
+### 1.1 JobLauncher
 
 #### Purpose
 
-Triggers batch job execution based on cron expression.
+Acts as the central batch execution manager that starts and runs a Job.
 
 #### Dependencies
 
 ```java
-None (Spring Framework annotation)
+Job
+JobParameters
+JobRepository
 ```
 
 #### Actual Usage
 
 ```java
-@Scheduled(cron = "${batch.job.scheduling.daily.reconciliation.report}")
-public void executeReconciliationJob() {
-    // Job execution logic
-}
+@Autowired
+public JobLauncher jobLauncher;
+
+@Autowired
+@Qualifier("reconciliationQrJob")
+private Job reconciliationQrJob;
+```
+
+Run job:
+
+```java
+JobExecution execution = jobLauncher.run(reconciliationQrJob, jobParams);
 ```
 
 #### Responsibilities
 
-- Triggers job execution at scheduled intervals.
-- Uses cron expression from properties.
-- Entry point for batch processing.
+- Central coordinator for batch execution.
+- Integrates **Job** (defines what to execute).
+- Integrates **JobParameters** (runtime inputs).
+- Integrates **JobRepository** (creates JobInstance and JobExecution).
+- Starts Job execution.
+- Returns **JobExecution** holding the execution result.
 
 ---
 
@@ -66,6 +79,7 @@ None (Spring Batch class)
 #### Actual Usage
 
 ```java
+String day = DateTime.now().minusDays(1).toString(CommonConsts.DATETIME_FORMAT_CCYYMMDD);
 JobParametersBuilder paramBuilder = new JobParametersBuilder();
 paramBuilder.addDate("runDate", new Date());
 paramBuilder.addString("inputDateStr", day);
@@ -116,113 +130,7 @@ String inputDateStr = (String) chunkContext.getStepContext().getJobParameters().
 
 ---
 
-### 1.4 JobLauncher
-
-#### Purpose
-
-Acts as the central batch execution manager that starts and runs a Job.
-
-#### Dependencies
-
-```java
-Job
-JobParameters
-JobRepository
-```
-
-#### Actual Usage
-
-```java
-@Autowired
-public JobLauncher jobLauncher;
-
-@Autowired
-@Qualifier("reconciliationQrJob")
-private Job reconciliationQrJob;
-```
-
-Run job:
-
-```java
-JobExecution execution = jobLauncher.run(reconciliationQrJob, jobParams);
-```
-
-#### Responsibilities
-
-- Central coordinator for batch execution.
-- Integrates **Job** (defines what to execute).
-- Integrates **JobParameters** (runtime inputs).
-- Integrates **JobRepository** (creates JobInstance and JobExecution).
-- Starts Job execution.
-- Returns **JobExecution** holding the execution result.
-
----
-
-### 1.5 JobRepository
-
-#### Purpose
-
-Stores and manages Spring Batch execution metadata.
-
-#### Dependencies
-
-```java
-DataSource
-PlatformTransactionManager
-```
-
-#### Actual Usage
-
-Auto-configured by Spring Boot. Used implicitly by JobBuilder and StepBuilder:
-
-```java
-@Bean
-public Job staticQrJob(JobRepository jobRepository, Step staticQrStep) {
-    return new JobBuilder("staticQrJob", jobRepository)
-            .start(staticQrStep)
-            .build();
-}
-```
-
-#### Responsibilities
-
-- Integrates **DataSource** (persists batch metadata to database).
-- Integrates **PlatformTransactionManager** (manages metadata transactions).
-- Used by **JobLauncher** (to create JobInstance and JobExecution).
-- Used by **Job** (to update JobExecution state).
-- Used by **Step** (to create and update StepExecution).
-- Stores **JobInstance**, **JobExecution**, **StepExecution**.
-
----
-
-### 1.6 JobInstance
-
-#### Purpose
-
-Represents a logical job execution identified by Job name and JobParameters.
-
-#### Dependencies
-
-```java
-Job
-JobParameters
-```
-
-#### Actual Usage
-
-```java
-execution.getJobInstance().getJobName()
-```
-
-#### Responsibilities
-
-- Uniquely identifies a job run.
-- Created by **JobRepository**.
-- Used for restart logic.
-
----
-
-### 1.7 Job
+### 1.4 Job
 
 #### Purpose
 
@@ -270,7 +178,7 @@ public class StaticQrJobConfig {
 
 ---
 
-### 1.8 Step
+### 1.5 Step
 
 #### Purpose
 
@@ -303,41 +211,20 @@ public Step staticQrStep(JobRepository jobRepository, PlatformTransactionManager
 - Executed by **Job**.
 - Calls Tasklet.execute() within a transaction.
 
----
-
-### 1.9 PlatformTransactionManager
-
-#### Purpose
-
-Manages transaction boundaries for step execution.
-
-#### Dependencies
-
-```java
-DataSource
-```
-
-#### Actual Usage
+#### Configuration Source
 
 ```java
 @Bean
-public Step staticQrStep(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
-    return new StepBuilder("staticQrStep", jobRepository)
-            .tasklet(staticQrFileJobTasklet(), transactionManager)
+public Step creditAdjustmentStep(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+    return new StepBuilder("creditAdjustmentStep", jobRepository)
+            .tasklet(creditAdjustmentFileTasklet(), transactionManager)
             .build();
 }
 ```
 
-#### Responsibilities
-
-- Begins transaction before step execution.
-- Commits transaction on success.
-- Rolls back transaction on failure.
-- Integrates with **DataSource**.
-
 ---
 
-### 1.10 Tasklet
+### 1.6 Tasklet
 
 #### Purpose
 
@@ -354,7 +241,13 @@ ChunkContext
 
 ```java
 @Component
-public class CreditAdjustmentTasklet implements Tasklet {
+public class StaticQrFileTasklet implements Tasklet {
+
+    @Value("${batch.sftp.local.dir.generated}")
+    private String generatedPath;
+
+    @Value("${batch.sftp.local.dir.staticqr.sent}")
+    protected String sentFilePath;
 
     @Autowired
     QRBatchRepository repository;
@@ -362,21 +255,42 @@ public class CreditAdjustmentTasklet implements Tasklet {
     @Autowired
     BatchService service;
 
-    @Value("${batch.sftp.local.dir.generated}")
-    protected String generatedFilePath;
+    @Autowired
+    EmailService email;
+
+    @Value("${sgqr.membercode}")
+    protected String memberCode;
 
     @Override
-    public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) {
-        String inputDateStr = (String) chunkContext.getStepContext().getJobParameters().get("inputDateStr");
-        
-        // Business logic: find transactions, write file, upload
-        List<CreditAdjustmentDetailRecord> records = findTransactions(startDate, endDate);
-        File creditAdjustmentFile = writeFile(records, inputDateStr);
-        service.processCreditAdjustmentFile(creditAdjustmentFile.getName(), sentFolderDir, records);
-        
+    public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
+        List<StaticQrDetailRecord> dataList = repository.getBulkFileUploadData();
+
+        int fileUploadSequence = service.getNextFileId(DAILY_DIRECTORY_DATE_FORMAT.format(new Date()));
+        String formattedFileId = String.format("%03d", fileUploadSequence);
+        String fileName = generateBulkFileName(formattedFileId);
+        String fileHeader = generateBulkFileHeader(dataList.size(), formattedFileId);
+        String fileFooter = generateBulkFileFooter(dataList.size() + 1);
+
+        File file = writeFile(dataList, fileHeader, fileName, fileFooter);
+        service.processStaticQrFile(file.getName(), sentFilePath + PATH_DELIMITER + DAILY_DIRECTORY_DATE_FORMAT.format(new Date()), DAILY_DIRECTORY_DATE_FORMAT.format(new Date()));
+        updatePosQRStatusToPostedToCR(dataList);
+
+        createFileUploadEntry(formattedFileId, fileName, file.getAbsolutePath());
         return RepeatStatus.FINISHED;
     }
 }
+```
+
+Access job parameters:
+
+```java
+String inputDateStr = (String) chunkContext.getStepContext().getJobParameters().get("inputDateStr");
+```
+
+Return status:
+
+```java
+return RepeatStatus.FINISHED;
 ```
 
 #### Responsibilities
@@ -398,145 +312,51 @@ public Tasklet staticQrFileJobTasklet() {
 
 ---
 
-### 1.11 StepContribution
+### 1.7 JobRepository
 
 #### Purpose
 
-Holds step execution metrics and contribution data.
+Stores and manages Spring Batch execution metadata.
 
 #### Dependencies
 
 ```java
-StepExecution
+DataSource
+PlatformTransactionManager
 ```
 
 #### Actual Usage
 
+Auto-configured by Spring Boot. Used implicitly by JobBuilder and StepBuilder:
+
 ```java
-@Override
-public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) {
-    // contribution tracks read/write/skip counts
-    return RepeatStatus.FINISHED;
+@Bean
+public Job staticQrJob(JobRepository jobRepository, Step staticQrStep) {
+    return new JobBuilder("staticQrJob", jobRepository)
+            .start(staticQrStep)
+            .build();
+}
+
+@Bean
+public Step staticQrStep(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+    return new StepBuilder("staticQrStep", jobRepository)
+            .tasklet(staticQrFileJobTasklet(), transactionManager)
+            .build();
 }
 ```
 
 #### Responsibilities
 
-- Tracks read count, write count, skip count.
-- Reports metrics back to **StepExecution**.
-- Passed to **Tasklet.execute()**.
+- Integrates **DataSource** (persists batch metadata to database).
+- Integrates **PlatformTransactionManager** (manages metadata transactions).
+- Used by **JobLauncher** (to create JobInstance and JobExecution).
+- Used by **Job** (to update JobExecution state).
+- Used by **Step** (to create and update StepExecution).
+- Stores **JobInstance**, **JobExecution**, **StepExecution**.
 
 ---
 
-### 1.12 ChunkContext
-
-#### Purpose
-
-Provides access to job parameters and step context within Tasklet.
-
-#### Dependencies
-
-```java
-StepContext
-```
-
-#### Actual Usage
-
-```java
-String inputDateStr = (String) chunkContext.getStepContext().getJobParameters().get("inputDateStr");
-```
-
-#### Responsibilities
-
-- Provides access to **StepContext**.
-- Provides access to **JobParameters**.
-- Passed to **Tasklet.execute()**.
-
----
-
-### 1.13 StepContext
-
-#### Purpose
-
-Provides step-level context information.
-
-#### Dependencies
-
-```java
-StepExecution
-JobParameters
-```
-
-#### Actual Usage
-
-```java
-chunkContext.getStepContext().getJobParameters().get("inputDateStr");
-```
-
-#### Responsibilities
-
-- Provides access to **JobParameters**.
-- Provides access to **StepExecution**.
-- Accessed via **ChunkContext**.
-
----
-
-### 1.14 RepeatStatus
-
-#### Purpose
-
-Indicates whether step should continue or finish.
-
-#### Dependencies
-
-```java
-None (Spring Batch enum)
-```
-
-#### Actual Usage
-
-```java
-return RepeatStatus.FINISHED;
-```
-
-#### Responsibilities
-
-- **FINISHED**: Step should not repeat.
-- **CONTINUABLE**: Step may be called again.
-- Returned by **Tasklet.execute()**.
-
----
-
-### 1.15 StepExecution
-
-#### Purpose
-
-Stores the execution result of a Step.
-
-#### Dependencies
-
-```java
-JobExecution
-BatchStatus
-ExitStatus
-```
-
-#### Actual Usage
-
-```java
-// Accessed internally by Spring Batch
-// StepExecution is created by JobRepository
-```
-
-#### Responsibilities
-
-- Stores step execution state.
-- Holds read/write/commit counts.
-- Linked to parent **JobExecution**.
-
----
-
-### 1.16 JobExecution
+### 1.8 JobExecution
 
 #### Purpose
 
@@ -589,73 +409,22 @@ private void sendErrors(JobExecution execution) {
 
 ---
 
-### 1.17 BatchStatus
+## Execution Flow
 
-#### Purpose
-
-Enumeration representing batch execution status.
-
-#### Dependencies
-
-```java
-None (Spring Batch enum)
-```
-
-#### Actual Usage
-
-```java
-if (!execution.getStatus().equals(BatchStatus.COMPLETED)) {
-    // Handle errors
-}
-```
-
-#### Responsibilities
-
-- Represents status: COMPLETED, FAILED, STOPPED, STARTING, STARTED, STOPPING, ABANDONED, UNKNOWN.
-- Used by **JobExecution** and **StepExecution**.
-
----
-
-### 1.18 ExitStatus
-
-#### Purpose
-
-Represents the exit status of a batch execution.
-
-#### Dependencies
-
-```java
-None (Spring Batch class)
-```
-
-#### Actual Usage
-
-```java
-execution.getExitStatus().getExitCode();
-```
-
-#### Responsibilities
-
-- Holds exit code and description.
-- Default codes: COMPLETED, FAILED, STOPPED, NOOP.
-- Used by **JobExecution** and **StepExecution**.
-
----
-
-## Tasklet-Based Execution Flow
-
-1. **@Scheduled** triggers **executeReconciliationJob()** method based on cron expression.
-
-2. **JobParametersBuilder** creates **JobParameters**:
+1. **QRBatchJob** (scheduled method) builds **JobParameters** using **JobParametersBuilder**:
 
    ```java
-   JobParametersBuilder paramBuilder = new JobParametersBuilder();
-   paramBuilder.addDate("runDate", new Date());
-   paramBuilder.addString("inputDateStr", day);
-   JobParameters jobParams = paramBuilder.toJobParameters();
+   @Scheduled(cron = "${batch.job.scheduling.daily.reconciliation.report}")
+   public void executeReconciliationJob() {
+       String day = DateTime.now().minusDays(1).toString(CommonConsts.DATETIME_FORMAT_CCYYMMDD);
+       JobParametersBuilder paramBuilder = new JobParametersBuilder();
+       paramBuilder.addDate("runDate", new Date());
+       paramBuilder.addString("inputDateStr", day);
+       JobParameters jobParams = paramBuilder.toJobParameters();
+   }
    ```
 
-3. **JobLauncher.run(job, jobParams)** is called:
+2. **JobLauncher.run(job, jobParams)** is called:
 
    ```java
    JobExecution execution = jobLauncher.run(reconciliationQrJob, jobParams);
@@ -665,50 +434,37 @@ execution.getExitStatus().getExitCode();
    - JobLauncher integrates **JobParameters** (runtime inputs).
    - JobLauncher integrates **JobRepository** to create **JobInstance** and **JobExecution**.
 
-4. **JobRepository** creates **JobInstance** and **JobExecution**:
-
-   - JobInstance uniquely identifies job by name + parameters.
-   - JobExecution tracks this particular run.
-
-5. **Job** executes via **Job.execute()**:
+3. **JobLauncher** delegates to **Job.execute()**:
 
    - Job integrates **Step** (the work unit).
    - Job integrates **JobRepository** to update **JobExecution** state.
 
-6. **Step** executes via **Step.execute()**:
+4. **Job** delegates to **Step.execute()**:
 
    - Step integrates **Tasklet** (the business logic).
-   - Step integrates **PlatformTransactionManager** to begin transaction.
-   - Step integrates **JobRepository** to create **StepExecution**.
+   - Step integrates **PlatformTransactionManager** to manage transaction boundaries.
+   - Step integrates **JobRepository** to persist **StepExecution** state.
 
-7. **PlatformTransactionManager** begins transaction.
-
-8. **Step** calls **Tasklet.execute(StepContribution, ChunkContext)**:
+5. **Step** calls **Tasklet.execute(StepContribution, ChunkContext)**:
 
    ```java
    @Override
-   public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) {
+   public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
        String inputDateStr = (String) chunkContext.getStepContext().getJobParameters().get("inputDateStr");
        // Business logic execution
        return RepeatStatus.FINISHED;
    }
    ```
 
-   - **ChunkContext** provides access to **StepContext**.
-   - **StepContext** provides access to **JobParameters**.
-   - **StepContribution** tracks execution metrics.
+6. **Tasklet** executes business logic and returns **RepeatStatus.FINISHED**.
 
-9. **Tasklet** executes business logic and returns **RepeatStatus.FINISHED**.
+7. **Step** commits transaction via **PlatformTransactionManager**.
 
-10. **PlatformTransactionManager** commits transaction.
+8. **Job** updates **JobExecution** status via **JobRepository**.
 
-11. **Step** updates **StepExecution** with **BatchStatus** and **ExitStatus**.
+9. **JobLauncher** returns **JobExecution** to caller.
 
-12. **Job** updates **JobExecution** status via **JobRepository**.
-
-13. **JobLauncher** returns **JobExecution** to caller.
-
-14. **sendErrors(execution)** checks **JobExecution.getStatus()** for error handling:
+10. **sendErrors(execution)** checks **JobExecution.getStatus()** for error handling:
 
     ```java
     if (!execution.getStatus().equals(BatchStatus.COMPLETED)) {
@@ -730,32 +486,45 @@ Provides batch execution framework for large data processing where data is read,
 
 ## Components
 
-### 2.1 @Scheduled
+### 2.1 JobLauncher
 
 #### Purpose
 
-Triggers batch job execution based on cron expression.
+Acts as the central batch execution manager that starts and runs a Job.
 
 #### Dependencies
 
 ```java
-None (Spring Framework annotation)
+Job
+JobParameters
+JobRepository
 ```
 
 #### Actual Usage
 
 ```java
-@Scheduled(cron = "${batch.job.scheduling.daily.refundexception.report}")
-public void executeRefundExceptionJob() {
-    // Job execution logic
-}
+@Autowired
+public JobLauncher jobLauncher;
+
+@Autowired
+@Qualifier("getRefundExceptionJob")
+private Job refundExceptionJob;
+```
+
+Run job:
+
+```java
+JobExecution execution = jobLauncher.run(refundExceptionJob, jobParams);
 ```
 
 #### Responsibilities
 
-- Triggers job execution at scheduled intervals.
-- Uses cron expression from properties.
-- Entry point for batch processing.
+- Central coordinator for batch execution.
+- Integrates **Job** (defines what to execute).
+- Integrates **JobParameters** (runtime inputs).
+- Integrates **JobRepository** (creates JobInstance and JobExecution).
+- Starts Job execution.
+- Returns **JobExecution** holding the execution result.
 
 ---
 
@@ -774,6 +543,7 @@ None (Spring Batch class)
 #### Actual Usage
 
 ```java
+String day = DateTime.now().minusDays(1).toString(CommonConsts.DATETIME_FORMAT_CCYYMMDD);
 JobParametersBuilder paramBuilder = new JobParametersBuilder();
 paramBuilder.addDate("runDate", new Date());
 paramBuilder.addString("inputDateStr", day);
@@ -826,120 +596,7 @@ Access via @StepScope late binding:
 
 ---
 
-### 2.4 JobLauncher
-
-#### Purpose
-
-Acts as the central batch execution manager that starts and runs a Job.
-
-#### Dependencies
-
-```java
-Job
-JobParameters
-JobRepository
-```
-
-#### Actual Usage
-
-```java
-@Autowired
-public JobLauncher jobLauncher;
-
-@Autowired
-@Qualifier("getRefundExceptionJob")
-private Job refundExceptionJob;
-
-JobExecution execution = jobLauncher.run(refundExceptionJob, jobParams);
-```
-
-#### Responsibilities
-
-- Central coordinator for batch execution.
-- Integrates **Job** (defines what to execute).
-- Integrates **JobParameters** (runtime inputs).
-- Integrates **JobRepository** (creates JobInstance and JobExecution).
-- Starts Job execution.
-- Returns **JobExecution** holding the execution result.
-
----
-
-### 2.5 JobRepository
-
-#### Purpose
-
-Stores and manages Spring Batch execution metadata.
-
-#### Dependencies
-
-```java
-DataSource
-PlatformTransactionManager
-```
-
-#### Actual Usage
-
-```java
-@Autowired
-private JobRepository jobRepository;
-
-@Bean(name="getRefundExceptionJob")
-public Job getRefundExceptionJob() {
-    return new JobBuilder("getRefundExceptionJob", jobRepository)
-            .incrementer(new RunIdIncrementer())
-            .flow(getRefundExceptionStep())
-            .next(uploadTransactionsFileStep())
-            .end()
-            .build();
-}
-```
-
-#### Responsibilities
-
-- Integrates **DataSource** (persists batch metadata to database).
-- Integrates **PlatformTransactionManager** (manages metadata transactions).
-- Used by **JobLauncher** (to create JobInstance and JobExecution).
-- Used by **Job** (to update JobExecution state).
-- Used by **Step** (to create and update StepExecution).
-- Stores **JobInstance**, **JobExecution**, **StepExecution**.
-
----
-
-### 2.6 RunIdIncrementer
-
-#### Purpose
-
-Ensures unique JobInstance for each job execution.
-
-#### Dependencies
-
-```java
-JobParameters
-```
-
-#### Actual Usage
-
-```java
-@Bean(name="getRefundExceptionJob")
-public Job getRefundExceptionJob() {
-    return new JobBuilder("getRefundExceptionJob", jobRepository)
-            .incrementer(new RunIdIncrementer())
-            .flow(getRefundExceptionStep())
-            .next(uploadTransactionsFileStep())
-            .end()
-            .build();
-}
-```
-
-#### Responsibilities
-
-- Adds unique **run.id** parameter to each execution.
-- Ensures each job run creates a new **JobInstance**.
-- Allows same job parameters to run multiple times.
-
----
-
-### 2.7 Job (Multi-Step)
+### 2.4 Job (Multi-Step)
 
 #### Purpose
 
@@ -977,7 +634,7 @@ public Job getRefundExceptionJob() {
 
 ---
 
-### 2.8 Chunk-Oriented Step
+### 2.5 Step (Chunk-Oriented)
 
 #### Purpose
 
@@ -996,6 +653,12 @@ JobRepository
 #### Actual Usage
 
 ```java
+@Autowired
+private JobRepository jobRepository;
+
+@Autowired
+private PlatformTransactionManager transactionManager;
+
 @Value("${batch.processing.chunk.size}")
 private int chunkSize;
 
@@ -1021,58 +684,45 @@ public Step getRefundExceptionStep() {
 
 ---
 
-### 2.9 @StepScope
+### 2.6 DataContainer
 
 #### Purpose
 
-Creates bean instance per step execution with late binding of JobParameters.
+Holds accumulated state across chunk processing for footer generation.
 
 #### Dependencies
 
 ```java
-JobParameters
-StepExecution
+None (POJO)
 ```
 
 #### Actual Usage
 
 ```java
-@Bean
-@StepScope
-ItemReader<RefundExceptionRecord> transactionsReader(
-        @Value("#{jobParameters[inputDateStr]}") String inputDateStr) {
-    return new RefundExceptionReader(inputDateStr);
-}
+public class DataContainer {
+    
+    private Integer totalCount = 0;
+    private BigDecimal totalRefundAmount = new BigDecimal(0);
+    
+    public void incrementCount() {
+        this.totalCount += 1;
+    }
+    
+    public void addRefund(BigDecimal amount) {
+        this.totalRefundAmount = this.totalRefundAmount.add(amount);
+    }
+    
+    public Integer getTotalCount() {
+        return this.totalCount;
+    }
 
-@Bean
-@StepScope
-public FlatFileItemWriter<RefundExceptionRecord> transactionsFileWriter(
-        @Value("#{jobParameters[filename]}") String filename) {
-    // writer configuration
+    public BigDecimal getTotalRefundAmount() {
+        return this.totalRefundAmount;
+    }
 }
 ```
 
-#### Responsibilities
-
-- Creates bean instance per step execution.
-- Enables **#{jobParameters[key]}** expression for late binding.
-- Required for dynamic parameter injection at runtime.
-
----
-
-### 2.10 @JobScope
-
-#### Purpose
-
-Creates bean instance per job execution, shared across steps.
-
-#### Dependencies
-
-```java
-JobExecution
-```
-
-#### Actual Usage
+Bean configuration with @JobScope:
 
 ```java
 @Bean
@@ -1084,13 +734,14 @@ DataContainer refundDataContainer() {
 
 #### Responsibilities
 
-- Creates bean instance per job execution.
-- Shared across all steps in the job.
-- Maintains state across steps.
+- Stores accumulated values across chunk processing.
+- Updated by **ItemProcessor** for each processed item.
+- Read by **FlatFileFooterCallback** to write totals.
+- Scoped to Job via **@JobScope** to maintain state across steps.
 
 ---
 
-### 2.11 ItemReader
+### 2.7 ItemReader
 
 #### Purpose
 
@@ -1099,8 +750,8 @@ Reads data items one at a time from a data source for chunk-based processing.
 #### Dependencies
 
 ```java
-Repository (data source)
-JobParameters (via @StepScope)
+QRBatchRepository
+Iterator
 ```
 
 #### Actual Usage
@@ -1111,6 +762,9 @@ public class RefundExceptionReader implements ItemReader<RefundExceptionRecord> 
     @Autowired
     QRBatchRepository repository;
     
+    @Autowired
+    EmailService email;
+    
     private String inputDate;
     private Iterator<RefundExceptionRecord> transactionIterator;
     
@@ -1120,13 +774,17 @@ public class RefundExceptionReader implements ItemReader<RefundExceptionRecord> 
     
     @PostConstruct
     public void afterConstruct() throws BatchException {
-        List<RefundExceptionRecord> exceptionRecs = repository.getOutboundRefundExceptions(startDate, endDate);
+        List<RefundExceptionRecord> exceptionRecs = new ArrayList<>();
+        String startDate = CommonConstants.dateBatchInputFormat.parseDateTime(inputDate).withTime(0, 0, 0, 0).toString(CommonConstants.dateTimeBatchDbFormat);
+        String endDate = CommonConstants.dateBatchInputFormat.parseDateTime(inputDate).withTime(23, 59, 59, 59).toString(CommonConstants.dateTimeBatchDbFormat);
+        exceptionRecs = repository.getOutboundRefundExceptions(startDate, endDate);
         transactionIterator = exceptionRecs.iterator();
     }
     
     @Override
-    public RefundExceptionRecord read() throws Exception {
+    public RefundExceptionRecord read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
         if (transactionIterator.hasNext()) {
+            logger.debug("reading record from iterator...");
             return transactionIterator.next();
         }
         return null;
@@ -1134,27 +792,26 @@ public class RefundExceptionReader implements ItemReader<RefundExceptionRecord> 
 }
 ```
 
-Bean configuration:
+Bean configuration with @StepScope for late binding:
 
 ```java
 @Bean
 @StepScope
-ItemReader<RefundExceptionRecord> transactionsReader(
-        @Value("#{jobParameters[inputDateStr]}") String inputDateStr) {
+ItemReader<RefundExceptionRecord> transactionsReader(@Value("#{jobParameters[inputDateStr]}") String inputDateStr) {
     return new RefundExceptionReader(inputDateStr);
 }
 ```
 
 #### Responsibilities
 
-- Integrates **Repository** (data source for reading).
+- Integrates **QRBatchRepository** (data source for reading).
 - Integrates **JobParameters** via **@StepScope** late binding.
 - Returns one item at a time until exhausted (returns null).
 - Used by **Step** in chunk-based processing.
 
 ---
 
-### 2.12 ItemProcessor
+### 2.8 ItemProcessor
 
 #### Purpose
 
@@ -1163,7 +820,7 @@ Transforms or processes each item read by ItemReader before writing.
 #### Dependencies
 
 ```java
-DataContainer (for accumulating state across items)
+DataContainer
 ```
 
 #### Actual Usage
@@ -1181,17 +838,20 @@ public class RefundExceptionProcessor implements ItemProcessor<RefundExceptionRe
     public RefundExceptionRecord process(RefundExceptionRecord transaction) {
         RefundExceptionRecord data = transaction;
         data.setRecordType("DT");
-        data.setConsumerBank("BANK");
+        data.setConsumerBank("UOB");
         data.setProcessingStatus("FAILED");
 
-        // Business logic for failure reason
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        LocalDateTime originalTxnDt = LocalDateTime.parse(transaction.getTxnDate(), formatter);
+        LocalDateTime refundDt = LocalDateTime.parse(transaction.getRefundDate(), formatter);
+
         long daysBetween = Math.abs(ChronoUnit.DAYS.between(originalTxnDt, refundDt));
         if (daysBetween > 30) {
             data.setFailureReason("LATE_RFD");
         } else {
             data.setFailureReason("ACQ_INIT");
         }
-        
         dataContainer.incrementCount();
         dataContainer.addRefund(new BigDecimal(data.getRefundAmt()));
         return data;
@@ -1218,67 +878,11 @@ ItemProcessor<RefundExceptionRecord, RefundExceptionRecord> transactionDataProce
 
 ---
 
-### 2.13 DataContainer
+### 2.9 FlatFileItemWriter
 
 #### Purpose
 
-Holds accumulated state across chunk processing for footer generation.
-
-#### Dependencies
-
-```java
-None (POJO)
-```
-
-#### Actual Usage
-
-```java
-public class DataContainer {
-    private int totalCount = 0;
-    private BigDecimal totalRefundAmount = BigDecimal.ZERO;
-    
-    public void incrementCount() {
-        totalCount++;
-    }
-    
-    public void addRefund(BigDecimal amount) {
-        totalRefundAmount = totalRefundAmount.add(amount);
-    }
-    
-    public int getTotalCount() {
-        return totalCount;
-    }
-    
-    public BigDecimal getTotalRefundAmount() {
-        return totalRefundAmount;
-    }
-}
-```
-
-Bean configuration:
-
-```java
-@Bean
-@JobScope
-DataContainer refundDataContainer() {
-    return new DataContainer();
-}
-```
-
-#### Responsibilities
-
-- Stores accumulated values across chunk processing.
-- Updated by **ItemProcessor** for each processed item.
-- Read by **FlatFileFooterCallback** to write totals.
-- Scoped to Job via **@JobScope** to maintain state across steps.
-
----
-
-### 2.14 ItemWriter (FlatFileItemWriter)
-
-#### Purpose
-
-Writes processed items to a destination (file, database, etc.).
+Writes processed items to a flat file destination.
 
 #### Dependencies
 
@@ -1295,9 +899,7 @@ FlatFileFooterCallback
 ```java
 @Bean
 @StepScope
-public FlatFileItemWriter<RefundExceptionRecord> transactionsFileWriter(
-        @Value("#{jobParameters[filename]}") String filename) {
-    
+public FlatFileItemWriter<RefundExceptionRecord> transactionsFileWriter(@Value("#{jobParameters[filename]}") String filename) {
     FlatFileItemWriter<RefundExceptionRecord> writer = new FlatFileItemWriter<>();
     
     writer.setResource(new FileSystemResource(generatedFolder + filename));
@@ -1308,24 +910,20 @@ public FlatFileItemWriter<RefundExceptionRecord> transactionsFileWriter(
             setDelimiter(",");
             setFieldExtractor(new BeanWrapperFieldExtractor<RefundExceptionRecord>() {
                 {
-                    setNames(new String[] { 
-                        "recordType", "txnDate", "txnRRN", "refundRRN", "consumerBank",
-                        "refundAmt", "failureReason", "processingStatus", "refundDate", 
-                        "txnAmount", "currency", "fxRate", "foreignTerminalId", 
-                        "foreignMerchantId", "merchantName", "netsReferenceNumber"
-                    });
+                    setNames(new String[] { "recordType", "txnDate", "txnRRN", "refundRRN", "consumerBank",
+                            "refundAmt", "failureReason", "processingStatus", "refundDate", "txnAmount",
+                            "currency", "fxRate", "foreignTerminalId", "foreignMerchantId", "merchantName",
+                            "netsReferenceNumber"});
+                    FileHeaderWriter header = new FileHeaderWriter("HD,Transaction_Date,Original_RRN,Refund_RRN,"
+                            + "Consumer_Bank,Refund_Amt,Failure_Reason,Processing_Status,Refund_Timestamp,ORI_PURC_AMOUNT,CCY,FX_Rate,"
+                            + "Foreign_Terminal_ID,Foreign_Merchant_ID,Merchant_Name,NETS_Reference_Number");
+                    writer.setHeaderCallback(header);
+                    FileFooterWriter footer = new FileFooterWriter(refundDataContainer());
+                    writer.setFooterCallback(footer);
                 }
             });
         }
     });
-    
-    // Header callback
-    FileHeaderWriter header = new FileHeaderWriter("HD,Transaction_Date,Original_RRN,...");
-    writer.setHeaderCallback(header);
-    
-    // Footer callback
-    FileFooterWriter footer = new FileFooterWriter(refundDataContainer());
-    writer.setFooterCallback(footer);
     
     return writer;
 }
@@ -1341,100 +939,7 @@ public FlatFileItemWriter<RefundExceptionRecord> transactionsFileWriter(
 
 ---
 
-### 2.15 FileSystemResource
-
-#### Purpose
-
-Represents file system location for writing output.
-
-#### Dependencies
-
-```java
-None (Spring Core class)
-```
-
-#### Actual Usage
-
-```java
-writer.setResource(new FileSystemResource(generatedFolder + filename));
-```
-
-#### Responsibilities
-
-- Points to output file location.
-- Used by **FlatFileItemWriter**.
-
----
-
-### 2.16 DelimitedLineAggregator
-
-#### Purpose
-
-Aggregates item fields into a delimited line (CSV).
-
-#### Dependencies
-
-```java
-BeanWrapperFieldExtractor
-```
-
-#### Actual Usage
-
-```java
-writer.setLineAggregator(new DelimitedLineAggregator<RefundExceptionRecord>() {
-    {
-        setDelimiter(",");
-        setFieldExtractor(new BeanWrapperFieldExtractor<RefundExceptionRecord>() {
-            // ...
-        });
-    }
-});
-```
-
-#### Responsibilities
-
-- Converts item to delimited string.
-- Integrates **BeanWrapperFieldExtractor** for field extraction.
-- Used by **FlatFileItemWriter**.
-
----
-
-### 2.17 BeanWrapperFieldExtractor
-
-#### Purpose
-
-Extracts field values from item bean for line aggregation.
-
-#### Dependencies
-
-```java
-None (Spring Batch class)
-```
-
-#### Actual Usage
-
-```java
-setFieldExtractor(new BeanWrapperFieldExtractor<RefundExceptionRecord>() {
-    {
-        setNames(new String[] { 
-            "recordType", "txnDate", "txnRRN", "refundRRN", "consumerBank",
-            "refundAmt", "failureReason", "processingStatus", "refundDate", 
-            "txnAmount", "currency", "fxRate", "foreignTerminalId", 
-            "foreignMerchantId", "merchantName", "netsReferenceNumber"
-        });
-    }
-});
-```
-
-#### Responsibilities
-
-- Extracts specified fields from item bean.
-- Fields are extracted in order specified.
-- Used by **DelimitedLineAggregator**.
-
----
-
-### 2.18 FlatFileHeaderCallback
+### 2.10 FlatFileHeaderCallback
 
 #### Purpose
 
@@ -1472,7 +977,7 @@ public class FileHeaderWriter implements FlatFileHeaderCallback {
 
 ---
 
-### 2.19 FlatFileFooterCallback
+### 2.11 FlatFileFooterCallback
 
 #### Purpose
 
@@ -1482,7 +987,7 @@ Writes footer record at the end of a flat file.
 
 ```java
 Writer
-DataContainer (for accumulated totals)
+DataContainer
 ```
 
 #### Actual Usage
@@ -1517,7 +1022,7 @@ public class FileFooterWriter implements FlatFileFooterCallback {
 
 ---
 
-### 2.20 Tasklet (Upload Step)
+### 2.12 Tasklet (Upload Step)
 
 #### Purpose
 
@@ -1545,8 +1050,14 @@ public class UploadFileTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        String filename = (String) chunkContext.getStepContext().getJobParameters().get("filename");
-        service.processRefundExceptionFile(filename);
+        try {
+            String filename = (String) chunkContext.getStepContext().getJobParameters().get("filename");
+            logger.info("start processing of file with name " + filename);
+            service.processRefundExceptionFile(filename);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw new BatchException(e.getMessage());
+        }
         return RepeatStatus.FINISHED;
     }
 }
@@ -1572,7 +1083,7 @@ public Step uploadTransactionsFileStep() {
 
 ---
 
-### 2.21 JobExecution
+### 2.13 JobExecution
 
 #### Purpose
 
@@ -1584,7 +1095,6 @@ Stores the execution result of a Job.
 JobInstance
 BatchStatus
 ExitStatus
-StepExecution
 ```
 
 #### Actual Usage
@@ -1597,7 +1107,6 @@ sendErrors(execution);
 #### Responsibilities
 
 - Created by **JobRepository** when JobLauncher starts a Job.
-- Contains collection of **StepExecution** objects.
 - Integrates **JobInstance** (identifies which Job + JobParameters).
 - Integrates **BatchStatus** (COMPLETED, FAILED, STOPPED).
 - Integrates **ExitStatus** and failure exceptions.
@@ -1605,52 +1114,52 @@ sendErrors(execution);
 
 ---
 
-## Chunk-Based Execution Flow
+## Execution Flow
 
-1. **@Scheduled** triggers **executeRefundExceptionJob()** method based on cron expression.
-
-2. **JobParametersBuilder** creates **JobParameters**:
+1. **QRBatchJob** (scheduled method) builds **JobParameters** using **JobParametersBuilder**:
 
    ```java
-   JobParametersBuilder paramBuilder = new JobParametersBuilder();
-   paramBuilder.addDate("runDate", new Date());
-   paramBuilder.addString("inputDateStr", day);
-   paramBuilder.addString("filename", "Refund_Exception_Report_" + day + ".csv");
-   JobParameters jobParams = paramBuilder.toJobParameters();
+   @Scheduled(cron = "${batch.job.scheduling.daily.refundexception.report}")
+   public void executeRefundExceptionJob() {
+       String day = DateTime.now().minusDays(1).toString(CommonConsts.DATETIME_FORMAT_CCYYMMDD);
+       JobParametersBuilder paramBuilder = new JobParametersBuilder();
+       paramBuilder.addDate("runDate", new Date());
+       paramBuilder.addString("inputDateStr", day);
+       paramBuilder.addString("filename", "Refund_Exception_Report_" + day + ".csv");
+       JobParameters jobParams = paramBuilder.toJobParameters();
+   }
    ```
 
-3. **JobLauncher.run(job, jobParams)** is called:
+2. **JobLauncher.run(job, jobParams)** is called:
 
    ```java
    JobExecution execution = jobLauncher.run(refundExceptionJob, jobParams);
    ```
 
-4. **JobRepository** creates **JobInstance** and **JobExecution**:
+   - JobLauncher integrates **Job** (what to execute).
+   - JobLauncher integrates **JobParameters** (runtime inputs).
+   - JobLauncher integrates **JobRepository** to create **JobInstance** and **JobExecution**.
 
-   - **RunIdIncrementer** adds unique run.id parameter.
-   - JobInstance uniquely identifies job by name + parameters.
-   - JobExecution tracks this particular run.
+3. **RunIdIncrementer** adds unique run.id parameter to ensure unique **JobInstance**.
 
-5. **Job** executes first step (chunk processing):
+4. **Job** executes first step (chunk processing):
 
    ```java
    .flow(getRefundExceptionStep())
    ```
 
-6. **@JobScope** bean **DataContainer** is created for state accumulation.
+5. **@JobScope** bean **DataContainer** is created for state accumulation.
 
-7. **@StepScope** beans are created with late-bound **JobParameters**:
+6. **@StepScope** beans are created with late-bound **JobParameters**:
 
    ```java
    @Value("#{jobParameters[inputDateStr]}") String inputDateStr
    @Value("#{jobParameters[filename]}") String filename
    ```
 
-8. **Step** begins chunk processing loop:
+7. **Step** begins chunk processing loop:
 
-   a. **PlatformTransactionManager** begins transaction.
-   
-   b. **ItemReader.read()** reads items one by one until chunk size reached:
+   a. **ItemReader.read()** reads items one by one:
    
    ```java
    @Override
@@ -1662,7 +1171,7 @@ sendErrors(execution);
    }
    ```
 
-   c. **ItemProcessor.process()** transforms each item:
+   b. **ItemProcessor.process()** transforms each item:
    
    ```java
    @Override
@@ -1674,41 +1183,38 @@ sendErrors(execution);
    }
    ```
 
-   d. **ItemWriter.write()** writes chunk of items:
+   c. **FlatFileItemWriter.write()** writes chunk of items:
    
    - **FlatFileHeaderCallback.writeHeader()** called once at start.
-   - **DelimitedLineAggregator** formats each item.
-   - **BeanWrapperFieldExtractor** extracts field values.
+   - **DelimitedLineAggregator** formats each item using **BeanWrapperFieldExtractor**.
    - **FlatFileFooterCallback.writeFooter()** called once at end.
 
-   e. **PlatformTransactionManager** commits transaction.
+8. **Step** commits transaction after each chunk via **PlatformTransactionManager**.
 
 9. **Step** repeats chunk processing until **ItemReader** returns null.
 
-10. **Step** updates **StepExecution** with **BatchStatus** and **ExitStatus**.
-
-11. **Job** proceeds to next step (upload):
+10. **Job** proceeds to next step (upload):
 
     ```java
     .next(uploadTransactionsFileStep())
     ```
 
-12. **UploadFileTasklet** executes file upload:
+11. **UploadFileTasklet** executes file upload:
 
     ```java
     @Override
-    public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) {
+    public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         String filename = (String) chunkContext.getStepContext().getJobParameters().get("filename");
         service.processRefundExceptionFile(filename);
         return RepeatStatus.FINISHED;
     }
     ```
 
-13. **Job** updates **JobExecution** status via **JobRepository**.
+12. **Job** updates **JobExecution** status via **JobRepository**.
 
-14. **JobLauncher** returns **JobExecution** to caller.
+13. **JobLauncher** returns **JobExecution** to caller.
 
-15. **sendErrors(execution)** checks **JobExecution.getStatus()** for error handling.
+14. **sendErrors(execution)** checks **JobExecution.getStatus()** for error handling.
 
 ---
 
@@ -1732,36 +1238,39 @@ sendErrors(execution);
 
 | Component | Class | Part | Purpose |
 |-----------|-------|------|---------|
-| @Scheduled | Annotation | Part 1 & 2 | Triggers job execution |
+| JobLauncher | JobLauncher | Part 1 & 2 | Central batch execution manager |
 | JobParametersBuilder | JobParametersBuilder | Part 1 & 2 | Builds runtime parameters |
 | JobParameters | JobParameters | Part 1 & 2 | Runtime inputs |
-| JobLauncher | JobLauncher | Part 1 & 2 | Central batch execution manager |
-| JobRepository | JobRepository | Part 1 & 2 | Batch metadata persistence |
-| JobInstance | JobInstance | Part 1 & 2 | Logical job identification |
 | Job | JobBuilder | Part 1 & 2 | Workflow definition |
 | RunIdIncrementer | RunIdIncrementer | Part 2 | Unique job instance generator |
 | Step | StepBuilder | Part 1 & 2 | Work unit definition |
-| PlatformTransactionManager | PlatformTransactionManager | Part 1 & 2 | Transaction management |
 | Tasklet | Tasklet | Part 1 & 2 | Single operation business logic |
-| StepContribution | StepContribution | Part 1 & 2 | Step execution metrics |
-| ChunkContext | ChunkContext | Part 1 & 2 | Step context access |
-| StepContext | StepContext | Part 1 & 2 | Step-level context |
-| RepeatStatus | RepeatStatus | Part 1 & 2 | Step continuation indicator |
-| StepExecution | StepExecution | Part 1 & 2 | Step execution result |
+| JobRepository | JobRepository | Part 1 & 2 | Batch metadata persistence |
 | JobExecution | JobExecution | Part 1 & 2 | Job execution result |
-| BatchStatus | BatchStatus | Part 1 & 2 | Execution status enum |
-| ExitStatus | ExitStatus | Part 1 & 2 | Exit status |
 | @StepScope | Annotation | Part 2 | Late binding scope |
 | @JobScope | Annotation | Part 2 | Job-level scope |
-| ItemReader | ItemReader | Part 2 | Data reading |
-| ItemProcessor | ItemProcessor | Part 2 | Data transformation |
 | DataContainer | POJO | Part 2 | State accumulation |
-| ItemWriter | FlatFileItemWriter | Part 2 | Data writing |
-| FileSystemResource | FileSystemResource | Part 2 | File location |
+| ItemReader | RefundExceptionReader | Part 2 | Data reading |
+| ItemProcessor | RefundExceptionProcessor | Part 2 | Data transformation |
+| FlatFileItemWriter | FlatFileItemWriter | Part 2 | Data writing |
 | DelimitedLineAggregator | DelimitedLineAggregator | Part 2 | CSV line formatting |
 | BeanWrapperFieldExtractor | BeanWrapperFieldExtractor | Part 2 | Field extraction |
-| FlatFileHeaderCallback | FlatFileHeaderCallback | Part 2 | File header writing |
-| FlatFileFooterCallback | FlatFileFooterCallback | Part 2 | File footer writing |
+| FlatFileHeaderCallback | FileHeaderWriter | Part 2 | File header writing |
+| FlatFileFooterCallback | FileFooterWriter | Part 2 | File footer writing |
+
+---
+
+## Configuration Files
+
+| File | Purpose |
+|------|---------|
+| StaticQrJobConfig.java | Static QR job configuration (Tasklet-based) |
+| ReconciliationJobConfig.java | Reconciliation job configuration (Tasklet-based) |
+| CreditAdjustmentJobConfig.java | Credit adjustment job configuration (Tasklet-based) |
+| RefundReportJobConfig.java | Refund exception job configuration (Chunk-based) |
+| WeChatReconJobConfig.java | WeChat reconciliation job configuration |
+| WeChatTimingJobConfig.java | WeChat timing job configuration |
+| TenpayQueryBillFileJobConfig.java | Tenpay query bill job configuration |
 
 ---
 
@@ -1774,6 +1283,9 @@ batch.job.scheduling.daily.reconciliation.report=0 0 2 * * ?
 batch.job.scheduling.daily.static.qr.report=0 0 3 * * ?
 batch.job.scheduling.daily.creditadjustment.report=0 0 4 * * ?
 batch.job.scheduling.daily.refundexception.report=0 0 5 * * ?
+batch.job.scheduling.daily.wechat.recon.report=0 0 6 * * ?
+batch.job.scheduling.daily.wechat.timing.report=0 0 7 * * ?
+batch.job.scheduling.daily.tenpay.querybillfile.report=0 0 8 * * ?
 ```
 
 ### Processing Properties
