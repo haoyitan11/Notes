@@ -20,7 +20,7 @@ None (Root Bean)
 
 #### Implementation Options
 
-> **Choose ONE approach** - XML OR Java, not both.
+> **Choose ONE approach** - XML OR Java
 
 **Option A: Java Configuration (SolaceConfiguration.java)**
 
@@ -195,7 +195,7 @@ ConnectionFactory (from JndiObjectFactoryBean)
 
 #### Implementation Options
 
-> **Choose ONE approach** - XML OR Java, not both.
+> **Choose ONE approach** - XML OR Java
 
 **Option A: Java Configuration (JmsConfiguration.java)**
 
