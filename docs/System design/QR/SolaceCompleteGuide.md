@@ -13,43 +13,6 @@ This document provides a complete guide for the Solace messaging implementation 
 > - **JMS Messaging**: XML configuration only (`upi-request-adapter.xml`) with Java implementation classes
 > - **Spring Integration**: XML configuration only (various flow XML files) with Java `@ServiceActivator` methods
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────────┐
-│                              SOLACE COMPLETE ARCHITECTURE                            │
-├─────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                      │
-│  ┌─────────────────────────────────────────────────────────────────────────────┐    │
-│  │                    LAYER 1: CORE INFRASTRUCTURE                              │    │
-│  │                        (XML + Java Configuration)                            │    │
-│  │  ┌───────────────────┐   ┌─────────────────────┐   ┌───────────────────────┐│    │
-│  │  │ solaceJndiTemplate│──►│ solaceConnection    │──►│solaceCachedConnection ││    │
-│  │  │ (XML profiles)    │   │ Factory             │   │Factory                ││    │
-│  │  └───────────────────┘   └─────────────────────┘   └───────────────────────┘│    │
-│  └─────────────────────────────────────────────────────────────────────────────┘    │
-│                                          │                                           │
-│              ┌───────────────────────────┴───────────────────────────┐              │
-│              ▼                                                       ▼              │
-│  ┌─────────────────────────────────────────────────────────────────────────────┐    │
-│  │                    LAYER 2: JMS MESSAGING (XML Config)                       │    │
-│  │  ┌─────────────────┐   ┌───────────────────┐   ┌─────────────────────┐      │    │
-│  │  │ producerJms     │   │ SolaceMessage     │   │ SolaceMessage       │      │    │
-│  │  │ Template        │   │ Sender            │   │ Receiver            │      │    │
-│  │  └─────────────────┘   └───────────────────┘   └─────────────────────┘      │    │
-│  │  Pattern: Synchronous Request-Reply with Correlation ID                      │    │
-│  └─────────────────────────────────────────────────────────────────────────────┘    │
-│                                                                                      │
-│  ┌─────────────────────────────────────────────────────────────────────────────┐    │
-│  │                    LAYER 3: SPRING INTEGRATION (XML Config)                  │    │
-│  │  ┌──────────────┐  ┌─────────────┐  ┌─────────────┐  ┌──────────────────┐   │    │
-│  │  │Listener      │─►│ Channels    │─►│ Transformer │─►│@ServiceActivator │   │    │
-│  │  │Container     │  │ (wire-tap)  │  │ (JSON↔Obj)  │  │methods           │   │    │
-│  │  └──────────────┘  └─────────────┘  └─────────────┘  └──────────────────┘   │    │
-│  │  Pattern: Asynchronous Processing via Spring Integration Flows               │    │
-│  └─────────────────────────────────────────────────────────────────────────────┘    │
-│                                                                                      │
-└─────────────────────────────────────────────────────────────────────────────────────┘
-```
-
 ---
 
 # Part 1: Core Infrastructure
