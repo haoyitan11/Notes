@@ -1,33 +1,34 @@
 # Payment Service Provider QR System Design
 ## Solace Message Broker
-### Solace Core Infrasutrcture Components
+### Core Infrasutrcture Components
 1. JndiTemplate
-2. JndiObjectFactoryBean (ConnectionFactory Lookup)
+2. JndiObjectFactoryBean
 3. ConnectionFactory
 4. CachingConnectionFactory
+5. JndiDestinationResolver
 
-More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SolaceCoreInfrastructure.md
-
-### Solace JMS Messaging Components
-1. JmsTemplate
+### JMS Messaging Components
+1. Producer JmsTemplate
 2. SolaceMessageSender
-3. SolaceMessageReceiver
-4. ReplyToJmsForwardingService
-5. ReplyToJmsReplyService
+3. SolaceMessageSenderOneWay
+4. Receiver Queue
+5. Receiver JmsTemplate
+6. Receiver JmsTemplate
 
-More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SolaceJMSMessaging.md
-
-### Solace Spring Integration Components
+### Spring Integration Components
 1. DefaultMessageListenerContainer
-2. message-driven-channel-adapter
+2. MessageDrivenChannelAdapter
 3. Spring Integration Channels
-4. json-to-object-transformer
-5. service-activator (XML config)
-6. @ServiceActivator (Java annotation)
-7. object-to-json-transformer
-8. outbound-channel-adapter
+4. JsonToObjectTransformer
+5. ServiceActivator
+6. @ServiceActivator Business Service
+7. ObjectToJsonTransformer
+8. OutboundChannelAdapter
 
-More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SolaceSpringIntegration.md
+### Runtime
+1. Solace Broker (Topic / Queue)
+
+More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SolaceCompleteGuide.md
 
 ## Database
 1. MySQL
