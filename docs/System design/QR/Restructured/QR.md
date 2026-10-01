@@ -93,13 +93,13 @@ https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/PrivateKey
 ## QR Processing
 
 ### ZXing QR Code Generate Dependencies Handle
-#### Part 1: QR Payload Generation Components
+#### QR Payload Generation Components
 1. DynamicQrCodeUtil
 2. DateUtil
 3. CRC16 Calculator
 4. Helper Methods
 
-#### Part 2: QR Image Generation Components
+#### QR Image Generation Components
 1. DynamicQrImageUtil
 2. QRCodeWriter
 3. BitMatrix
