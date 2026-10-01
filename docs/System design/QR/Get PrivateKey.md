@@ -38,7 +38,7 @@ java.security.Security
 #### Actual Usage
 
 ```java
-Security.addProvider(new BouncyCastleProvider());
+Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 ```
 
 #### Responsibilities
