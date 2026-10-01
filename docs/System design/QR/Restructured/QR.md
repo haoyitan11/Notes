@@ -1,6 +1,8 @@
 # Payment Service Provider QR System Design
+
 ## Solace Message Broker
-### Core Infrasutrcture Components
+
+### Core Infrastructure Components
 1. JndiTemplate
 2. JndiObjectFactoryBean
 3. ConnectionFactory
@@ -13,7 +15,7 @@
 3. SolaceMessageSenderOneWay
 4. Receiver Queue
 5. Receiver JmsTemplate
-6. Receiver JmsTemplate
+6. SolaceMessageReceiver
 
 ### Spring Integration Components
 1. DefaultMessageListenerContainer
@@ -28,75 +30,71 @@
 ### Runtime
 1. Solace Broker (Topic / Queue)
 
-More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SolaceCompleteGuide.md
+More details on:
+https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SolaceCompleteGuide.md
+
+---
 
 ## Database
+
+### Database
 1. MySQL
 
-## Database Query dependencies handle
-1. JdbcTemplate <br>
+### Database Query Dependencies Handle
+1. JdbcTemplate
 2. Hibernate
 
-## HTTP clients dependencies handle
-1. Spring WebFlux (WebClient) 
-2. Apache HttpClient (CloseableHttpClient)
-3. RestClient (match with expcetion RestClientResponseException)
+---
 
-## Oauth2 dependencies handle
+## HTTP Clients Dependencies Handle
+
+### Components
+1. Spring WebFlux (WebClient)
+2. Apache HttpClient (CloseableHttpClient)
+3. RestClient
+
+---
+
+## OAuth2 Dependencies Handle
+
 ### Components
 1. AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager
 2. ReactiveClientRegistrationRepository
 3. ReactiveOAuth2AuthorizedClientService
 4. ClientCredentialsReactiveOAuth2AuthorizedClientProvider
-5. WebClientReactiveClientCredentialsTokenResponseClien
+5. WebClientReactiveClientCredentialsTokenResponseClient
 6. WebClient
 7. OAuth2AuthorizeRequest
 8. OAuth2AuthorizedClient
 9. OAuth2AccessToken
 
-More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/OAuth2.md
+More details on:
+https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/OAuth2.md
 
-## Spring Batch dependencies handle
-### Spring Batch Job components
-1. JobLauncher
-2. Job
-3. JobParameters
-4. JobExecution
-5. JobRepository
-6. JobBuilder
-7. Step
-8. StepBuilder
-9. Tasklet
+---
 
-More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SpringBatchJob.md
+## PrivateKey Dependencies Handle
 
-### Spring Batch Chunk components
-1. Chunk-Oriented Step
-2. ItemReader
-3. ItemProcessor
-4. ItemWriter (FlatFileItemWriter)
-5. FlatFileHeaderCallback
-6. FlatFileFooterCallback
-7. DataContainer
-8. @StepScope / @JobScope
-
-More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SpringBatchChunk.md
-
-## PrivateKey dependencies handle
 ### Components
 1. BouncyCastleProvider
 2. Files & Paths
-3. Reader (StringReader)
+3. StringReader
 4. PEMParser
 5. PEMKeyPair
 6. PrivateKeyInfo
 7. JcaPEMKeyConverter
 8. PrivateKey
 
-More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/PrivateKey.md
+More details on:
+https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/PrivateKey.md
 
-## ZXing QR code generate dependencies handle
-### Components
+---
+
+## HTTP QR Processing
+
+### ZXing QR Code Generate Dependencies Handle
+
+#### Components
 1. DynamicQrCodeUtil
 2. DynamicQrImageUtil
 3. QRCodeWriter
@@ -107,5 +105,36 @@ More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20desi
 8. Graphics2D
 9. ImageIO
 
-More details on https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/ZXing%20QR.md
+More details on:
+https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/ZXing%20QR.md
 
+---
+
+## Spring Batch Dependencies Handle
+
+### Spring Batch Job Components
+1. JobLauncher
+2. Job
+3. JobParameters
+4. JobExecution
+5. JobRepository
+6. JobBuilder
+7. Step
+8. StepBuilder
+9. Tasklet
+
+More details on:
+https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SpringBatchJob.md
+
+### Spring Batch Chunk Components
+1. Chunk-Oriented Step
+2. ItemReader
+3. ItemProcessor
+4. ItemWriter (FlatFileItemWriter)
+5. FlatFileHeaderCallback
+6. FlatFileFooterCallback
+7. DataContainer
+8. @StepScope / @JobScope
+
+More details on:
+https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SpringBatchChunk.md
