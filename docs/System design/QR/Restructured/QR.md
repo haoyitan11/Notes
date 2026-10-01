@@ -99,7 +99,7 @@ https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/OAuth2.md
 5. PrivateKey
 
 More details on:
-https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/PrivateKey.md
+https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/GetPrivateKey.md
 
 ---
 
