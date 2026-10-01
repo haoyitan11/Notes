@@ -3,7 +3,7 @@
 ## Overview
 <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/674a6316-6421-4ab5-a201-6c643e37feaf" />
 
-This document provides a complete guide for the Solace messaging implementation in the UPI Proxy application. It covers three layers:
+This document provides a complete guide for the Solace messaging implementation in the application. It covers three layers:
 
 1. **Core Infrastructure** - Foundation connectivity to Solace Broker
 2. **JMS Messaging** - Direct JMS messaging capabilities (Synchronous Request-Reply)
