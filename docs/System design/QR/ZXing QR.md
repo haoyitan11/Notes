@@ -1,8 +1,7 @@
 # ZXing QR Code Generation Dependencies Handle
 
 ## Overview
-
-![ZXing QR Generation Architecture](https://github.com/user-attachments/assets/6f213bf2-f013-4130-8465-10b682ddf86a)
+<img width="3200" height="2918" alt="image" src="https://github.com/user-attachments/assets/9b705931-a138-4dc4-8fff-9b3b99d12cbb" />
 
 This document provides a complete guide for the ZXing QR code generation implementation in the application. It covers two processing layers:
 
