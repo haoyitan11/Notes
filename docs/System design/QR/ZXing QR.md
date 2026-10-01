@@ -994,27 +994,3 @@ try {
     logger.error("IOException occurred", e);
 }
 ```
-
----
-
-## Properties Reference
-
-### QR Configuration
-
-| Property | Value | Description |
-|----------|-------|-------------|
-| Header | QRPAY | Fixed QR identifier |
-| Version | 0 | Protocol version |
-| Operation | 0 | Transaction type (Sale) |
-| Currency | 0 | Currency code (SGD) |
-| Logo Path | /images/logo.png | Logo resource location |
-
-### Image Configuration
-
-| Property | Value | Description |
-|----------|-------|-------------|
-| Image Type | TYPE_INT_ARGB | 32-bit ARGB image |
-| Compression Quality | 0.1F | PNG compression level |
-| Error Correction | Level H | 30% damage tolerance |
-| Foreground Color | BLACK (0xFF000000) | QR module color |
-| Background Color | WHITE (0xFFFFFFFF) | Empty space color |
