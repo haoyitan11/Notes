@@ -75,7 +75,7 @@ https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/OAuth2.md
 
 ## Get PrivateKey Dependencies Handle
 
-### Components
+### Part 1. PEM File Loading (Bouncy Castle)
 1. BouncyCastleProvider
 2. Files & Paths
 3. StringReader
@@ -84,6 +84,19 @@ https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/OAuth2.md
 6. PrivateKeyInfo
 7. JcaPEMKeyConverter
 8. PrivateKey
+
+### Part 2. Raw PKCS8 Binary File Loading (Native Java)
+1. Files & Paths
+2. PKCS8EncodedKeySpec
+3. KeyFactory
+4. PrivateKey
+
+### Part 3. KeyStore Loading (JKS / PKCS12)
+1. FileInputStream
+2. KeyStore
+3. KeyStore.getKey()
+4. KeyStore.PrivateKeyEntry
+5. PrivateKey
 
 More details on:
 https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/PrivateKey.md
