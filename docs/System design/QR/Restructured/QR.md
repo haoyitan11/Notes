@@ -123,9 +123,6 @@ https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/ZXing%20QR
 8. StepBuilder
 9. Tasklet
 
-More details on:
-https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SpringBatchJob.md
-
 ### Spring Batch Chunk Components
 1. Chunk-Oriented Step
 2. ItemReader
@@ -137,4 +134,4 @@ https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SpringBatc
 8. @StepScope / @JobScope
 
 More details on:
-https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SpringBatchChunk.md
+https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SpringBatchCompleteGuide.md
