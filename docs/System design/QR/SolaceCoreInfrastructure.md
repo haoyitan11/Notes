@@ -65,7 +65,7 @@ public JndiTemplate jndiTemplate() {
 
 ---
 
-### 2. JndiObjectFactoryBean (ConnectionFactory)
+### 2. JndiObjectFactoryBean (ConnectionFactory Lookup)
 
 #### Purpose
 
@@ -111,7 +111,7 @@ public JndiObjectFactoryBean connectionFactory(JndiTemplate jndiTemplate) {
 
 ---
 
-### 3. JndiObjectFactoryBean (Queue)
+### 3. JndiObjectFactoryBean (Queue Lookup)
 
 #### Purpose
 
