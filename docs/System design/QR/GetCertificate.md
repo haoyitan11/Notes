@@ -234,36 +234,6 @@ pemParser.close();
 return certificate;
 ```
 
----
-
-## Complete Example
-
-```java
-private X509Certificate getCertificateFromPem(String certPath) 
-        throws IOException, CertificateException {
-    Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
-    
-    String pem = new String(Files.readAllBytes(Paths.get(certPath)));
-    Reader certReader = new StringReader(pem);
-    PEMParser pemParser = new PEMParser(certReader);
-    
-    X509Certificate certificate = null;
-    Object pemObject = pemParser.readObject();
-    
-    if (pemObject instanceof X509CertificateHolder) {
-        X509CertificateHolder certHolder = (X509CertificateHolder) pemObject;
-        JcaX509CertificateConverter converter = new JcaX509CertificateConverter()
-                .setProvider("BC");
-        certificate = converter.getCertificate(certHolder);
-    }
-    
-    pemParser.close();
-    return certificate;
-}
-```
-
----
-
 ## PEM Certificate Format Reference
 
 ### X.509 Certificate Format
@@ -502,70 +472,6 @@ X509Certificate certificate = (X509Certificate) entry.getCertificate();
 Certificate[] chain = entry.getCertificateChain();
 ```
 
----
-
-## Complete Example: Single Certificate
-
-```java
-private X509Certificate getCertificateFromKeyStore(String keyStorePath, 
-        String keyStoreType, String keyStorePassword, String alias) 
-        throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException {
-    
-    try (InputStream inputStream = new FileInputStream(keyStorePath)) {
-        KeyStore keyStore = KeyStore.getInstance(keyStoreType);
-        keyStore.load(inputStream, keyStorePassword.toCharArray());
-        return (X509Certificate) keyStore.getCertificate(alias);
-    }
-}
-```
-
-## Complete Example: Certificate Chain
-
-```java
-private X509Certificate[] getCertificateChainFromKeyStore(String keyStorePath, 
-        String keyStoreType, String keyStorePassword, String alias) 
-        throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException {
-    
-    try (InputStream inputStream = new FileInputStream(keyStorePath)) {
-        KeyStore keyStore = KeyStore.getInstance(keyStoreType);
-        keyStore.load(inputStream, keyStorePassword.toCharArray());
-        
-        Certificate[] certChain = keyStore.getCertificateChain(alias);
-        if (certChain == null) {
-            return null;
-        }
-        
-        X509Certificate[] x509Chain = new X509Certificate[certChain.length];
-        for (int i = 0; i < certChain.length; i++) {
-            x509Chain[i] = (X509Certificate) certChain[i];
-        }
-        return x509Chain;
-    }
-}
-```
-
-## Complete Example: From PrivateKeyEntry
-
-```java
-private X509Certificate getCertificateFromPrivateKeyEntry(String keyStorePath, 
-        String keyStoreType, String keyStorePassword, String keyPassword, String alias) 
-        throws KeyStoreException, IOException, NoSuchAlgorithmException, 
-               CertificateException, UnrecoverableEntryException {
-    
-    try (InputStream inputStream = new FileInputStream(keyStorePath)) {
-        KeyStore keyStore = KeyStore.getInstance(keyStoreType);
-        keyStore.load(inputStream, keyStorePassword.toCharArray());
-        
-        KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(
-                alias, new KeyStore.PasswordProtection(keyPassword.toCharArray()));
-        
-        return (X509Certificate) privateKeyEntry.getCertificate();
-    }
-}
-```
-
----
-
 # Part 3: DER/CER File Loading (Native Java)
 
 ## Purpose
@@ -717,34 +623,6 @@ PublicKey pk = certificate.getPublicKey();
 ```java
 fin.close();
 ```
-
----
-
-## Complete Example: File-Based Loading
-
-```java
-private X509Certificate getCertificateFromFile(String certPath) 
-        throws FileNotFoundException, CertificateException {
-    FileInputStream fin = new FileInputStream(certPath);
-    CertificateFactory f = CertificateFactory.getInstance("X.509");
-    X509Certificate certificate = (X509Certificate) f.generateCertificate(fin);
-    return certificate;
-}
-```
-
-## Complete Example: Byte Array Loading
-
-```java
-private X509Certificate getCertificateFromBytes(byte[] certBytes) 
-        throws CertificateException {
-    CertificateFactory f = CertificateFactory.getInstance("X.509");
-    X509Certificate certificate = (X509Certificate) f.generateCertificate(
-            new ByteArrayInputStream(certBytes));
-    return certificate;
-}
-```
-
----
 
 # Part 4: Certificate Utility Methods
 
