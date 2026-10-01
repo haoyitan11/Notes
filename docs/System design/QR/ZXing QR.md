@@ -971,35 +971,6 @@ return new String(encodedBytes);
 
 ---
 
-## Maven Dependencies
-
-```xml
-<!-- QR Image Generation -->
-<dependency>
-    <groupId>com.google.zxing</groupId>
-    <artifactId>core</artifactId>
-    <version>3.5.4</version>
-</dependency>
-
-<dependency>
-    <groupId>com.google.zxing</groupId>
-    <artifactId>javase</artifactId>
-    <version>3.5.4</version>
-</dependency>
-```
-
-### Module Breakdown
-
-| Module | Package | Classes Used |
-|--------|---------|--------------|
-| **core** | com.google.zxing | BarcodeFormat, EncodeHintType, WriterException |
-| **core** | com.google.zxing.common | BitMatrix |
-| **core** | com.google.zxing.qrcode | QRCodeWriter |
-| **core** | com.google.zxing.qrcode.decoder | ErrorCorrectionLevel |
-| **javase** | com.google.zxing.client.j2se | MatrixToImageWriter, MatrixToImageConfig |
-
----
-
 ## Error Handling
 
 ### WriterException
