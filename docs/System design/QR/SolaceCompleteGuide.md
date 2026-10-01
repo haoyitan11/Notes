@@ -58,56 +58,6 @@ This document provides a complete guide for the Solace messaging implementation 
 
 Provides the foundational connectivity layer between the application and Solace Broker.
 
-## Bean Dependency Flow
-
-```
-┌─────────────────────────────────────────────────────────────────────────────────────┐
-│                         CORE INFRASTRUCTURE BEANS                                    │
-├─────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                      │
-│  ┌───────────────────────────────────────────────────────────────────────────────┐  │
-│  │                        XML CONFIG (spring-context.xml)                         │  │
-│  │                                                                                │  │
-│  │  ┌─────────────────────┐                                                       │  │
-│  │  │  solaceJndiTemplate │  ◄── Profile-based (dev, SIT/UAT/PROD)               │  │
-│  │  └──────────┬──────────┘                                                       │  │
-│  │             │                                                                  │  │
-│  │             ├────────────────────────────────────────────┐                     │  │
-│  │             ▼                                            ▼                     │  │
-│  │  ┌─────────────────────────┐         ┌─────────────────────────────────────┐  │  │
-│  │  │  solaceConnectionFactory│         │  JndiObjectFactoryBean (Queues)     │  │  │
-│  │  │  (JndiObjectFactoryBean)│         │  - ap.processingRequestQueue        │  │  │
-│  │  └──────────┬──────────────┘         │  - fx.processingRequestQueue        │  │  │
-│  │             │                        │  - tsp.processingRequestQueue       │  │  │
-│  │             ▼                        │  - upiAdapterReq.consumerQueue      │  │  │
-│  │  ┌──────────────────────────────┐    │  - reversal.consumerQueue           │  │  │
-│  │  │  solaceCachedConnection      │    │  - processor.consumerQueue          │  │  │
-│  │  │  Factory (primary="true")    │    └─────────────────────────────────────┘  │  │
-│  │  └──────────────────────────────┘                                              │  │
-│  │                                                                                │  │
-│  └───────────────────────────────────────────────────────────────────────────────┘  │
-│                                                                                      │
-│  ┌───────────────────────────────────────────────────────────────────────────────┐  │
-│  │                   JAVA CONFIG (Alternative - @Profile based)                   │  │
-│  │                                                                                │  │
-│  │  SolaceConfiguration.java (@Profile("!local"))                                 │  │
-│  │  └── jndiTemplate (with SSL properties)                                        │  │
-│  │                                                                                │  │
-│  │  LocalSolaceConfiguration.java (@Profile("local"))                             │  │
-│  │  └── jndiTemplate (with password auth)                                         │  │
-│  │                                                                                │  │
-│  │  JmsConfiguration.java                                                         │  │
-│  │  ├── connectionFactory                                                         │  │
-│  │  ├── cachedConnectionFactoryfinal                                              │  │
-│  │  ├── jmsTemplate                                                               │  │
-│  │  └── jmsListenerContainerFactory                                               │  │
-│  └───────────────────────────────────────────────────────────────────────────────┘  │
-│                                                                                      │
-└─────────────────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
 ## 1.1 JndiTemplate (XML Configuration)
 
 ### Purpose
