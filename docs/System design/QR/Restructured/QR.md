@@ -73,7 +73,7 @@ https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/OAuth2.md
 
 ---
 
-## PrivateKey Dependencies Handle
+## Get PrivateKey Dependencies Handle
 
 ### Components
 1. BouncyCastleProvider
