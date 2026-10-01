@@ -640,6 +640,7 @@ public class SolaceMessageSenderOneWay {
 - Optionally sets JMSCorrelationID for one-way messaging
 
 # Part 3: Spring Integration
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/81b13df6-790a-4c1f-930c-a824ff3932be" />
 
 ## Purpose
 
