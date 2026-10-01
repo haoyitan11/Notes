@@ -1,7 +1,8 @@
 # Solace Complete Implementation Guide
 
 ## Overview
-<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/674a6316-6421-4ab5-a201-6c643e37feaf" />
+
+![Solace Complete Architecture](https://github.com/user-attachments/assets/674a6316-6421-4ab5-a201-6c643e37feaf)
 
 This document provides a complete guide for the Solace messaging implementation in the application. It covers three layers:
 
@@ -9,13 +10,17 @@ This document provides a complete guide for the Solace messaging implementation 
 2. **JMS Messaging** - Direct JMS messaging capabilities (Synchronous Request-Reply)
 3. **Spring Integration** - Message flow processing with transformations (Asynchronous Processing)
 
+---
 
 # Part 1: Core Infrastructure
-<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/53540487-1374-45ab-9549-310d58fb5ed2" />
+
+![Core Infrastructure](https://github.com/user-attachments/assets/53540487-1374-45ab-9549-310d58fb5ed2)
 
 ## Purpose
 
 Provides the foundational connectivity layer between the application and Solace Broker.
+
+---
 
 ## 1.1 JndiTemplate (XML Configuration)
 
@@ -275,11 +280,14 @@ Resolves destination names to JNDI-looked-up destinations.
 ---
 
 # Part 2: JMS Messaging
-<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/f3a99b74-4e35-451e-b01a-3f5b5d416baf" />
+
+![JMS Messaging](https://github.com/user-attachments/assets/f3a99b74-4e35-451e-b01a-3f5b5d416baf)
 
 ## Purpose
 
 Provides direct JMS-based messaging capabilities for synchronous request-reply pattern.
+
+---
 
 ## 2.1 Producer JmsTemplate
 
@@ -363,10 +371,10 @@ Provides inbound JMS receive operations with selector support.
 
 Handles outbound message sending to Solace with request-reply pattern support.
 
-### Implementation (com.nets.nps.qr.common.solace.SolaceMessageSender)
+### Implementation (SolaceMessageSender.java)
 
 ```java
-package com.nets.nps.qr.common.solace;
+package com.common.solace;
 
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
@@ -430,7 +438,7 @@ public class SolaceMessageSender {
 
 ```xml
 <bean id="ReqMessageProducer"
-    class="com.nets.nps.qr.common.solace.SolaceMessageSender">
+    class="com.common.solace.SolaceMessageSender">
     <property name="jmsTemplate" ref="producerJmsTemplate" />
 </bean>
 ```
@@ -443,16 +451,16 @@ public class SolaceMessageSender {
 
 ---
 
-## 2.4 SolaceMessageReceiver (nps-qr-common Library)
+## 2.4 SolaceMessageReceiver
 
 ### Purpose
 
 Handles inbound message receiving using correlation ID filtering.
 
-### Implementation (com.nets.nps.qr.common.solace.SolaceMessageReceiver)
+### Implementation (SolaceMessageReceiver.java)
 
 ```java
-package com.nets.nps.qr.common.solace;
+package com.common.solace;
 
 import java.util.Objects;
 
@@ -506,17 +514,17 @@ public class SolaceMessageReceiver {
 
 ```xml
 <bean id="ReqMessageReceiver"
-    class="com.nets.nps.qr.common.solace.SolaceMessageReceiver">
+    class="com.common.solace.SolaceMessageReceiver">
     <property name="jmsTemplate" ref="ReqMessageReceiverJmsTemplate" />
 </bean>
 
 <bean id="reversalMessageReceiver"
-    class="com.nets.nps.qr.common.solace.SolaceMessageReceiver">
+    class="com.common.solace.SolaceMessageReceiver">
     <property name="jmsTemplate" ref="reversalMessageReceiverJmsTemplate" />
 </bean>
 
 <bean id="processorMessageReceiver"
-    class="com.nets.nps.qr.common.solace.SolaceMessageReceiver">
+    class="com.common.solace.SolaceMessageReceiver">
     <property name="jmsTemplate" ref="processorMessageReceiverJmsTemplate" />
 </bean>
 ```
@@ -595,13 +603,17 @@ public class SolaceMessageSenderOneWay {
 - Sends outbound text messages to specified topic
 - Optionally sets JMSCorrelationID for one-way messaging
 
+---
+
 # Part 3: Spring Integration
-<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/81b13df6-790a-4c1f-930c-a824ff3932be" />
+
+![Spring Integration](https://github.com/user-attachments/assets/81b13df6-790a-4c1f-930c-a824ff3932be)
 
 ## Purpose
 
 Receives messages from Solace queues, transforms payloads, invokes business services, and publishes responses asynchronously.
 
+---
 
 ## 3.1 DefaultMessageListenerContainer
 
@@ -759,17 +771,17 @@ public class TransactionProcessingService {
     private ExchangeService exchangeService;
 
     @ServiceActivator
-    public ProxyRequest process(UpiProxyRequest upiProxyRequest) {
-        logger.info("TransactionUpiProxyProcessingService process method start");
+    public ProxyRequest process(ProxyRequest proxyRequest) {
+        logger.info("TransactionProcessingService process method start");
 
-        String upiRestUrl = getUPIRequestURI.getUpiRequestUrl(upiProxyRequest.getTransactionType());
+        String restUrl = getRequestURI.getRequestUrl(proxyRequest.getTransactionType());
         
-        String upiProxyResponse = "";
+        String proxyResponse = "";
         try {
-            upiProxyResponse = exchangeService.getUPIResponse(
-                upiProxyRequest.getUpiProxyRequestJsonData(), 
-                upiRestUrl, 
-                upiProxyRequest.getInstCode()
+            proxyResponse = exchangeService.getResponse(
+                proxyRequest.getRequestJsonData(), 
+                restUrl, 
+                proxyRequest.getInstCode()
             );
         } catch (ResourceAccessException ex) {
             logger.error("Exception occurred while processing ", ex);
@@ -777,9 +789,9 @@ public class TransactionProcessingService {
             logger.error("Exception occurred while processing ", e);
         }
         
-        upiProxyRequest.setUpiProxyResponseJsonData(upiProxyResponse);
-        logger.info("TransactionUpiProxyProcessingService process method end");
-        return upiProxyRequest;
+        proxyRequest.setResponseJsonData(proxyResponse);
+        logger.info("TransactionProcessingService process method end");
+        return proxyRequest;
     }
 }
 ```
@@ -810,16 +822,16 @@ Sends Spring Integration messages back to Solace.
 </int-jms:outbound-channel-adapter>
 ```
 
-### Configuration - Static Destination (fx-hub-request.xml)
+### Configuration - Static Destination
 
 ```xml
-<int:channel id="jsonJMSOutChannelFx" />
+<int:channel id="jsonJMSOutChannel" />
 
 <int-jms:outbound-channel-adapter 
-    id="outputChannelFx"
+    id="outputChannel"
     pub-sub-domain="true" 
-    destination-expression="'${solace.upiproxy.to.fx.topic.name}'"
-    channel="jsonJMSOutChannelFx" 
+    destination-expression="'${solace.response.topic.name}'"
+    channel="jsonJMSOutChannel" 
     connection-factory="solaceCachedConnectionFactory">
 </int-jms:outbound-channel-adapter>
 ```
@@ -914,8 +926,8 @@ public class GracefulShutdownConfiguration {
 | SolaceConfiguration.java | Java | Core | JndiTemplate (@Profile("!local")) |
 | LocalSolaceConfiguration.java | Java | Core | JndiTemplate (@Profile("local")) |
 | JmsConfiguration.java | Java | Core | ConnectionFactory, CachingConnectionFactory, JmsTemplate |
-| upi-request-adapter.xml | XML | JMS | Producer/Receiver JmsTemplate, SolaceMessageSender/Receiver |
-| upi-proxy-transactions.xml | XML | Integration | UPI Proxy transaction flow |
+| request-adapter.xml | XML | JMS | Producer/Receiver JmsTemplate, SolaceMessageSender/Receiver |
+| transactions.xml | XML | Integration | Transaction flow |
 | fx-hub-request.xml | XML | Integration | FX Hub query flow |
 | tsp-request-enroll.xml | XML | Integration | TSP enrollment flow |
 | tsp-request-cardsm.xml | XML | Integration | TSP card status management flow |
@@ -932,13 +944,13 @@ public class GracefulShutdownConfiguration {
 | solaceConnectionFactory | JndiObjectFactoryBean | spring-context.xml | Core |
 | solaceCachedConnectionFactory | CachingConnectionFactory | spring-context.xml | Core |
 | jndiDestinationResolver | JndiDestinationResolver | spring-context.xml | Core |
-| producerJmsTemplate | JmsTemplate | upi-request-adapter.xml | JMS |
-| upiAdapterReqMessageProducer | SolaceMessageSender | upi-request-adapter.xml | JMS |
-| upiDebitMessageProducer | SolaceMessageSenderOneWay | upi-request-adapter.xml | JMS |
-| upiAdapterReqMessageReceiver | SolaceMessageReceiver | upi-request-adapter.xml | JMS |
-| reversalMessageReceiver | SolaceMessageReceiver | upi-request-adapter.xml | JMS |
-| processorMessageReceiver | SolaceMessageReceiver | upi-request-adapter.xml | JMS |
-| ap.messageListenerContainer | DefaultMessageListenerContainer | upi-proxy-transactions.xml | Integration |
+| producerJmsTemplate | JmsTemplate | request-adapter.xml | JMS |
+| ReqMessageProducer | SolaceMessageSender | request-adapter.xml | JMS |
+| MessageProducer | SolaceMessageSenderOneWay | request-adapter.xml | JMS |
+| ReqMessageReceiver | SolaceMessageReceiver | request-adapter.xml | JMS |
+| reversalMessageReceiver | SolaceMessageReceiver | request-adapter.xml | JMS |
+| processorMessageReceiver | SolaceMessageReceiver | request-adapter.xml | JMS |
+| ap.messageListenerContainer | DefaultMessageListenerContainer | transactions.xml | Integration |
 | fx.messageListenerContainer | DefaultMessageListenerContainer | fx-hub-request.xml | Integration |
 
 ---
@@ -989,7 +1001,7 @@ low.usage.idle.taskexecution.limit=20
 ### Timeout Properties
 
 ```properties
-upi.message.receive.timeout=30000
+message.receive.timeout=30000
 server.gracefulshutdown.timeout.second=50
 ```
 
@@ -1004,7 +1016,3 @@ server.gracefulshutdown.timeout.second=50
 | JMSMessageID | Unique message identifier | Solace Broker |
 | JMSTimestamp | Message send time | Solace Broker |
 | jms_replyTo | Spring Integration header | Preserved from JMS |
-
----
-
-
