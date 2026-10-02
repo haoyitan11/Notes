@@ -92,10 +92,6 @@ https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SolaceComp
 1. @Transactional
 2. Transaction Propagation
 
-### Reference
-https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/DatabaseAccessPatternsCompleteGuide.md
-
-
 ## Hibernate / Spring Data JPA
 
 ### Components
@@ -133,7 +129,9 @@ https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/DatabaseAc
 5. Dynamic SQL Provider
 6. Service Layer
 
----
+### Reference
+https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/DatabaseAccessPatternsCompleteGuide.md
+
 
 # 3. Security Layer
 
