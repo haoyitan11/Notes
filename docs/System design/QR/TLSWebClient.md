@@ -9,8 +9,6 @@ This document provides a complete guide for building TLS-enabled WebClient in th
 
 ---
 
-<img width="3200" height="3372" alt="image" src="https://github.com/user-attachments/assets/c393bc53-01da-4760-a685-6623e0702c60" />
-
 # Part 1: One-Way TLS (Server Certificate Validation)
 
 ## Purpose
@@ -18,7 +16,7 @@ This document provides a complete guide for building TLS-enabled WebClient in th
 Provides TLS connectivity where only the server's certificate is validated. The client trusts the server but does not present its own certificate.
 
 ## Components
-<img width="3200" height="3288" alt="image" src="https://github.com/user-attachments/assets/6141a276-59f4-4421-97b8-d8a9992f2095" />
+<img width="2624" height="1760" alt="image" src="https://github.com/user-attachments/assets/d40ee0c4-6c00-4183-b3ca-eb8aa279137a" />
 
 ### 1.1 FileInputStream & ResourceUtils
 
@@ -333,7 +331,7 @@ public WebClient createTokenWebClient(SslContext oneWayTlsContext) {
 Provides mTLS connectivity where both client and server authenticate each other using certificates. The client presents its certificate (via KeyStore) and validates the server's certificate (via TrustStore).
 
 ## Components
-<img width="3200" height="4668" alt="image" src="https://github.com/user-attachments/assets/1e7f853c-b438-412b-91bd-7f2e5b7b5b58" />
+<img width="2624" height="2152" alt="image" src="https://github.com/user-attachments/assets/8156f380-adbc-4885-aaa3-fe8dbc99a9f8" />
 
 ### 2.1 FileInputStream (KeyStore)
 
