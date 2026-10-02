@@ -32,11 +32,9 @@ Payment Service Provider (PSP) QR System
 
 ---
 
-# 1. Messaging Layer
+# Solace Message Broker
 
-## Solace Message Broker
-
-### Core Infrastructure Components
+## Core Infrastructure Components
 
 1. JndiTemplate
 2. JndiObjectFactoryBean
@@ -44,7 +42,7 @@ Payment Service Provider (PSP) QR System
 4. CachingConnectionFactory
 5. JndiDestinationResolver
 
-### JMS Messaging Components
+## JMS Messaging Components
 
 1. Producer JmsTemplate
 2. SolaceMessageSender
@@ -53,7 +51,7 @@ Payment Service Provider (PSP) QR System
 5. Receiver JmsTemplate
 6. SolaceMessageReceiver
 
-### Spring Integration Components
+## Spring Integration Components
 
 1. DefaultMessageListenerContainer
 2. MessageDrivenChannelAdapter
@@ -64,14 +62,19 @@ Payment Service Provider (PSP) QR System
 7. ObjectToJsonTransformer
 8. OutboundChannelAdapter
 
-### Runtime Components
+## Runtime Components
 
 1. Solace Broker (Topic / Queue)
 
-### Reference
+## Reference
+
 https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SolaceCompleteGuide.md
 
-## Database
+---
+
+# Database
+
+## MySQL
 
 ### Database Engine
 
@@ -91,6 +94,8 @@ https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SolaceComp
 
 1. @Transactional
 2. Transaction Propagation
+
+---
 
 ## Hibernate / Spring Data JPA
 
@@ -129,11 +134,13 @@ https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SolaceComp
 5. Dynamic SQL Provider
 6. Service Layer
 
-### Reference
+## Reference
+
 https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/DatabaseAccessPatternsCompleteGuide.md
 
+---
 
-# 3. Security Layer
+# Security
 
 ## TLS WebClient Dependencies Handle
 
@@ -167,7 +174,10 @@ https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/DatabaseAc
 2. Response Logging Filter
 
 ### Reference
+
 https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/TLSWebClient.md
+
+---
 
 ## OAuth2 Dependencies Handle
 
@@ -184,7 +194,10 @@ https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/TLSWebClie
 9. OAuth2AccessToken
 
 ### Reference
+
 https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/OAuth2.md
+
+---
 
 ## PrivateKey Dependencies Handle
 
@@ -215,8 +228,10 @@ https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/OAuth2.md
 5. PrivateKey
 
 ### Reference
+
 https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/GetPrivateKey.md
 
+---
 
 ## Certificate Dependencies Handle
 
@@ -246,9 +261,12 @@ https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/GetPrivate
 4. X509Certificate
 
 ### Reference
+
 https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/GetCertificate.md
 
-# 4. External Communication Layer
+---
+
+# External Communication
 
 ## HTTP Client Dependencies Handle
 
@@ -260,7 +278,7 @@ https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/GetCertifi
 
 ---
 
-# 5. QR Processing Layer
+# QR Processing
 
 ## ZXing QR Code Processing
 
@@ -283,9 +301,12 @@ https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/GetCertifi
 8. ImageIO
 
 ### Reference
+
 https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/ZXing%20QR.md
 
-# 6. Batch Processing Layer
+---
+
+# Batch Processing
 
 ## Spring Batch Job Processing
 
@@ -321,4 +342,5 @@ https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/ZXing%20QR
 12. @StepScope
 
 ### Reference
+
 https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SpringBatchCompleteGuide.md
