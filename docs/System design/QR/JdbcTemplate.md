@@ -5,14 +5,18 @@
 This document provides a complete guide for database connectivity using JdbcTemplate in Spring applications. It covers:
 
 - **Common Foundation:** Properties → DataSource → Repository (shared infrastructure)
+
 - **Scenario 1:** JdbcTemplate with positional parameters `?` (for INSERT operations)
+
 - **Scenario 2:** NamedParameterJdbcTemplate with named parameters `:param` (for SELECT/UPDATE operations)
+
+- **Scenario 3:** JdbcTemplate queryForRowSet + NamedParameterJdbcTemplate (for DELETE operations with SqlRowSet)
 
 ---
 
 # Common Foundation: Database Infrastructure
 
-This section covers the shared infrastructure used by both JdbcTemplate scenarios.
+This section covers the shared infrastructure used by all JdbcTemplate scenarios.
 
 ---
 
@@ -32,7 +36,6 @@ Defines database connection parameters that will be bound to DataSource beans.
 # ═══════════════════════════════════════════════════════════════════════════════
 # SPRING DATASOURCE (for write operations)
 # ═══════════════════════════════════════════════════════════════════════════════
-
 spring.datasource.driver=com.mysql.jdbc.Driver
 spring.datasource.jdbcUrl=jdbc:mysql://db-host:3306/database_name?sslMode=REQUIRED
 spring.datasource.username=svc_user
@@ -52,7 +55,6 @@ spring.datasource.hikari.connection-test-query=SELECT 1
 # ═══════════════════════════════════════════════════════════════════════════════
 # BATCH DATASOURCE (for read operations)
 # ═══════════════════════════════════════════════════════════════════════════════
-
 batch.datasource.driver=com.mysql.jdbc.Driver
 batch.datasource.jdbcUrl=jdbc:mysql://db-host:3306/database_name?sslMode=REQUIRED
 batch.datasource.username=svc_user
@@ -175,10 +177,27 @@ public List<DetailRecord> getTransactions(String date) {
 ```
 
 **What readOnly = true Does:**
+
 - Hints to the database that no writes will occur
 - Database may optimize (no write locks, can use read replicas)
 - Spring will throw exception if UPDATE/INSERT attempted
 - Connection returned to pool in read-only state
+
+### @Transactional(propagation = Propagation.REQUIRES_NEW)
+
+```java
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+public void deleteRecords(String tableName, String primaryKey, List<Long> idList) {
+    // ... DELETE query - runs in its own transaction
+}
+```
+
+**What REQUIRES_NEW Does:**
+
+- Always creates a new transaction
+- Suspends any existing transaction
+- Each call commits independently
+- Useful for batch deletes where partial success is acceptable
 
 ---
 
@@ -528,39 +547,445 @@ public void updateAdjustmentStatus(LocalDateTime startDate, LocalDateTime endDat
 
 ---
 
+# Scenario 3: JdbcTemplate queryForRowSet + NamedParameterJdbcTemplate (DELETE Operations)
+
+This scenario covers batch DELETE operations that require:
+1. **JdbcTemplate.queryForRowSet()** - SELECT records to delete into disconnected SqlRowSet
+2. **NamedParameterJdbcTemplate.update()** - DELETE records using IN clause with chunking
+
+---
+
+## Overview
+
+**Classes Used:**
+- `org.springframework.jdbc.core.JdbcTemplate` - For queryForRowSet()
+- `org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate` - For DELETE with IN clause
+- `org.springframework.jdbc.support.rowset.SqlRowSet` - Disconnected result set
+
+**Use Case:** Batch deletion with:
+- Pre-deletion data export (audit trail)
+- Chunked deletes to avoid lock contention
+- Dynamic table/column handling
+
+---
+
+## Part 1: SELECT with queryForRowSet()
+
+### Purpose
+
+Returns a disconnected `SqlRowSet` that can be processed after the database connection is released.
+
+### 1.1 Single Table Query
+
+```java
+public SqlRowSet getSingleTableRecords(LocalDate startDate, LocalDate endDate, 
+        String tableName, String primaryKey) {
+    
+    SqlRowSet rs = null;
+    StringBuffer query = new StringBuffer();
+    query.append("SELECT * FROM " + tableName + " WHERE CREATION_DATE <= '" + endDate);
+    query.append("' AND CREATION_DATE > '" + startDate + "' ORDER BY " + primaryKey + " ASC");
+    
+    log.info("getSingleTableRecords query " + query.toString());
+    rs = jdbcTemplate.queryForRowSet(query.toString());
+    return rs;
+}
+```
+
+### 1.2 JOIN Table Query
+
+```java
+public SqlRowSet getJoinRecords(LocalDate startDate, LocalDate endDate, String tableName, 
+        String primaryKey, String joinMainColumn, String joinTable, String joinColumn) {
+    
+    SqlRowSet rs = null;
+    String alias = (tableName.split("[.]")[1]).split("_")[0];
+    String joinAlias = (joinTable.split("[.]")[1]).split("_")[0];
+    
+    StringBuffer query = new StringBuffer();
+    query.append("SELECT " + alias + ".* FROM " + tableName + " " + alias);
+    query.append(" JOIN " + joinTable + " " + joinAlias);
+    query.append(" ON " + alias + "." + joinMainColumn + " = " + joinAlias + "." + joinColumn);
+    query.append(" WHERE " + joinAlias + ".CREATION_DATE <= '" + endDate);
+    query.append("' AND " + joinAlias + ".CREATION_DATE > '" + startDate);
+    query.append("' ORDER BY " + alias + "." + primaryKey + " ASC");
+    
+    log.info("getJoinRecords query " + query.toString());
+    rs = jdbcTemplate.queryForRowSet(query.toString());
+    return rs;
+}
+```
+
+### 1.3 Single Record Query
+
+```java
+public SqlRowSet getSingleRecord(String tableName, String columnName, Long id) {
+    
+    SqlRowSet rs = null;
+    StringBuffer query = new StringBuffer();
+    query.append("SELECT * FROM " + tableName + " WHERE " + columnName + " = " + id);
+    
+    log.info("getSingleRecord query " + query.toString());
+    rs = jdbcTemplate.queryForRowSet(query.toString());
+    return rs;
+}
+```
+
+---
+
+## Part 2: SqlRowSet Processing
+
+### Purpose
+
+Extract data from SqlRowSet for export and collect IDs for deletion.
+
+### 2.1 SqlRowSetMetaData - Dynamic Column Discovery
+
+```java
+SqlRowSet rs = jdbcTemplate.queryForRowSet(query.toString());
+int columnNo = rs.getMetaData().getColumnCount();
+
+// Find primary key column index
+int primaryKeyNo = 1;
+for (int i = 1; i <= columnNo; i++) {
+    String columnName = rs.getMetaData().getColumnName(i);
+    if (columnName.equalsIgnoreCase(tableKey)) {
+        primaryKeyNo = i;
+        log.debug("primary key index is " + primaryKeyNo);
+    }
+}
+```
+
+### SqlRowSetMetaData Methods
+
+| Method | Description |
+|--------|-------------|
+| getColumnCount() | Returns number of columns |
+| getColumnName(int) | Returns column name by index (1-based) |
+| getColumnLabel(int) | Returns column label/alias |
+| getColumnType(int) | Returns SQL type (java.sql.Types) |
+
+### 2.2 Build CSV Header from Metadata
+
+```java
+StringBuilder recordsDump = new StringBuilder();
+
+// Build header row from column names
+for (int i = 1; i <= columnNo; i++) {
+    String columnName = rs.getMetaData().getColumnName(i);
+    recordsDump.append(columnName + ",");
+    if (columnName.equalsIgnoreCase(tableKey)) {
+        primaryKeyNo = i;
+    }
+}
+recordsDump.append("\n");
+```
+
+### 2.3 Extract Data and Collect IDs
+
+```java
+List<Long> deletionIDs = new ArrayList<>();
+List<String> deletionIDsString = new ArrayList<>();
+
+while (rs.next()) {
+    // Export each row to CSV
+    for (int x = 1; x <= columnNo; x++) {
+        String value = rs.getString(x);
+        
+        // Collect primary key for deletion
+        if (x == primaryKeyNo) {
+            try {
+                deletionIDs.add(Long.valueOf(value));
+            } catch (NumberFormatException ex) {
+                deletionIDsString.add(value);  // Handle String PKs
+            }
+        }
+        recordsDump.append(value + ", ");
+    }
+    recordsDump.append("\n");
+}
+```
+
+### SqlRowSet Navigation Methods
+
+| Method | Description |
+|--------|-------------|
+| next() | Moves cursor to next row, returns false if no more rows |
+| previous() | Moves cursor to previous row |
+| first() | Moves cursor to first row |
+| last() | Moves cursor to last row |
+| getString(int/String) | Gets column value as String |
+| getLong(int/String) | Gets column value as Long |
+| getDate(int/String) | Gets column value as Date |
+
+---
+
+## Part 3: DELETE Operations
+
+### 3.1 Batch DELETE with IN Clause (Long IDs)
+
+```java
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+public void deleteRecords(String tableName, String primaryKey, List<Long> idList) {
+    
+    StringBuffer query = new StringBuffer();
+    query.append("DELETE FROM " + tableName + " WHERE " + primaryKey + " IN (:ids)");
+    
+    NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
+    Map<String, List<Long>> params = new HashMap<String, List<Long>>();
+    params.put("ids", idList);
+    
+    int records = namedParameterJdbcTemplate.update(query.toString(), params);
+    log.info("deleted " + records + " in " + tableName);
+}
+```
+
+### 3.2 Batch DELETE with IN Clause (String IDs)
+
+```java
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+public void deleteRecordsWithStringId(String tableName, String primaryKey, List<String> idList) {
+    
+    StringBuffer query = new StringBuffer();
+    query.append("DELETE FROM " + tableName + " WHERE " + primaryKey + " IN (:ids)");
+    
+    NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
+    Map<String, List<String>> params = new HashMap<String, List<String>>();
+    params.put("ids", idList);
+    
+    int records = namedParameterJdbcTemplate.update(query.toString(), params);
+    log.info("deleted " + records + " in " + tableName);
+}
+```
+
+### 3.3 Single Record DELETE
+
+```java
+public void deleteRecord(String tableName, String primaryKey, Long id) {
+    
+    StringBuffer query = new StringBuffer();
+    query.append("DELETE FROM " + tableName + " WHERE " + primaryKey + " = :id");
+    
+    NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
+    Map<String, Long> params = new HashMap<String, Long>();
+    params.put("id", id);
+    
+    namedParameterJdbcTemplate.update(query.toString(), params);
+}
+```
+
+### 3.4 JOIN DELETE
+
+```java
+public void deleteJoinRecord(String tableName, String joinTable, String mainColumn, 
+        String joinColumn, String primaryKey, Long id) {
+    
+    StringBuffer query = new StringBuffer();
+    String alias = tableName.split("_")[0];
+    String joinAlias = joinTable.split("_")[0];
+    
+    query.append("DELETE " + joinAlias + " FROM " + tableName + " " + alias);
+    query.append(" JOIN " + joinTable + " " + joinAlias);
+    query.append(" ON " + alias + "." + mainColumn + " = " + joinAlias + "." + joinColumn);
+    query.append(" WHERE " + alias + "." + primaryKey + " = :id");
+    
+    NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
+    Map<String, Long> params = new HashMap<String, Long>();
+    params.put("id", id);
+    
+    namedParameterJdbcTemplate.update(query.toString(), params);
+}
+```
+
+---
+
+## Part 4: Chunked Delete Execution Flow
+
+### Purpose
+
+Delete large datasets in chunks to:
+- Avoid long-running transactions
+- Reduce lock contention
+- Allow DB replication to catch up
+- Enable partial success on failure
+
+### Execution Flow Diagram
+
+```
+┌────────────────────────────────────────────────────────────────────────────┐
+│                        BATCH DELETE EXECUTION                               │
+└────────────────────────────────────────────────────────────────────────────┘
+          │
+          ▼
+┌───────────────────┐
+│  1. Query Records │
+│  to Delete        │
+└─────────┬─────────┘
+          │
+          ▼
+┌───────────────────┐
+│  2. SqlRowSet     │◄─── jdbcTemplate.queryForRowSet(query)
+│  (disconnected)   │     Connection released after query
+└─────────┬─────────┘
+          │
+          ▼
+┌───────────────────┐
+│  3. Process Rows  │◄─── Export to CSV + Collect IDs
+│  while(rs.next()) │
+└─────────┬─────────┘
+          │
+          ▼
+┌───────────────────┐
+│  4. Partition IDs │◄─── Split into chunks (e.g., 1000 per chunk)
+│  into Chunks      │
+└─────────┬─────────┘
+          │
+          ▼
+┌───────────────────────────────────────────────────────────────────────────┐
+│  5. FOR EACH CHUNK:                                                        │
+│  ┌─────────────────┐                                                       │
+│  │  @Transactional │◄─── REQUIRES_NEW (independent transaction)            │
+│  │  deleteRecords()│                                                       │
+│  └────────┬────────┘                                                       │
+│           │                                                                │
+│           ▼                                                                │
+│  ┌─────────────────────────────────┐                                       │
+│  │  NamedParameterJdbcTemplate     │                                       │
+│  │  DELETE ... WHERE id IN (:ids)  │                                       │
+│  └────────┬────────────────────────┘                                       │
+│           │                                                                │
+│           ▼                                                                │
+│  ┌─────────────────┐                                                       │
+│  │  COMMIT         │◄─── Transaction committed immediately                 │
+│  └─────────────────┘                                                       │
+│           │                                                                │
+│           ▼                                                                │
+│  ┌─────────────────┐                                                       │
+│  │  Sleep Interval │◄─── Thread.sleep() for DB replication                 │
+│  └─────────────────┘                                                       │
+└───────────────────────────────────────────────────────────────────────────┘
+```
+
+### Actual Implementation
+
+```java
+// Step 1: Query records to delete
+SqlRowSet rs = repository.getSingleTableRecords(deletionDate, intervalDate, tableName, tableKey);
+
+// Step 2-3: Extract IDs from SqlRowSet
+List<Long> deletionIDs = new ArrayList<>();
+while (rs.next()) {
+    deletionIDs.add(Long.valueOf(rs.getString(primaryKeyNo)));
+}
+
+// Step 4: Partition into chunks
+List<List<Long>> partitions = new ArrayList<>();
+for (int i = 0; i < deletionIDs.size(); i += chunkSize) {
+    partitions.add(deletionIDs.subList(i, Math.min(i + chunkSize, deletionIDs.size())));
+}
+
+// Step 5: Delete each chunk with throttling
+int deletedRecords = 0;
+for (List<Long> chunk : partitions) {
+    repository.deleteRecords(tableName, tableKey, chunk);
+    deletedRecords += chunk.size();
+    
+    // Throttle after reaching threshold
+    if (deletedRecords >= deletionThreshold) {
+        Thread.sleep(TimeUnit.SECONDS.toMillis(intervalTime));
+        deletedRecords = 0;
+    }
+}
+```
+
+---
+
+## Scenario 3 Summary
+
+### Components Used
+
+| Component | Purpose |
+|-----------|---------|
+| JdbcTemplate.queryForRowSet() | SELECT records into disconnected SqlRowSet |
+| SqlRowSet | Process results without holding connection |
+| SqlRowSetMetaData | Dynamic column discovery |
+| NamedParameterJdbcTemplate.update() | DELETE with IN clause |
+| @Transactional(REQUIRES_NEW) | Independent transaction per chunk |
+
+### When to Use This Pattern
+
+- Batch deletion of large datasets
+- Need audit trail (export before delete)
+- Dynamic table/column names
+- Want to avoid long-running transactions
+- Need throttling for DB replication
+
+### Key Benefits
+
+| Benefit | How Achieved |
+|---------|--------------|
+| Audit Trail | Export SqlRowSet to CSV before delete |
+| No Lock Contention | Chunked deletes with sleep intervals |
+| Partial Success | REQUIRES_NEW commits each chunk independently |
+| Memory Efficient | SqlRowSet is disconnected, connection released early |
+| Replication Safe | Sleep between chunks allows replicas to catch up |
+
+---
+
 # Overall Summary
 
 ## Scenario Comparison
 
-| Aspect | Scenario 1: JdbcTemplate | Scenario 2: NamedParameterJdbcTemplate |
-|--------|--------------------------|----------------------------------------|
-| Parameter Style | Positional `?` | Named `:param` |
-| Parameter Binding | By position (order matters) | By name (order doesn't matter) |
-| IN Clause Support | Manual handling | Native collection support |
-| Parameter Reuse | Not possible | Can reuse same parameter |
-| Best For | Simple INSERT | Complex SELECT/UPDATE |
-| Readability | Lower with many params | Higher with many params |
+| Aspect | Scenario 1: JdbcTemplate | Scenario 2: NamedParameter | Scenario 3: queryForRowSet + NamedParameter |
+|--------|--------------------------|----------------------------|---------------------------------------------|
+| Parameter Style | Positional `?` | Named `:param` | Named `:param` |
+| Primary Operation | INSERT | SELECT/UPDATE | DELETE (batch) |
+| Result Handling | N/A | RowMapper | SqlRowSet |
+| Transaction | Single | Single | Chunked (REQUIRES_NEW) |
+| Best For | Simple INSERT | Complex SELECT/UPDATE | Large batch DELETE |
 
 ## DataSource Usage
 
 | Operation | DataSource | JdbcTemplate Type |
 |-----------|------------|-------------------|
-| SELECT | readOnlySource (batchDatasource) | NamedParameterJdbcTemplate |
+| SELECT | readOnlySource (batchDatasource) | NamedParameterJdbcTemplate or JdbcTemplate |
 | INSERT | writeDataSource (springDatasource) | JdbcTemplate |
 | UPDATE | writeDataSource (springDatasource) | NamedParameterJdbcTemplate |
+| DELETE | writeDataSource (via JdbcTemplate) | NamedParameterJdbcTemplate |
 
 ## Quick Reference
 
-### JdbcTemplate (Positional)
+### Scenario 1: JdbcTemplate (Positional)
+
 ```java
 JdbcTemplate template = new JdbcTemplate(writeDataSource);
 template.update("INSERT INTO table (col1, col2) VALUES (?, ?)", value1, value2);
 ```
 
-### NamedParameterJdbcTemplate (Named)
+### Scenario 2: NamedParameterJdbcTemplate (Named)
+
 ```java
 NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
 Map<String, Object> params = new HashMap<>();
 params.put("param1", value1);
 jdbcTemplate.query("SELECT * FROM table WHERE col = :param1", params, rowMapper);
+```
+
+### Scenario 3: queryForRowSet + NamedParameterJdbcTemplate (DELETE)
+
+```java
+// Step 1: Query with queryForRowSet
+SqlRowSet rs = jdbcTemplate.queryForRowSet("SELECT id FROM table WHERE date < ?", date);
+
+// Step 2: Collect IDs
+List<Long> ids = new ArrayList<>();
+while (rs.next()) {
+    ids.add(rs.getLong("id"));
+}
+
+// Step 3: Delete with NamedParameterJdbcTemplate
+NamedParameterJdbcTemplate npTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
+Map<String, List<Long>> params = new HashMap<>();
+params.put("ids", ids);
+npTemplate.update("DELETE FROM table WHERE id IN (:ids)", params);
 ```
