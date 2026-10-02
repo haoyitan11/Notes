@@ -17,6 +17,8 @@ A comprehensive reference for database access patterns in Spring Boot applicatio
 
 This document explains how the batch application configures database connectivity using Spring Boot's DataSource infrastructure.
 
+<img width="2310" height="1515" alt="image" src="https://github.com/user-attachments/assets/f8bc4e30-95fa-41fd-a8f2-184e27367131" />
+
 ---
 
 ## 1. Overview
