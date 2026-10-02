@@ -12,8 +12,6 @@ This document provides a complete guide for obtaining Certificate (specifically 
 
 ---
 
-<img width="3200" height="3784" alt="image" src="https://github.com/user-attachments/assets/3019f80d-ee0e-44d9-965e-88d5282ceb8b" />
-
 # Part 1: PEM Certificate File Loading (Bouncy Castle)
 
 ## Purpose
@@ -21,7 +19,7 @@ This document provides a complete guide for obtaining Certificate (specifically 
 Loads X509Certificate from PEM-formatted certificate files using Bouncy Castle library.
 
 ## Components
-<img width="3200" height="2336" alt="image" src="https://github.com/user-attachments/assets/2e28d0df-ac7c-49e0-9d90-85ef1a6862f2" />
+<img width="2624" height="1680" alt="image" src="https://github.com/user-attachments/assets/4b78167f-a92a-4c56-9516-d8b604850ba9" />
 
 ### 1.1 BouncyCastleProvider
 
@@ -259,7 +257,7 @@ MIIDXTCCAkWgAwIBAgIJAJC1HiIAZAiUMA...
 Extracts X509Certificate from Java KeyStore files (JKS or PKCS12 format).
 
 ## Components
-<img width="3200" height="2676" alt="image" src="https://github.com/user-attachments/assets/fa51aac8-0cd6-44aa-a107-302c050f2f95" />
+<img width="2624" height="1584" alt="image" src="https://github.com/user-attachments/assets/547a0e79-cff3-4db8-a193-5b9a05e92b6d" />
 
 ### 2.1 FileInputStream
 
@@ -477,7 +475,7 @@ Certificate[] chain = entry.getCertificateChain();
 ```
 
 # Part 3: DER/CER File Loading (Native Java)
-<img width="3200" height="2536" alt="image" src="https://github.com/user-attachments/assets/c36a4a0e-5638-4e81-8417-750af9996dce" />
+<img width="2624" height="1523" alt="image" src="https://github.com/user-attachments/assets/fbf0a055-c9ca-4f69-9fa0-98f7023e3b6d" />
 
 ## Purpose
 
