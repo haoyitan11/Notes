@@ -74,6 +74,8 @@ public class SomeService {
 
 Object-Relational Mapping (ORM) approach that maps Java objects directly to database tables.
 
+<img width="2310" height="1515" alt="image" src="https://github.com/user-attachments/assets/dd6d03c5-8316-4304-b935-185879ef7266" />
+
 ### How It Works
 
 Spring Data JPA builds on top of Hibernate ORM:
@@ -284,6 +286,8 @@ public class KeyInfo {
 ## JdbcTemplate
 
 Low-level approach providing direct SQL control with Spring's exception handling.
+
+<img width="2310" height="1515" alt="image" src="https://github.com/user-attachments/assets/ff3982b5-7f4c-4cc0-b4ee-d81afc86b9e9" />
 
 ### How It Works
 
@@ -554,6 +558,8 @@ public class TransactionService {
 ## MyBatis
 
 SQL mapping framework using XML or annotations for query definition.
+
+<img width="2310" height="1515" alt="image" src="https://github.com/user-attachments/assets/9767108a-416f-42fd-ad8c-3af0481f6d4c" />
 
 ### How It Works
 
