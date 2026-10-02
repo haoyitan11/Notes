@@ -2,16 +2,17 @@
 
 ## Overview
 
-This document provides a complete guide for database connectivity using JdbcTemplate in Spring applications. It covers two scenarios:
+This document provides a complete guide for database connectivity using JdbcTemplate in Spring applications. It covers:
 
-- **Scenario 1:** JdbcTemplate without Spring Batch (standalone database operations)
-- **Scenario 2:** JdbcTemplate with Spring Batch (batch job integration)
+- **Common Foundation:** Properties → DataSource → Repository (shared infrastructure)
+- **Scenario 1:** JdbcTemplate with positional parameters `?` (for INSERT operations)
+- **Scenario 2:** NamedParameterJdbcTemplate with named parameters `:param` (for SELECT/UPDATE operations)
 
 ---
 
-# Scenario 1: JdbcTemplate Without Batch
+# Common Foundation: Database Infrastructure
 
-This scenario covers standalone JdbcTemplate usage for direct database operations without Spring Batch framework.
+This section covers the shared infrastructure used by both JdbcTemplate scenarios.
 
 ---
 
@@ -133,7 +134,7 @@ public class DatasourceConfiguration {
 
 ### Purpose
 
-Injects DataSource beans and creates JdbcTemplate for database operations.
+Injects DataSource beans for creating JdbcTemplate instances.
 
 ### Source Reference
 
@@ -162,19 +163,134 @@ public class BatchRepository {
 
 ---
 
-## Part 4: JdbcTemplate Usage Patterns
+## Part 4: Transaction Management
 
-### 4.1 SELECT with Lambda RowMapper
+### @Transactional(readOnly = true)
+
+```java
+@Transactional(readOnly = true)
+public List<DetailRecord> getTransactions(String date) {
+    // ... SELECT query
+}
+```
+
+**What readOnly = true Does:**
+- Hints to the database that no writes will occur
+- Database may optimize (no write locks, can use read replicas)
+- Spring will throw exception if UPDATE/INSERT attempted
+- Connection returned to pool in read-only state
+
+---
+
+# Scenario 1: JdbcTemplate (Positional Parameters)
+
+This scenario covers `JdbcTemplate` usage with positional `?` parameters. Best suited for simple INSERT operations.
+
+---
+
+## Overview
+
+**Class:** `org.springframework.jdbc.core.JdbcTemplate`
+
+**Parameter Style:** Positional `?` placeholders
+
+**Use Case:** Simple INSERT/UPDATE with few parameters
+
+---
+
+## INSERT with Positional Parameters
+
+### Source Reference
+
+**File:** `com.example.batch.repository.BatchRepository`
+
+### Actual Usage
+
+```java
+public void createFileUploadEntry(String createdDate, String directory, String fileName, 
+        String fileId, Integer status, Integer lastUpdatedBy, Timestamp lastUpdatedDate) {
+    
+    // Create JdbcTemplate from write DataSource
+    JdbcTemplate template = new JdbcTemplate(writeDataSource);
+    
+    // SQL with positional parameters (?)
+    StringBuilder query = new StringBuilder();
+    query.append("INSERT INTO file_upload ");
+    query.append("(CREATED_DATE, DIRECTORY, FILENAME, STATUS, LAST_UPDATED_BY, LAST_UPDATED_DATE, FILE_ID) ");
+    query.append("VALUES (?, ?, ?, ?, ?, ?, ?)");
+    
+    // Execute with parameters in order matching ? positions
+    template.update(query.toString(), 
+            createdDate,        // ? position 1
+            directory,          // ? position 2
+            fileName,           // ? position 3
+            status,             // ? position 4
+            lastUpdatedBy,      // ? position 5
+            lastUpdatedDate,    // ? position 6
+            fileId);            // ? position 7
+}
+```
+
+### Key Points
+
+| Aspect | Description |
+|--------|-------------|
+| Parameter Binding | Parameters bound by position (order matters) |
+| DataSource | Uses `writeDataSource` for INSERT |
+| Return Value | `update()` returns number of affected rows |
+| Best For | Simple INSERT with sequential parameters |
+
+---
+
+## Scenario 1 Summary
+
+### When to Use JdbcTemplate
+
+- Simple INSERT operations
+- Few parameters in fixed order
+- No need for parameter reuse in query
+
+### Limitations
+
+- Parameter order must match `?` positions exactly
+- Hard to read with many parameters
+- Cannot reuse same parameter value in multiple places
+
+---
+
+# Scenario 2: NamedParameterJdbcTemplate (Named Parameters)
+
+This scenario covers `NamedParameterJdbcTemplate` usage with named `:param` parameters. Best suited for complex SELECT/UPDATE operations.
+
+---
+
+## Overview
+
+**Class:** `org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate`
+
+**Parameter Style:** Named `:paramName` placeholders
+
+**Use Case:** Complex queries with multiple/reusable parameters
+
+---
+
+## Part 1: SELECT Operations
+
+### 1.1 SELECT with Lambda RowMapper
+
+Simple inline mapping for straightforward result sets.
 
 ```java
 @Transactional(readOnly = true)
 public List<DetailRecord> getTransactions(String settlementDate, Set<Integer> acquirerIds, Set<String> states) {
 
+    // Prepare named parameters
     Map<String, Object> namedParameters = new HashMap<>();
     namedParameters.put("settlementDate", settlementDate);
-    namedParameters.put("acquirerIds", acquirerIds);
+    namedParameters.put("acquirerIds", acquirerIds);   // Supports IN clause with Set
     namedParameters.put("states", states);
 
+    // SQL with named parameters
     String query = "SELECT ttr01.state, ttr01.tran_type, ttr01.target_amount, "
             + "ttr30.transaction_date, ttr30.transaction_time "
             + "FROM ttr01_transaction ttr01 "
@@ -183,8 +299,10 @@ public List<DetailRecord> getTransactions(String settlementDate, Set<Integer> ac
             + "AND ttr01.acquirer_id IN (:acquirerIds) "
             + "AND ttr01.state IN (:states)";
 
+    // Create NamedParameterJdbcTemplate from read DataSource
     NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(readOnlySource);
     
+    // Execute with Lambda RowMapper
     return jdbcTemplate.query(query, namedParameters, (rs, rowNum) -> {
         DetailRecord record = new DetailRecord();
         record.setState(rs.getString("state"));
@@ -199,7 +317,9 @@ public List<DetailRecord> getTransactions(String settlementDate, Set<Integer> ac
 
 ---
 
-### 4.2 SELECT with RowMapper Class
+### 1.2 SELECT with RowMapper Class
+
+Reusable mapper for complex mapping logic.
 
 ```java
 @Transactional(readOnly = true)
@@ -220,9 +340,12 @@ public List<DetailRecord> getTransactions(String settlementDate, Set<Integer> ac
             + "AND ttr01.state IN (:states)";
 
     NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(readOnlySource);
+    
+    // Execute with RowMapper class
     return jdbcTemplate.query(query, namedParameters, new TransactionRowMapper());
 }
 
+// Reusable RowMapper class with complex logic
 private class TransactionRowMapper implements RowMapper<DetailRecord> {
     @Override
     public DetailRecord mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -236,8 +359,9 @@ private class TransactionRowMapper implements RowMapper<DetailRecord> {
         record.setTerminalTid(rs.getString("tid"));
         record.setTerminalMid(rs.getString("mid"));
         
+        // Conditional logic in mapper
         if (StringUtils.isEmpty(rs.getString("generated_pan"))) {
-            record.setTerminalPan("9009901000000001");
+            record.setTerminalPan("9009901000000001");  // Default value
         } else {
             record.setTerminalPan(rs.getString("generated_pan"));
         }
@@ -249,7 +373,9 @@ private class TransactionRowMapper implements RowMapper<DetailRecord> {
 
 ---
 
-### 4.3 SELECT with BeanPropertyRowMapper
+### 1.3 SELECT with BeanPropertyRowMapper
+
+Auto-mapping by column alias to bean property name.
 
 ```java
 @Transactional(readOnly = true)
@@ -257,14 +383,14 @@ public List<ExceptionRecord> getExceptions(String startDate, String endDate) {
     
     NamedParameterJdbcTemplate template = new NamedParameterJdbcTemplate(readOnlySource);
     
-    // Column aliases must match bean property names exactly
-    String query = "SELECT tbo.authorize_date as txnDate, "
-            + "tbo.stan as txnRRN, "
-            + "tbr.stan as refundRRN, "
-            + "tbr.target_amount as refundAmt, "
-            + "tbr.authorize_date as refundDate, "
-            + "tbo.target_amount as txnAmount, "
-            + "tc02.currency_iso_name as currency "
+    // Column aliases MUST match bean property names exactly
+    String query = "SELECT tbo.authorize_date as txnDate, "       // Maps to ExceptionRecord.txnDate
+            + "tbo.stan as txnRRN, "                               // Maps to ExceptionRecord.txnRRN
+            + "tbr.stan as refundRRN, "                            // Maps to ExceptionRecord.refundRRN
+            + "tbr.target_amount as refundAmt, "                   // Maps to ExceptionRecord.refundAmt
+            + "tbr.authorize_date as refundDate, "                 // Maps to ExceptionRecord.refundDate
+            + "tbo.target_amount as txnAmount, "                   // Maps to ExceptionRecord.txnAmount
+            + "tc02.currency_iso_name as currency "                // Maps to ExceptionRecord.currency
             + "FROM transaction_basics tbr "
             + "JOIN foreign_refund_request fre ON tbr.id = fre.refund_transaction_id "
             + "JOIN transaction_basics tbo ON tbo.id = fre.original_transaction_id "
@@ -282,7 +408,9 @@ public List<ExceptionRecord> getExceptions(String startDate, String endDate) {
 
 ---
 
-### 4.4 SELECT Single Value with Anonymous RowMapper
+### 1.4 SELECT Single Value with Anonymous RowMapper
+
+Extracting single column value.
 
 ```java
 @Transactional(readOnly = true)
@@ -297,9 +425,10 @@ public String getNextFileId(String createdDate) {
 
     NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(readOnlySource);
     
+    // Anonymous RowMapper for single column
     List<String> results = jdbcTemplate.query(query, namedParameters, new RowMapper<String>() {
         public String mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return rs.getString(1);
+            return rs.getString(1);  // Get first column
         }
     });
     
@@ -312,32 +441,18 @@ public String getNextFileId(String createdDate) {
 
 ---
 
-### 4.5 INSERT with JdbcTemplate
+## Part 2: UPDATE Operations
 
-```java
-public void createFileUploadEntry(String createdDate, String directory, String fileName, 
-        String fileId, Integer status, Integer lastUpdatedBy, Timestamp lastUpdatedDate) {
-    
-    JdbcTemplate template = new JdbcTemplate(writeDataSource);
-    
-    String query = "INSERT INTO file_upload "
-            + "(CREATED_DATE, DIRECTORY, FILENAME, STATUS, LAST_UPDATED_BY, LAST_UPDATED_DATE, FILE_ID) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?)";
-    
-    template.update(query, createdDate, directory, fileName, status, 
-            lastUpdatedBy, lastUpdatedDate, fileId);
-}
-```
+### 2.1 UPDATE with MapSqlParameterSource
 
----
-
-### 4.6 UPDATE with NamedParameterJdbcTemplate
+Using builder pattern for parameters.
 
 ```java
 public void updateStatus(String state, int posId, String scheme) {
 
     NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(writeDataSource);
     
+    // Builder pattern for parameters
     SqlParameterSource namedParameters = new MapSqlParameterSource()
             .addValue("state", state)
             .addValue("posID", posId)
@@ -351,27 +466,31 @@ public void updateStatus(String state, int posId, String scheme) {
 
 ---
 
-### 4.7 UPDATE with Multiple Parameters
+### 2.2 UPDATE with Multiple Parameters
+
+Complex update with many parameters.
 
 ```java
 public void updateAdjustmentStatus(LocalDateTime startDate, LocalDateTime endDate) {
     
     NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(writeDataSource);
     
+    // Multiple parameters with MapSqlParameterSource
     SqlParameterSource namedParameters = new MapSqlParameterSource()
             .addValue("startDate", startDate)
             .addValue("endDate", endDate)
-            .addValue("approvedStatus", "APPROVED")
+            .addValue("approvedStatus", OutboundCreditAdjustmentStatus.APPROVED.getCode())
             .addValue("tranType", "40")
-            .addValue("submittedStatus", "SUBMITTED")
+            .addValue("submittedStatus", OutboundCreditAdjustmentStatus.SUBMITTED.getCode())
             .addValue("updateBy", 2)
             .addValue("currentDatetime", new Timestamp(Calendar.getInstance().getTime().getTime()));
 
+    // Same parameter can be used multiple times (:currentDatetime)
     String updateSql = "UPDATE outbound_dispute "
             + "SET status = :submittedStatus, "
             + "updated_by = :updateBy, "
             + "updated_date_time = :currentDatetime, "
-            + "closed_date = :currentDatetime "
+            + "closed_date = :currentDatetime "                    // Reused parameter
             + "WHERE (approval_date_time BETWEEN :startDate AND :endDate) "
             + "AND status = :approvedStatus "
             + "AND tran_type = :tranType";
@@ -382,346 +501,9 @@ public void updateAdjustmentStatus(LocalDateTime startDate, LocalDateTime endDat
 
 ---
 
-## Part 5: Transaction Management
-
-### @Transactional(readOnly = true)
-
-```java
-@Transactional(readOnly = true)
-public List<DetailRecord> getTransactions(String date) {
-    NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(readOnlySource);
-    // ... SELECT query
-}
-```
-
-**What readOnly = true Does:**
-- Hints to the database that no writes will occur
-- Database may optimize (no write locks, can use read replicas)
-- Spring will throw exception if UPDATE/INSERT attempted
-- Connection returned to pool in read-only state
-
----
-
-## Scenario 1 Summary
-
-### Complete Linkage Chain
-
-1. **Properties File** → Defines connection parameters (jdbcUrl, username, password, HikariCP settings)
-2. **DatasourceConfiguration** → `@ConfigurationProperties` binds properties to DataSource beans
-3. **Repository** → `@Autowired @Qualifier` injects specific DataSource beans
-4. **JdbcTemplate** → Created from DataSource, executes SQL via HikariCP connection pool
-5. **Database** → MySQL receives SQL queries via JDBC connections
-
-### Quick Reference
-
-| Component | Purpose |
-|-----------|---------|
-| Properties | Define database connection settings |
-| DatasourceConfiguration | Create DataSource beans |
-| Repository | Inject DataSource, create JdbcTemplate |
-| JdbcTemplate | Execute SQL queries |
-
----
-
-# Scenario 2: JdbcTemplate With Spring Batch
-
-This scenario covers JdbcTemplate usage integrated with Spring Batch framework for batch job processing.
-
----
-
-## Part 1: Spring Batch + Repository Integration
-
-Spring Batch components (Tasklet and ItemReader) access the database through the Repository layer, which internally uses JdbcTemplate.
-
-### Linkage Chain
-
-1. **Job Configuration** → Defines Job and Step beans
-2. **Tasklet/ItemReader** → Injects Repository via `@Autowired`
-3. **Repository** → Uses JdbcTemplate to execute SQL
-4. **Database** → Receives queries via HikariCP connection pool
-
----
-
-## Part 2: Tasklet Pattern
-
-Tasklet executes a single batch operation (not chunk-based). Used for file generation, bulk updates, or report generation.
-
-### Source Reference
-
-**File:** `com.example.batch.job.tasklet.ReportTasklet`
-
-### Actual Usage
-
-```java
-@Component
-public class ReportTasklet implements Tasklet {
-
-    @Autowired
-    BatchRepository repository;
-
-    @Autowired
-    BatchService service;
-
-    @Value("${batch.output.dir.generated}")
-    protected String generatedFilePath;
-
-    @Value("${batch.output.dir.sent}")
-    protected String sentFilePath;
-
-    @Override
-    public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) {
-        
-        // 1. Get job parameters from ChunkContext
-        String inputDateStr = (String) chunkContext.getStepContext()
-                .getJobParameters().get("inputDateStr");
-        
-        // 2. Parse and calculate dates
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-        String processDate = LocalDate.parse(inputDateStr, dateFormatter)
-                .minusDays(1).format(dateFormatter);
-        
-        LocalDateTime startDate = LocalDate.parse(processDate, dateFormatter).atStartOfDay();
-        LocalDateTime endDate = LocalDate.parse(processDate, dateFormatter).atTime(LocalTime.MAX);
-
-        // 3. Query database via Repository (Repository uses JdbcTemplate internally)
-        List<DetailRecord> records = repository.getTransactions(startDate, endDate);
-        
-        // 4. Process records - write to file
-        try {
-            File outputFile = writeFile(records, inputDateStr);
-            String sentFolderDir = sentFilePath + File.separator + inputDateStr;
-            service.processFile(outputFile.getName(), sentFolderDir, records);
-        } catch (IOException e) {
-            logger.error("Error during write file " + e.getMessage(), e);
-        }
-        
-        // 5. Update database status via Repository
-        if (!records.isEmpty()) {
-            repository.updateStatus(startDate, endDate);
-        }
-
-        return RepeatStatus.FINISHED;
-    }
-}
-```
-
-### How Tasklet Interacts with JdbcTemplate
-
-| Step | Component | Action |
-|------|-----------|--------|
-| 1 | Tasklet | Gets job parameters from `ChunkContext` |
-| 2 | Tasklet | Calls `repository.getTransactions()` |
-| 3 | Repository | Creates `NamedParameterJdbcTemplate` from DataSource |
-| 4 | JdbcTemplate | Executes SELECT query |
-| 5 | Tasklet | Processes records, writes file |
-| 6 | Tasklet | Calls `repository.updateStatus()` |
-| 7 | Repository | Creates `NamedParameterJdbcTemplate`, executes UPDATE |
-
----
-
-## Part 3: ItemReader Pattern (Chunk-Based)
-
-ItemReader reads data one record at a time for chunk-based processing. Used for large dataset processing with memory efficiency.
-
-### Source Reference
-
-**File:** `com.example.batch.job.reader.ExceptionReader`
-
-### Actual Usage
-
-```java
-public class ExceptionReader implements ItemReader<ExceptionRecord> {
-
-    @Autowired
-    BatchRepository repository;
-    
-    @Autowired
-    EmailService email;
-    
-    private String inputDate;
-    private Iterator<ExceptionRecord> transactionIterator;
-    
-    public ExceptionReader(String inputDate) {
-        this.inputDate = inputDate;
-    }
-    
-    @PostConstruct
-    public void afterConstruct() throws BatchException {
-        // Load all records once during initialization
-        String startDate = CommonConstants.dateBatchInputFormat
-                .parseDateTime(inputDate)
-                .withTime(0, 0, 0, 0)
-                .toString(CommonConstants.dateTimeBatchDbFormat);
-        
-        String endDate = CommonConstants.dateBatchInputFormat
-                .parseDateTime(inputDate)
-                .withTime(23, 59, 59, 59)
-                .toString(CommonConstants.dateTimeBatchDbFormat);
-        
-        // Query via Repository (which uses JdbcTemplate internally)
-        List<ExceptionRecord> exceptionRecs = repository.getExceptions(startDate, endDate);
-        transactionIterator = exceptionRecs.iterator();
-    }
-    
-    @Override
-    public ExceptionRecord read() throws Exception {
-        // Return one record at a time
-        if (transactionIterator.hasNext()) {
-            return transactionIterator.next();
-        }
-        // Return null signals end of data
-        return null;
-    }
-}
-```
-
-### How ItemReader Interacts with JdbcTemplate
-
-| Step | Component | Action |
-|------|-----------|--------|
-| 1 | ItemReader | `@PostConstruct` method called on bean creation |
-| 2 | ItemReader | Calls `repository.getExceptions()` |
-| 3 | Repository | Creates `NamedParameterJdbcTemplate` from DataSource |
-| 4 | JdbcTemplate | Executes SELECT query, returns List |
-| 5 | ItemReader | Stores result as Iterator |
-| 6 | Spring Batch | Calls `read()` repeatedly |
-| 7 | ItemReader | Returns one record per call from Iterator |
-| 8 | ItemReader | Returns `null` when Iterator exhausted (signals end) |
-
----
-
-## Part 4: Job Configuration
-
-### Source Reference
-
-**File:** `com.example.batch.job.config.ReportJobConfig`
-
-### Tasklet Job Configuration
-
-```java
-@Configuration
-public class ReportJobConfig {
-
-    @Autowired
-    private JobRepository jobRepository;
-
-    @Autowired
-    private PlatformTransactionManager transactionManager;
-
-    @Autowired
-    private ReportTasklet reportTasklet;
-
-    @Bean
-    public Job reportJob() {
-        return new JobBuilder("reportJob", jobRepository)
-                .start(reportStep())
-                .build();
-    }
-
-    @Bean
-    public Step reportStep() {
-        return new StepBuilder("reportStep", jobRepository)
-                .tasklet(reportTasklet, transactionManager)
-                .build();
-    }
-}
-```
-
-### Chunk-Based Job Configuration
-
-```java
-@Configuration
-public class ExceptionJobConfig {
-
-    @Autowired
-    private JobRepository jobRepository;
-
-    @Autowired
-    private PlatformTransactionManager transactionManager;
-
-    @Bean
-    @StepScope
-    public ExceptionReader exceptionReader(
-            @Value("#{jobParameters['inputDateStr']}") String inputDate) {
-        return new ExceptionReader(inputDate);
-    }
-
-    @Bean
-    public Job exceptionJob() {
-        return new JobBuilder("exceptionJob", jobRepository)
-                .start(exceptionStep())
-                .build();
-    }
-
-    @Bean
-    public Step exceptionStep() {
-        return new StepBuilder("exceptionStep", jobRepository)
-                .<ExceptionRecord, ExceptionRecord>chunk(100, transactionManager)
-                .reader(exceptionReader(null))
-                .processor(exceptionProcessor())
-                .writer(exceptionWriter())
-                .build();
-    }
-}
-```
-
----
-
 ## Scenario 2 Summary
 
-### Complete Linkage Chain
-
-1. **Job Configuration** → Defines Job, Step, and component beans
-2. **Spring Batch** → Executes Job, calls Tasklet or ItemReader
-3. **Tasklet/ItemReader** → Injects Repository via `@Autowired`
-4. **Repository** → Injects DataSource, creates JdbcTemplate
-5. **JdbcTemplate** → Executes SQL via HikariCP connection pool
-6. **Database** → MySQL receives SQL queries
-
-### Quick Reference
-
-| Pattern | Use Case | Database Access |
-|---------|----------|-----------------|
-| Tasklet | Single operation, file generation, bulk updates | `repository.query()` / `repository.update()` |
-| ItemReader | Chunk processing, large datasets | `@PostConstruct` loads via `repository.query()` |
-
-### Tasklet vs ItemReader
-
-| Aspect | Tasklet | ItemReader |
-|--------|---------|------------|
-| Processing | All at once | One record at a time |
-| Memory | Loads all records | Iterator-based |
-| Use Case | File generation, reports | Large dataset transformation |
-| Return | `RepeatStatus.FINISHED` | Record or `null` |
-
----
-
-# Overall Summary
-
-## Scenario Comparison
-
-| Aspect | Scenario 1 (Without Batch) | Scenario 2 (With Batch) |
-|--------|---------------------------|------------------------|
-| Entry Point | Service/Controller | Job Configuration |
-| Database Access | Repository → JdbcTemplate | Tasklet/Reader → Repository → JdbcTemplate |
-| Transaction | `@Transactional` | Spring Batch Transaction Manager |
-| Use Case | API endpoints, scheduled tasks | Batch processing, file generation |
-
-## Common Components
-
-Both scenarios share:
-- **Properties Configuration** (HikariCP, dual DataSource)
-- **DatasourceConfiguration** (bean creation)
-- **Repository Layer** (JdbcTemplate usage patterns)
-
-## JdbcTemplate Quick Reference
-
-| Class | Parameter Style | Use Case |
-|-------|-----------------|----------|
-| JdbcTemplate | Positional `?` | Simple INSERT/UPDATE |
-| NamedParameterJdbcTemplate | Named `:param` | Complex queries with multiple params |
-
-## RowMapper Patterns
+### RowMapper Patterns
 
 | Pattern | Use Case |
 |---------|----------|
@@ -729,3 +511,56 @@ Both scenarios share:
 | RowMapper Class | Reusable complex mapping with logic |
 | BeanPropertyRowMapper | Auto-map by column alias to bean property |
 | Anonymous RowMapper | Single value extraction |
+
+### Parameter Source Options
+
+| Class | Use Case |
+|-------|----------|
+| `Map<String, Object>` | Simple parameter map |
+| `MapSqlParameterSource` | Builder pattern with chained `.addValue()` |
+
+### When to Use NamedParameterJdbcTemplate
+
+- Complex queries with multiple parameters
+- Need to reuse same parameter in multiple places
+- IN clause with collections (Set, List)
+- Better readability for queries with many parameters
+
+---
+
+# Overall Summary
+
+## Scenario Comparison
+
+| Aspect | Scenario 1: JdbcTemplate | Scenario 2: NamedParameterJdbcTemplate |
+|--------|--------------------------|----------------------------------------|
+| Parameter Style | Positional `?` | Named `:param` |
+| Parameter Binding | By position (order matters) | By name (order doesn't matter) |
+| IN Clause Support | Manual handling | Native collection support |
+| Parameter Reuse | Not possible | Can reuse same parameter |
+| Best For | Simple INSERT | Complex SELECT/UPDATE |
+| Readability | Lower with many params | Higher with many params |
+
+## DataSource Usage
+
+| Operation | DataSource | JdbcTemplate Type |
+|-----------|------------|-------------------|
+| SELECT | readOnlySource (batchDatasource) | NamedParameterJdbcTemplate |
+| INSERT | writeDataSource (springDatasource) | JdbcTemplate |
+| UPDATE | writeDataSource (springDatasource) | NamedParameterJdbcTemplate |
+
+## Quick Reference
+
+### JdbcTemplate (Positional)
+```java
+JdbcTemplate template = new JdbcTemplate(writeDataSource);
+template.update("INSERT INTO table (col1, col2) VALUES (?, ?)", value1, value2);
+```
+
+### NamedParameterJdbcTemplate (Named)
+```java
+NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
+Map<String, Object> params = new HashMap<>();
+params.put("param1", value1);
+jdbcTemplate.query("SELECT * FROM table WHERE col = :param1", params, rowMapper);
+```
