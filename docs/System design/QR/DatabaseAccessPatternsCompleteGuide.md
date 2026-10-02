@@ -15,60 +15,265 @@ A comprehensive reference for database access patterns in Spring Boot applicatio
 
 ---
 
-## Common Foundation
+# Common Foundation: DataSource Configuration
 
-All three approaches share common database connectivity infrastructure in Spring Boot.
+This document explains how the batch application configures database connectivity using Spring Boot's DataSource infrastructure.
 
-### DataSource Configuration
+---
 
-```properties
-# Application Properties
-spring.datasource.url=jdbc:mysql://localhost:3306/appdb
-spring.datasource.username=dbuser
-spring.datasource.password=dbpass
-spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+## 1. Overview
 
-# Connection Pool (HikariCP - Spring Boot default)
-spring.datasource.hikari.maximum-pool-size=10
-spring.datasource.hikari.minimum-idle=5
-spring.datasource.hikari.idle-timeout=30000
-spring.datasource.hikari.connection-timeout=20000
+The application uses a **dual DataSource** architecture:
+
+| Bean Name | Purpose | Configuration Prefix |
+|-----------|---------|---------------------|
+| `springDatasource` | Spring Batch metadata (job execution tracking) | `spring.datasource` |
+| `batchDatasource` | Business data operations | `batch.datasource` |
+
+Both DataSources connect to the same database but are logically separated for cleaner responsibility division.
+
+---
+
+## 2. DataSource Bean Configuration
+
+The `DatasourceConfiguration` class creates two DataSource beans:
+
+```java
+@Configuration
+public class DatasourceConfiguration {
+    
+    @Primary
+    @Bean(name="springDatasource")
+    @ConfigurationProperties(prefix="spring.datasource")
+    public DataSource springDataSource() {
+        return DataSourceBuilder.create().build();
+    }
+    
+    @Bean(name="batchDatasource")
+    @ConfigurationProperties(prefix="batch.datasource")
+    public DataSource batchDatasource() {
+        return DataSourceBuilder.create().build();
+    }
+}
 ```
 
-### Connection Flow
+### Key Annotations
 
-Application requests pass through the following layers:
-- **DataSource** - HikariCP connection pool manages database connections
-- **JDBC Connection** - Obtained from pool, returned after use
-- **JDBC Driver** - MySQL Connector/J handles protocol communication
-- **Database Server** - Executes SQL and returns results
+| Annotation | Purpose |
+|------------|---------|
+| `@Configuration` | Marks this class as a source of bean definitions for the Spring IoC container |
+| `@Bean` | Indicates the method produces a bean to be managed by Spring |
+| `@Primary` | Designates this DataSource as the default when autowiring without qualifier |
+| `@ConfigurationProperties` | Binds external properties (by prefix) to the returned object |
 
-### Transaction Management
+---
 
-All approaches use Spring's `@Transactional` annotation:
+## 3. How Spring Builds DataSource Beans
+
+### Bean Creation Process
+
+1. **Load Properties** - Spring reads properties from the configured location and decrypts encrypted values using Jasypt.
+
+2. **Scan @Configuration Classes** - Spring finds `DatasourceConfiguration.class` and registers bean definitions for both DataSource methods.
+
+3. **Process @ConfigurationProperties** - For each prefix (e.g., `spring.datasource`), Spring binds matching properties:
+   - `spring.datasource.driver` → driver
+   - `spring.datasource.jdbcUrl` → jdbcUrl
+   - `spring.datasource.username` → username
+   - `spring.datasource.password` → password
+   - `spring.datasource.type` → HikariDataSource.class
+   - `spring.datasource.hikari.*` → HikariConfig properties
+
+4. **DataSourceBuilder Creates Instance** - `DataSourceBuilder.create()` initializes the builder, and `.build()` creates a `HikariDataSource` instance with all bound properties.
+
+5. **Register in Application Context** - Both beans are registered and available for injection throughout the application.
+
+---
+
+## 4. Properties Configuration
+
+### Spring DataSource (Primary - for Spring Batch)
+
+```properties
+spring.datasource.driver=com.mysql.jdbc.Driver
+spring.datasource.jdbcUrl=jdbc:mysql://<host>:<port>/<database>?sslMode=REQUIRED
+spring.datasource.username=<username>
+spring.datasource.password=${db.write.encrypt}
+spring.datasource.type=com.zaxxer.hikari.HikariDataSource
+```
+
+### Batch DataSource (for Business Operations)
+
+```properties
+batch.datasource.driver=com.mysql.jdbc.Driver
+batch.datasource.jdbcUrl=jdbc:mysql://<host>:<port>/<database>?sslMode=REQUIRED
+batch.datasource.username=<username>
+batch.datasource.password=${db.read.encrypt}
+batch.datasource.type=com.zaxxer.hikari.HikariDataSource
+```
+
+---
+
+## 5. Connection Pool (HikariCP)
+
+HikariCP is the default connection pool in Spring Boot. Both DataSources share the same pool configuration:
+
+```properties
+*.datasource.hikari.minimum-idle=5
+*.datasource.hikari.maximum-pool-size=15
+*.datasource.hikari.auto-commit=true
+*.datasource.hikari.idle-timeout=600000
+*.datasource.hikari.pool-name=BatchHikariCP
+*.datasource.hikari.max-lifetime=1800000
+*.datasource.hikari.connection-timeout=600000
+*.datasource.hikari.connection-test-query=SELECT 1
+```
+
+### Configuration Parameters
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| `minimum-idle` | 5 | Minimum idle connections maintained in the pool |
+| `maximum-pool-size` | 15 | Maximum connections in the pool |
+| `auto-commit` | true | Auto-commit mode for connections |
+| `idle-timeout` | 600000ms (10 min) | Max time a connection can sit idle before eviction |
+| `max-lifetime` | 1800000ms (30 min) | Max lifetime of a connection in the pool |
+| `connection-timeout` | 600000ms (10 min) | Max wait time for a connection from pool |
+| `connection-test-query` | SELECT 1 | Query to validate connection liveness |
+
+---
+
+## 6. Connection Flow
+
+When the application requests a database connection:
+
+1. **Application Layer** - Tasklets request a connection.
+2. **DataSource Layer** - The appropriate DataSource (`springDatasource` or `batchDatasource`) is selected.
+3. **HikariCP** - Connection pool provides an available connection or creates a new one (up to max pool size).
+4. **JDBC Driver** - MySQL Connector/J handles protocol communication and SSL encryption.
+5. **Database Server** - MySQL executes SQL and returns results.
+
+---
+
+## 7. Password Encryption with Jasypt
+
+The application uses Jasypt for encrypting sensitive database passwords.
+
+### Encrypted Password Configuration
+
+```properties
+db.write.encrypt=ENC(<encrypted_value>)
+db.read.encrypt=ENC(<encrypted_value>)
+
+spring.datasource.password=${db.write.encrypt}
+batch.datasource.password=${db.read.encrypt}
+```
+
+### Jasypt Configuration
+
+```properties
+jasypt.encryptor.bean=encryptorBean
+jasypt.encryptor.env.pass.name=BATCH_ENCRYPTION_PASSWORD
+```
+
+At startup, Jasypt intercepts properties containing `ENC(...)` and decrypts them using the master password before Spring binds them to the DataSource.
+
+---
+
+## 8. Transaction Management
+
+### Using @Transactional with DataSources
 
 ```java
 @Service
 public class SomeService {
     
+    // Uses @Primary DataSource (springDatasource) by default
     @Transactional
     public void performOperation() {
-        // Operations within this method share the same transaction
+        // Operations share the same transaction
     }
     
+    // Read-only optimization
     @Transactional(readOnly = true)
     public Data readData() {
-        // Read-only transaction optimization
+        // Hints to driver for potential optimizations
     }
     
+    // New independent transaction
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void independentOperation() {
-        // Runs in a new transaction, suspending current if exists
+        // Runs in new transaction, suspending current if exists
+    }
+}
+```
+
+### Transaction Propagation Levels
+
+| Propagation | Behavior |
+|-------------|----------|
+| `REQUIRED` (default) | Join existing or create new transaction |
+| `REQUIRES_NEW` | Always create new, suspend existing |
+| `SUPPORTS` | Run in transaction if exists, otherwise non-transactional |
+| `MANDATORY` | Must run in existing transaction, throw exception otherwise |
+
+---
+
+## 9. Injecting DataSources in Components
+
+### Using @Qualifier
+
+```java
+@Component
+public class MyTasklet implements Tasklet {
+    
+    @Autowired
+    @Qualifier("batchDatasource")
+    private DataSource batchDatasource;
+}
+```
+
+### Constructor Injection
+
+```java
+@Component
+public class MyService {
+    
+    private final DataSource batchDatasource;
+    
+    public MyService(@Qualifier("batchDatasource") DataSource batchDatasource) {
+        this.batchDatasource = batchDatasource;
+    }
+}
+```
+
+### Using JdbcTemplate
+
+```java
+@Configuration
+public class JdbcTemplateConfig {
+    
+    @Bean
+    public JdbcTemplate batchJdbcTemplate(
+            @Qualifier("batchDatasource") DataSource dataSource) {
+        return new JdbcTemplate(dataSource);
     }
 }
 ```
 
 ---
+
+## 10. Summary
+
+| Component | Responsibility |
+|-----------|---------------|
+| `DatasourceConfiguration` | Defines DataSource beans with `@Bean` and `@ConfigurationProperties` |
+| `DataSourceBuilder` | Creates configured DataSource instances |
+| `@ConfigurationProperties` | Binds properties by prefix to bean properties |
+| `HikariCP` | Manages connection pooling |
+| `Jasypt` | Decrypts encrypted passwords |
+| `MySQL Connector/J` | Handles database communication protocol |
+
 
 ## Hibernate / Spring Data JPA
 
