@@ -10,8 +10,6 @@ A comprehensive reference for database access patterns in Spring Boot applicatio
 2. [Hibernate / Spring Data JPA](#hibernate--spring-data-jpa)
 3. [JdbcTemplate](#jdbctemplate)
 4. [MyBatis](#mybatis)
-5. [Pattern Comparison](#pattern-comparison)
-6. [Best Practices](#best-practices)
 
 ---
 
