@@ -18,7 +18,7 @@ This document provides a complete guide for obtaining PrivateKey from files usin
 Loads PrivateKey from PEM-formatted files using Bouncy Castle library.
 
 ## Components
-<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/37d28281-919b-4266-9b8d-886703c73fdb" />
+<img width="2624" height="1779" alt="image" src="https://github.com/user-attachments/assets/504d55a6-c9bf-4342-a533-cadee4c78c70" />
 
 ### 1.1 BouncyCastleProvider
 
@@ -340,7 +340,7 @@ MIIEvQIBADANBgkqhkiG9w0BAQEFAAOCAQ8A...
 Loads PrivateKey from DER-encoded PKCS8 binary files using native Java APIs (no Bouncy Castle required).
 
 ## Components
-<img width="3200" height="1830" alt="image" src="https://github.com/user-attachments/assets/728fdb47-8973-4b07-ad72-736c4e273658" />
+<img width="2624" height="1280" alt="image" src="https://github.com/user-attachments/assets/bc853c9a-9081-42c3-a22b-08222cef66f7" />
 
 ### 2.1 Files & Paths
 
@@ -485,7 +485,7 @@ PrivateKey signingKey = kf.generatePrivate(spec);
 Extracts PrivateKey from Java KeyStore files (JKS or PKCS12 format).
 
 ## Components
-<img width="3200" height="2482" alt="image" src="https://github.com/user-attachments/assets/cb82e3b2-4a22-46ad-a644-a818d14ca838" />
+<img width="2624" height="1552" alt="image" src="https://github.com/user-attachments/assets/8e502653-2c0d-406b-9fd3-9365af227991" />
 
 ### 3.1 FileInputStream
 
