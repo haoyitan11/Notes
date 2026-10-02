@@ -1,8 +1,43 @@
-# Payment Service Provider QR System Design
+# Payment Service Provider (PSP) QR System Design
+
+## Architecture Overview
+
+```text
+Payment Service Provider (PSP) QR System
+│
+├── Messaging Layer
+│   └── Solace Message Broker
+│
+├── Database Layer
+│   ├── MySQL
+│   ├── Hibernate / Spring Data JPA
+│   ├── JdbcTemplate
+│   └── MyBatis
+│
+├── Security Layer
+│   ├── TLS WebClient
+│   ├── OAuth2
+│   ├── PrivateKey Loading
+│   └── Certificate Loading
+│
+├── External Communication Layer
+│   └── HTTP Clients
+│
+├── QR Processing Layer
+│   └── ZXing QR Processing
+│
+└── Batch Processing Layer
+    └── Spring Batch
+```
+
+---
+
+# 1. Messaging Layer
 
 ## Solace Message Broker
 
 ### Core Infrastructure Components
+
 1. JndiTemplate
 2. JndiObjectFactoryBean
 3. ConnectionFactory
@@ -10,6 +45,7 @@
 5. JndiDestinationResolver
 
 ### JMS Messaging Components
+
 1. Producer JmsTemplate
 2. SolaceMessageSender
 3. SolaceMessageSenderOneWay
@@ -18,6 +54,7 @@
 6. SolaceMessageReceiver
 
 ### Spring Integration Components
+
 1. DefaultMessageListenerContainer
 2. MessageDrivenChannelAdapter
 3. Spring Integration Channels
@@ -27,32 +64,78 @@
 7. ObjectToJsonTransformer
 8. OutboundChannelAdapter
 
-### Runtime
+### Runtime Components
+
 1. Solace Broker (Topic / Queue)
 
-**More details on:** https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SolaceCompleteGuide.md
-
----
+### Reference
+https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SolaceCompleteGuide.md
 
 ## Database
 
-### Database
+### Database Engine
+
 1. MySQL
 
-### Database Query Dependencies Handle
-1. JdbcTemplate
-2. Hibernate
+### DataSource Infrastructure
 
----
+1. DatasourceConfiguration
+2. DataSourceBuilder
+3. springDatasource
+4. batchDatasource
+5. HikariCP
+6. Jasypt
+7. MySQL Connector/J
 
-## HTTP Clients Dependencies Handle
+### Transaction Management
+
+1. @Transactional
+2. Transaction Propagation
+
+### Reference
+https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/DatabaseAccessPatternsCompleteGuide.md
+
+
+## Hibernate / Spring Data JPA
 
 ### Components
-1. Spring WebFlux (WebClient)
-2. Apache HttpClient (CloseableHttpClient)
-3. RestClient
+
+1. Entity
+2. Repository Interface
+3. Spring Data JPA
+4. EntityManager
+5. Hibernate SessionFactory
+6. JpaRepository
+7. Service Layer
 
 ---
+
+## JdbcTemplate
+
+### Components
+
+1. JdbcTemplate
+2. NamedParameterJdbcTemplate
+3. RowMapper
+4. DAO / Repository
+5. Service Layer
+
+---
+
+## MyBatis
+
+### Components
+
+1. Mapper Interface
+2. Mapper XML
+3. SqlSession
+4. SqlSessionFactory
+5. Dynamic SQL Provider
+6. Service Layer
+
+---
+
+# 3. Security Layer
 
 ## TLS WebClient Dependencies Handle
 
@@ -85,9 +168,8 @@
 1. Request Logging Filter
 2. Response Logging Filter
 
-**More details on:** https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/TLSWebClient.md
-
----
+### Reference
+https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/TLSWebClient.md
 
 ## OAuth2 Dependencies Handle
 
@@ -103,11 +185,10 @@
 8. OAuth2AuthorizedClient
 9. OAuth2AccessToken
 
-**More details on:** https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/OAuth2.md
+### Reference
+https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/OAuth2.md
 
----
-
-## Get PrivateKey Dependencies Handle
+## PrivateKey Dependencies Handle
 
 ### Part 1. PEM File Loading (Bouncy Castle)
 
@@ -120,7 +201,7 @@
 7. JcaPEMKeyConverter
 8. PrivateKey
 
-### Part 2. Raw PKCS8 Binary File Loading (Native Java)
+### Part 2. Raw PKCS8 Binary File Loading
 
 1. Files & Paths
 2. PKCS8EncodedKeySpec
@@ -135,11 +216,11 @@
 4. KeyStore.PrivateKeyEntry
 5. PrivateKey
 
-**More details on:** https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/GetPrivateKey.md
+### Reference
+https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/GetPrivateKey.md
 
----
 
-## Get Certificate Dependencies Handle
+## Certificate Dependencies Handle
 
 ### Part 1. PEM Certificate File Loading (Bouncy Castle)
 
@@ -159,29 +240,40 @@
 5. KeyStore.PrivateKeyEntry.getCertificateChain()
 6. X509Certificate
 
-### Part 3. DER / CER File Loading (Native Java)
+### Part 3. DER / CER File Loading
 
 1. FileInputStream
 2. ByteArrayInputStream
 3. CertificateFactory
 4. X509Certificate
 
-**More details on:** https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/GetCertificate.md
+### Reference
+https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/GetCertificate.md
+
+# 4. External Communication Layer
+
+## HTTP Client Dependencies Handle
+
+### Components
+
+1. Spring WebFlux (WebClient)
+2. Apache HttpClient (CloseableHttpClient)
+3. RestClient
 
 ---
 
-## QR Processing
+# 5. QR Processing Layer
 
-### ZXing QR Code Generate Dependencies Handle
+## ZXing QR Code Processing
 
-#### QR Payload Generation Components
+### QR Payload Generation Components
 
 1. DynamicQrCodeUtil
 2. DateUtil
 3. CRC16 Calculator
 4. Helper Methods
 
-#### QR Image Generation Components
+### QR Image Generation Components
 
 1. DynamicQrImageUtil
 2. QRCodeWriter
@@ -192,13 +284,14 @@
 7. Graphics2D
 8. ImageIO
 
-**More details on:** https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/ZXing%20QR.md
+### Reference
+https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/ZXing%20QR.md
 
----
+# 6. Batch Processing Layer
 
-## Spring Batch Dependencies Handle
+## Spring Batch Job Processing
 
-### Spring Batch Job Components
+### Components
 
 1. JobLauncher
 2. JobParameters
@@ -210,7 +303,11 @@
 8. JobBuilder
 9. StepBuilder
 
-### Spring Batch Chunk Components
+---
+
+## Spring Batch Chunk Processing
+
+### Components
 
 1. JobLauncher
 2. JobParameters
@@ -225,4 +322,5 @@
 11. @JobScope
 12. @StepScope
 
-**More details on:** https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SpringBatchCompleteGuide.md
+### Reference
+https://github.com/haoyitan11/Notes/blob/main/docs/System%20design/QR/SpringBatchCompleteGuide.md
