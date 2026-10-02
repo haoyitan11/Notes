@@ -1,8 +1,6 @@
 # ZXing QR Code Generation Dependencies Handle
 
 ## Overview
-<img width="3200" height="2918" alt="image" src="https://github.com/user-attachments/assets/9b705931-a138-4dc4-8fff-9b3b99d12cbb" />
-
 This document provides a complete guide for the ZXing QR code generation implementation in the application. It covers two processing layers:
 
 1. **QR Payload Generation** - Building the QR data string with transaction information
@@ -13,7 +11,8 @@ This document provides a complete guide for the ZXing QR code generation impleme
 
 # Part 1: QR Payload Generation
 
-<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/fd734ce8-8d3f-4381-b260-427a35c12e5c" />
+<img width="2624" height="1936" alt="image" src="https://github.com/user-attachments/assets/1c1ec59f-9d0e-4a05-8d1e-616e589f2f03" />
+
 
 ## Purpose
 
@@ -266,7 +265,7 @@ public static String getQrMerchantName(String name) {
 
 # Part 2: QR Image Generation
 
-<img width="3200" height="3024" alt="image" src="https://github.com/user-attachments/assets/58466446-a815-487c-9f65-7ca7ea626bf4" />
+<img width="2624" height="2720" alt="image" src="https://github.com/user-attachments/assets/e3fe1dc6-2a71-42fb-bc3a-1370e442b2f2" />
 
 ## Purpose
 
