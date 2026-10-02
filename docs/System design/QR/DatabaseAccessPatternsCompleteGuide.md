@@ -37,17 +37,11 @@ spring.datasource.hikari.connection-timeout=20000
 
 ### Connection Flow
 
-```
-Application Request
-       ↓
-   DataSource (HikariCP Pool)
-       ↓
-   JDBC Connection
-       ↓
-   JDBC Driver (mysql-connector-java)
-       ↓
-   Database Server
-```
+Application requests pass through the following layers:
+- **DataSource** - HikariCP connection pool manages database connections
+- **JDBC Connection** - Obtained from pool, returned after use
+- **JDBC Driver** - MySQL Connector/J handles protocol communication
+- **Database Server** - Executes SQL and returns results
 
 ### Transaction Management
 
@@ -80,19 +74,14 @@ public class SomeService {
 
 Object-Relational Mapping (ORM) approach that maps Java objects directly to database tables.
 
-### Architecture Overview
+### How It Works
 
-```
-Repository Interface (JpaRepository)
-         ↓
-Spring Data JPA (auto-generates implementation)
-         ↓
-EntityManager (JPA API)
-         ↓
-Hibernate SessionFactory (ORM Engine)
-         ↓
-DataSource → JDBC → Database
-```
+Spring Data JPA builds on top of Hibernate ORM:
+- **Repository Interface** - You define an interface extending `JpaRepository`
+- **Spring Data JPA** - Auto-generates the implementation at runtime
+- **EntityManager** - JPA API that manages entity lifecycle
+- **Hibernate SessionFactory** - ORM engine that translates objects to SQL
+- **DataSource** - Connection pool feeding JDBC operations
 
 ### Configuration
 
@@ -296,17 +285,13 @@ public class KeyInfo {
 
 Low-level approach providing direct SQL control with Spring's exception handling.
 
-### Architecture Overview
+### How It Works
 
-```
-Service Layer
-     ↓
-JdbcTemplate / NamedParameterJdbcTemplate
-     ↓
-RowMapper (result → object conversion)
-     ↓
-DataSource → JDBC → Database
-```
+JdbcTemplate provides a thin wrapper over JDBC:
+- **Service Layer** - Business logic calls JdbcTemplate methods
+- **JdbcTemplate** - Handles connection management, statement creation, exception translation
+- **RowMapper** - Converts ResultSet rows to Java objects
+- **DataSource** - Provides pooled connections
 
 ### Configuration
 
@@ -570,19 +555,14 @@ public class TransactionService {
 
 SQL mapping framework using XML or annotations for query definition.
 
-### Architecture Overview
+### How It Works
 
-```
-Service Layer
-     ↓
-Mapper Interface (annotated or XML-bound)
-     ↓
-SqlSession (MyBatis core)
-     ↓
-SqlSessionFactory
-     ↓
-DataSource → JDBC → Database
-```
+MyBatis separates SQL from Java code:
+- **Mapper Interface** - Defines method signatures for database operations
+- **XML/Annotations** - Contains the actual SQL statements
+- **SqlSession** - Core MyBatis object managing statement execution
+- **SqlSessionFactory** - Creates SqlSession instances
+- **DataSource** - Provides database connections
 
 ### Configuration
 
@@ -852,14 +832,14 @@ public class PaymentService {
 
 | Criteria | JPA/Hibernate | JdbcTemplate | MyBatis |
 |----------|---------------|--------------|---------|
-| **Learning Curve** | Steep | Low | Moderate |
-| **SQL Control** | Limited | Full | Full |
-| **Productivity** | High (CRUD) | Low | Moderate |
-| **Complex Queries** | Challenging | Easy | Easy |
-| **Performance Tuning** | Difficult | Easy | Easy |
-| **Caching** | Built-in L1/L2 | Manual | Built-in |
-| **Code Verbosity** | Low | High | Moderate |
-| **Type Safety** | High | Low | Moderate |
+| Learning Curve | Steep | Low | Moderate |
+| SQL Control | Limited | Full | Full |
+| Productivity | High (CRUD) | Low | Moderate |
+| Complex Queries | Challenging | Easy | Easy |
+| Performance Tuning | Difficult | Easy | Easy |
+| Caching | Built-in L1/L2 | Manual | Built-in |
+| Code Verbosity | Low | High | Moderate |
+| Type Safety | High | Low | Moderate |
 
 ### Recommended Use Cases
 
@@ -909,7 +889,7 @@ List<Payment> findByStatus(String status) {
 
 ## Best Practices
 
-### General Best Practices
+### General
 
 1. **Always use parameterized queries** - Never concatenate user input into SQL strings
 2. **Use transactions appropriately** - Mark read-only operations with `@Transactional(readOnly = true)`
@@ -919,27 +899,27 @@ List<Payment> findByStatus(String status) {
 
 ### JPA-Specific
 
-1. **Use `@Transactional(readOnly = true)`** for queries to optimize performance
-2. **Prefer `FetchType.LAZY`** for relationships to avoid N+1 problems
-3. **Use `@EntityGraph`** or `JOIN FETCH` when eager loading is needed
-4. **Avoid returning entities from REST controllers** - Use DTOs
-5. **Use `@Modifying` with `@Query`** for update/delete operations
+1. Use `@Transactional(readOnly = true)` for queries to optimize performance
+2. Prefer `FetchType.LAZY` for relationships to avoid N+1 problems
+3. Use `@EntityGraph` or `JOIN FETCH` when eager loading is needed
+4. Avoid returning entities from REST controllers - Use DTOs
+5. Use `@Modifying` with `@Query` for update/delete operations
 
 ### JdbcTemplate-Specific
 
-1. **Use `NamedParameterJdbcTemplate`** for complex queries with many parameters
-2. **Create reusable `RowMapper` classes** for consistent mapping
-3. **Use `batchUpdate`** for bulk operations
-4. **Handle `EmptyResultDataAccessException`** for single-result queries
-5. **Use `MapSqlParameterSource`** for named parameters
+1. Use `NamedParameterJdbcTemplate` for complex queries with many parameters
+2. Create reusable `RowMapper` classes for consistent mapping
+3. Use `batchUpdate` for bulk operations
+4. Handle `EmptyResultDataAccessException` for single-result queries
+5. Use `MapSqlParameterSource` for named parameters
 
 ### MyBatis-Specific
 
-1. **Enable `map-underscore-to-camel-case`** for automatic column mapping
-2. **Use `<sql>` fragments** to avoid duplication
-3. **Prefer XML** for complex dynamic queries
-4. **Use `@Param`** annotation for multiple parameters
-5. **Leverage result maps** for complex object mapping
+1. Enable `map-underscore-to-camel-case` for automatic column mapping
+2. Use `<sql>` fragments to avoid duplication
+3. Prefer XML for complex dynamic queries
+4. Use `@Param` annotation for multiple parameters
+5. Leverage result maps for complex object mapping
 
 ### Error Handling
 
