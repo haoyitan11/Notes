@@ -10,8 +10,6 @@ This document provides a complete guide for obtaining PrivateKey from files usin
 
 ---
 
-<img width="3200" height="2992" alt="image" src="https://github.com/user-attachments/assets/d73b2647-b479-4166-92a6-a0801e37931e" />
-
 # Part 1: PEM File Loading (Bouncy Castle)
 
 
