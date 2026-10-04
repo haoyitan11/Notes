@@ -9,6 +9,8 @@ An array is a linear data structure that stores elements of the same type in con
 ### 1.   初始化数组 (Initialize the array)
 我们可以根据需求选用数组的两种初始化方式：无初始值、给定初始值。在未指定初始值的情况下，大多数编程语言会将数组元素初始化为 0
 
+We can choose between two ways of initializing an array based on requirements: without initial values ​​or with specified initial values. When no initial values ​​are specified, most programming languages ​​initialize array elements to 0.
+
 ```java
 int[] arr  = new int[5]; //{0,0,0,0,0}
 int[] nums = {1,3,2,5,4}
