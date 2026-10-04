@@ -166,6 +166,17 @@ Finding a specific element in an array requires traversing the array; in each it
 
 因为数组是线性数据结构，所以上述查找操作被称为“线性查找”。
 
+```java
+/* 在数组中查找指定元素 */
+int find(int[] nums, int target) {
+    for (int i = 0; i < nums.length; i++) {
+        if (nums[i] == target)
+            return i;
+    }
+    return -1;
+}
+```
+
 Since an array is a linear data structure, the aforementioned search operation is called "linear search."
 
 ### 7.   扩容数组 (Resize the array)
