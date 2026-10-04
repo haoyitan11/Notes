@@ -16,5 +16,11 @@ int[] arr  = new int[5]; //{0,0,0,0,0}
 int[] nums = {1,3,2,5,4}
 ```
 
+### 2. 访问元素 (Access elements)
+数组元素被存储在连续的内存空间中，这意味着计算数组元素的内存地址非常容易。给定数组内存地址（首元素内存地址）和某个元素的索引，我们可以使用图 4-2 所示的公式计算得到该元素的内存地址，从而直接访问该元素。
+
+Array elements are stored in contiguous memory space, which means calculating the memory address of an array element is very straightforward. Given the array's memory address (the address of the first element) and the index of a specific element, we can use the formula shown in Figure 4-2 to calculate that element's memory address, thereby accessing it directly.
+
+
 
 
