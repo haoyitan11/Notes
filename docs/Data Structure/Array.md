@@ -29,7 +29,6 @@ Array elements are stored in contiguous memory space, which means calculating th
 
 在数组中访问元素非常高效，我们可以在O(1)时间内随机访问数组中的任意一个元素。
 
-
 Looking at Figure 4-2, we observe that the index of the first array element is 0; this may seem counterintuitive, as counting from 1 feels more natural. However, from the perspective of the address calculation formula, an index is essentially a memory address offset. Since the offset for the first element is 0, assigning it an index of 0 is logical.
 
 Accessing elements in an array is highly efficient; we can randomly access any element in O(1) time.
@@ -45,7 +44,10 @@ int randomAccess(int[] nums) {
 }
 ```
 
+### 3.   插入元素 (Insert element)
+数组元素在内存中是“紧挨着的”，它们之间没有空间再存放任何数据。如图 4-3 所示，如果想在数组中间插入一个元素，则需要将该元素之后的所有元素都向后移动一位，之后再把元素赋值给该索引。
 
+Array elements are stored contiguously in memory, leaving no space between them to store additional data. As shown in Figure 4-3, if you wish to insert an element into the middle of an array, you must shift all subsequent elements one position to the right before assigning the new element to that index.
 
 
 
