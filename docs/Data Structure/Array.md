@@ -85,16 +85,12 @@ int randomAccess(int[] nums) {
 }
 ```
 
-> **Note**
->
-> 在上述示例中，随机生成的索引仅用于演示数组能够访问任意位置的元素，并不代表随机访问的定义。
->
-> In the example above, the randomly generated index is used only to demonstrate that an array can access an element at any position. It should not be interpreted as the definition of random access.
-
 ### 3.   插入元素 (Insert element)
 数组元素在内存中是“紧挨着的”，它们之间没有空间再存放任何数据。如图 4-3 所示，如果想在数组中间插入一个元素，则需要将该元素之后的所有元素都向后移动一位，之后再把元素赋值给该索引。
 
 Array elements are stored contiguously in memory, leaving no space between them to store additional data. As shown in Figure 4-3, if you wish to insert an element into the middle of an array, you must shift all subsequent elements one position to the right before assigning the new element to that index.
+
+<img width="1353" height="806" alt="image" src="https://github.com/user-attachments/assets/a590d598-b679-47f9-aa00-30b59be5885b" />
 
 
 
