@@ -159,7 +159,7 @@ void traverse(int[] nums) {
 }
 ```
 
-### 6.   查找元素
+### 6.   查找元素 (Find element)
 在数组中查找指定元素需要遍历数组，每轮判断元素值是否匹配，若匹配则输出对应索引。
 
 Finding a specific element in an array requires traversing the array; in each iteration, the element's value is checked for a match, and if a match is found, the corresponding index is output.
@@ -167,3 +167,26 @@ Finding a specific element in an array requires traversing the array; in each it
 因为数组是线性数据结构，所以上述查找操作被称为“线性查找”。
 
 Since an array is a linear data structure, the aforementioned search operation is called "linear search."
+
+### 7.   扩容数组 (Resize the array)
+在复杂的系统环境中，程序难以保证数组之后的内存空间是可用的，从而无法安全地扩展数组容量。因此在大多数编程语言中，数组的长度是不可变的。
+
+In complex system environments, it is difficult for a program to guarantee that the memory space immediately following an array is available, making it impossible to safely expand the array's capacity. Consequently, in most programming languages, the length of an array is immutable.
+
+如果我们希望扩容数组，则需重新建立一个更大的数组，然后把原数组元素依次复制到新数组。这是一个O(n)的操作，在数组很大的情况下非常耗时。代码如下所示：
+
+If we wish to expand the array, we must create a larger array and then copy the elements from the original array into the new one one by one. This is an O(n) operation, which is very time-consuming when the array is large. The code is shown below:
+
+```java
+/* 扩展数组长度 */
+int[] extend(int[] nums, int enlarge) {
+    // 初始化一个扩展长度后的数组
+    int[] res = new int[nums.length + enlarge];
+    // 将原数组中的所有元素复制到新数组
+    for (int i = 0; i < nums.length; i++) {
+        res[i] = nums[i];
+    }
+    // 返回扩展后的新数组
+    return res;
+}
+```
