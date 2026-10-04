@@ -21,6 +21,31 @@ int[] nums = {1,3,2,5,4}
 
 Array elements are stored in contiguous memory space, which means calculating the memory address of an array element is very straightforward. Given the array's memory address (the address of the first element) and the index of a specific element, we can use the formula shown in Figure 4-2 to calculate that element's memory address, thereby accessing it directly.
 
+<img width="801" height="322" alt="image" src="https://github.com/user-attachments/assets/95eb532f-a2f4-4bf4-b84c-08d4935364c5" />
+
+<img width="1339" height="293" alt="image" src="https://github.com/user-attachments/assets/742bf0a3-6344-4c3e-990d-732593a7a69f" />
+
+观察图 4-2 ，我们发现数组首个元素的索引为 0，这似乎有些反直觉，因为从1开始计数会更自然。但从地址计算公式的角度看，索引本质上是内存地址的偏移量。首个元素的地址偏移量是0，因此它的索引为0是合理的。
+
+在数组中访问元素非常高效，我们可以在O(1)时间内随机访问数组中的任意一个元素。
+
+
+Looking at Figure 4-2, we observe that the index of the first array element is 0; this may seem counterintuitive, as counting from 1 feels more natural. However, from the perspective of the address calculation formula, an index is essentially a memory address offset. Since the offset for the first element is 0, assigning it an index of 0 is logical.
+
+Accessing elements in an array is highly efficient; we can randomly access any element in O(1) time.
+
+```java
+/* Random access to element *
+int randomAccess(int[] nums) {
+  // Randomly select a number in the interval [0, nums.length)
+  int randomIndex = ThreadRandomLocal.current().nextInt(0, nums.length)
+  // Retrieve and return the random element
+  int randomNum = nums[randomIndex];
+  return randomNum;
+}
+```
+
+
 
 
 
