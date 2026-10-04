@@ -16,33 +16,71 @@ int[] arr  = new int[5]; //{0,0,0,0,0}
 int[] nums = {1,3,2,5,4}
 ```
 
-### 2. 访问元素 (Access elements)
-数组元素被存储在连续的内存空间中，这意味着计算数组元素的内存地址非常容易。给定数组内存地址（首元素内存地址）和某个元素的索引，我们可以使用图 4-2 所示的公式计算得到该元素的内存地址，从而直接访问该元素。
+### 2. 访问元素 (Access Elements)
 
-Array elements are stored in contiguous memory space, which means calculating the memory address of an array element is very straightforward. Given the array's memory address (the address of the first element) and the index of a specific element, we can use the formula shown in Figure 4-2 to calculate that element's memory address, thereby accessing it directly.
+数组元素存储在连续的内存空间中，因此可以根据数组的起始地址和元素索引直接计算出目标元素的内存地址，从而快速访问该元素。
+
+Array elements are stored in contiguous memory locations. Therefore, the memory address of any element can be calculated directly using the array's starting address and the element's index, allowing efficient access to that element.
 
 <img width="801" height="322" alt="image" src="https://github.com/user-attachments/assets/95eb532f-a2f4-4bf4-b84c-08d4935364c5" />
 
+元素地址的计算公式如下：
+
+The memory address of an element can be calculated using the following formula:
+
+```text
+Element Address = Array Starting Address + Element Size × Element Index
+
+元素地址 = 数组起始地址 + 元素大小 × 元素索引
+```
+
+例如，对于一个 `int` 数组，每个元素占用 `4` 个字节。假设数组的起始地址为 `000`，则索引为 `3` 的元素地址为：
+
+For example, in an `int` array, each element occupies `4` bytes. If the starting address of the array is `000`, the address of the element at index `3` is:
+
+```text
+000 + 4 × 3 = 012
+```
+
+计算机只需进行一次地址计算，便可直接定位到目标元素，而无需遍历前面的元素。
+
+The computer only needs to perform a single address calculation to locate the target element directly, without traversing the preceding elements.
+
 <img width="1339" height="293" alt="image" src="https://github.com/user-attachments/assets/742bf0a3-6344-4c3e-990d-732593a7a69f" />
 
-观察图 4-2 ，我们发现数组首个元素的索引为 0，这似乎有些反直觉，因为从1开始计数会更自然。但从地址计算公式的角度看，索引本质上是内存地址的偏移量。首个元素的地址偏移量是0，因此它的索引为0是合理的。
+数组索引从 `0` 开始，这可能看起来有些不直观，因为人们通常习惯从 `1` 开始计数。然而，从内存地址计算的角度来看，索引本质上表示元素相对于数组起始地址的偏移量（offset）。
 
-在数组中访问元素非常高效，我们可以在O(1)时间内随机访问数组中的任意一个元素。
+Array indexes start at `0`, which may seem counterintuitive because people naturally tend to count from `1`. However, from the perspective of memory address calculation, an index essentially represents the offset of an element from the array's starting address.
 
-Looking at Figure 4-2, we observe that the index of the first array element is 0; this may seem counterintuitive, as counting from 1 feels more natural. However, from the perspective of the address calculation formula, an index is essentially a memory address offset. Since the offset for the first element is 0, assigning it an index of 0 is logical.
+第一个元素距离数组起始地址的偏移量为 `0`，因此其索引为 `0` 是最合理且最高效的设计。
 
-Accessing elements in an array is highly efficient; we can randomly access any element in O(1) time.
+The first element has an offset of `0` from the starting address, making an index of `0` both logical and efficient.
+
+由于任意元素的地址都可以通过上述公式直接计算，因此数组支持**随机访问（Random Access）**。这里的“随机”并不表示随机选择元素，而是表示可以直接访问任意索引位置的元素。
+
+Because the address of any element can be calculated directly using the formula above, arrays support **Random Access**. Here, "random" does not mean randomly selecting an element; instead, it refers to the ability to directly access an element at any index.
+
+无论访问的是索引 `3` 还是索引 `3,000,000`，都只需要一次地址计算，因此访问操作的时间复杂度为 **O(1)**。
+
+Whether accessing index `3` or index `3,000,000`, only a single address calculation is required. Therefore, array access has a time complexity of **O(1)**.
+
+#### Example
 
 ```java
-/* Random access to element *
+/* Random access to an element */
 int randomAccess(int[] nums) {
-  // Randomly select a number in the interval [0, nums.length)
-  int randomIndex = ThreadRandomLocal.current().nextInt(0, nums.length)
-  // Retrieve and return the random element
-  int randomNum = nums[randomIndex];
-  return randomNum;
+    // Randomly select an index in [0, nums.length)
+    int randomIndex = ThreadLocalRandom.current()
+                                       .nextInt(0, nums.length);
+
+    // Access and return the element directly
+    return nums[randomIndex];
 }
 ```
+
+在上述示例中，随机生成的索引仅用于演示数组可以访问任意位置的元素。无论选择哪个索引，访问操作都能够在 **O(1)** 时间内完成。
+
+In the example above, the randomly generated index is used only to demonstrate that an array can access an element at any
 
 ### 3.   插入元素 (Insert element)
 数组元素在内存中是“紧挨着的”，它们之间没有空间再存放任何数据。如图 4-3 所示，如果想在数组中间插入一个元素，则需要将该元素之后的所有元素都向后移动一位，之后再把元素赋值给该索引。
