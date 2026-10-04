@@ -129,7 +129,41 @@ void remove(int[] nums, int index) {
 }
 ```
 
-总的来看，数组的插入与删除操作有以下缺点。(Overall, array insertion and deletion operations have the following drawbacks.)
-- 时间复杂度高：数组的插入和删除的平均时间复杂度均为 O(n)，其中n为数组长度。(High time complexity: The average time complexity for both insertion and deletion in an array is O(n), where n is the length of the array.)
-- 丢失元素：由于数组的长度不可变，因此在插入元素后，超出数组长度范围的元素会丢失。(Loss of elements: Since the array's length is fixed, elements falling outside the array's bounds after an insertion are lost.)
-- 内存浪费：我们可以初始化一个比较长的数组，只用前面一部分，这样在插入数据时，丢失的末尾元素都是“无意义”的，但这样做会造成部分内存空间浪费。(Memory wastage: We could initialize a relatively long array and use only the initial portion; the unused elements at the end would be "meaningless" during data insertion, but this approach results in wasted memory space.)
+总的来看，数组的插入与删除操作有以下缺点：
+- 时间复杂度高：数组的插入和删除平均时间复杂度均为 O(n)，其中 n 为数组长度。
+- 丢失元素：由于数组长度不可变，在插入新元素后，超出数组长度范围的元素可能会被覆盖或丢失。
+- 内存浪费：可以预先创建一个较大的数组，仅使用前面一部分空间。这样在插入元素时，即使末尾元素被覆盖，也不会影响有效数据，但会造成部分内存空间的浪费。
+
+Overall, array insertion and deletion operations have the following drawbacks:
+- High time complexity: The average time complexity of both insertion and deletion operations in an array is O(n), where n is the length of the array.
+- Loss of elements: Since the length of an array is fixed, elements that exceed the array's capacity after an insertion may be overwritten or lost.
+- Memory wastage: A larger array can be initialized in advance while only a portion of it is used. This prevents meaningful data from being lost during insertions, but  results in unused memory space and therefore wastes memory.
+
+### 5.   遍历数组 (Iterate through the array)
+在大多数编程语言中，我们既可以通过索引遍历数组，也可以直接遍历获取数组中的每个元素：
+
+In most programming languages, we can iterate through an array either by using indices or by directly accessing each element:
+
+```java
+/* 删除索引 index 处的元素 */
+void traverse(int[] nums) {
+    int count = 0;
+    // 通过索引遍历数组
+    for (int i = 0; i < nums.length; i++) {
+        count += nums[i];
+    }
+    // 直接遍历数组元素
+    for (int num : nums) {
+        count += num;
+    }
+}
+```
+
+### 6.   查找元素
+在数组中查找指定元素需要遍历数组，每轮判断元素值是否匹配，若匹配则输出对应索引。
+
+Finding a specific element in an array requires traversing the array; in each iteration, the element's value is checked for a match, and if a match is found, the corresponding index is output.
+
+因为数组是线性数据结构，所以上述查找操作被称为“线性查找”。
+
+Since an array is a linear data structure, the aforementioned search operation is called "linear search."
