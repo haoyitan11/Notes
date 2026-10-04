@@ -78,8 +78,7 @@ Whether accessing index `3` or index `3,000,000`, only a single address calculat
 /* Random access to an element */
 int randomAccess(int[] nums) {
     // Randomly select an index in [0, nums.length)
-    int randomIndex = ThreadLocalRandom.current()
-                                       .nextInt(0, nums.length);
+    int randomIndex = ThreadLocalRandom.current().nextInt(0, nums.length);
 
     // Access and return the element directly
     return nums[randomIndex];
