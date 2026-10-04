@@ -202,21 +202,39 @@ int[] extend(int[] nums, int enlarge) {
 }
 ```
 
-## 4.1.2   数组的优点与局限性
+## 4.1.2   数组的优点与局限性 (Advantages and limitations of arrays)
 数组存储在连续的内存空间内，且元素类型相同。这种做法包含丰富的先验信息，系统可以利用这些信息来优化数据结构的操作效率。
 - 空间效率高：数组为数据分配了连续的内存块，无须额外的结构开销。
 - 支持随机访问：数组允许在O(1)时间内访问任何元素。
 - 缓存局部性：当访问数组元素时，计算机不仅会加载它，还会缓存其周围的其他数据，从而借助高速缓存来提升后续操作的执行速度。
+
+Arrays are stored in contiguous memory space, and their elements are of the same type. This arrangement provides a wealth of prior information that the system can leverage to optimize the operational efficiency of the data structure.
+- High space efficiency: Arrays allocate contiguous memory blocks for data, eliminating the need for additional structural overhead.
+- Support for random access: Arrays allow any element to be accessed in O(1) time.
+- Cache locality: When an array element is accessed, the computer loads not only that element but also the surrounding data into the cache, thereby accelerating subsequent operations.
+
   
 连续空间存储是一把双刃剑，其存在以下局限性。
 - 插入与删除效率低：当数组中元素较多时，插入与删除操作需要移动大量的元素。
 - 长度不可变：数组在初始化后长度就固定了，扩容数组需要将所有数据复制到新数组，开销很大。
 - 空间浪费：如果数组分配的大小超过实际所需，那么多余的空间就被浪费了。
 
-## 4.1.3   数组典型应用
+Contiguous memory storage is a double-edged sword with the following limitations:
+- Inefficiency in insertion and deletion: When an array contains many elements, insertion and deletion operations require shifting a large number of elements.
+- Fixed length: The array's length is fixed upon initialization; expanding the array requires copying all data to a new array, which incurs significant overhead.
+- Wasted space: If the allocated size of the array exceeds actual requirements, the surplus space is wasted.
+
+## 4.1.3   数组典型应用 (Typical applications of arrays)
 数组是一种基础且常见的数据结构，既频繁应用在各类算法之中，也可用于实现各种复杂数据结构。
 - 随机访问：如果我们想随机抽取一些样本，那么可以用数组存储，并生成一个随机序列，根据索引实现随机抽样。
 - 排序和搜索：数组是排序和搜索算法最常用的数据结构。快速排序、归并排序、二分查找等都主要在数组上进行。
 - 查找表：当需要快速查找一个元素或其对应关系时，可以使用数组作为查找表。假如我们想实现字符到 ASCII 码的映射，则可以将字符的 ASCII 码值作为索引，对应的元素存放在数组中的对应位置。
 - 机器学习：神经网络中大量使用了向量、矩阵、张量之间的线性代数运算，这些数据都是以数组的形式构建的。数组是神经网络编程中最常使用的数据结构。
 - 数据结构实现：数组可以用于实现栈、队列、哈希表、堆、图等数据结构。例如，图的邻接矩阵表示实际上是一个二维数组。
+
+Arrays are a fundamental and common data structure; they are frequently used in various algorithms and serve as building blocks for implementing more complex data structures.
+- Random Access: Arrays facilitate random sampling; by storing data in an array and generating a random sequence of indices, one can randomly select specific elements.
+- Sorting and Searching: Arrays are the most common data structure for sorting and searching algorithms. Algorithms such as Quicksort, Merge Sort, and binary search are primarily implemented using arrays.
+- Lookup Tables: Arrays can function as lookup tables for the rapid retrieval of elements or associated data. For instance, to map characters to their ASCII codes, one can use the ASCII value as the index and store the corresponding element at that specific array position.
+- Machine Learning: Neural networks rely heavily on linear algebra operations involving vectors, matrices, and tensors—all of which are structured as arrays. Consequently, arrays are the most frequently used data structure in neural network programming.
+- Data Structure Implementation: Arrays can be used to implement data structures such as stacks, queues, hash tables, heaps, and graphs. For example, an adjacency matrix representation of a graph is essentially a two-dimensional array.
