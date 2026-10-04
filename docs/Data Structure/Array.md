@@ -92,5 +92,19 @@ Array elements are stored contiguously in memory, leaving no space between them 
 
 <img width="1353" height="806" alt="image" src="https://github.com/user-attachments/assets/a590d598-b679-47f9-aa00-30b59be5885b" />
 
+值得注意的是，由于数组的长度是固定的，因此插入一个元素必定会导致数组尾部元素“丢失”。我们将这个问题的解决方案留在“列表”章节中讨论。
 
+It is worth noting that since the length of an array is fixed, inserting an element will inevitably push the last element out of the array. We will leave the solution to this problem for discussion in the "List" chapter.
+
+```java
+/* 在数组的索引 index 处插入元素 num */
+void insert(int[] nums, int num, int index) {
+    // 把索引 index 以及之后的所有元素向后移动一位
+    for (int i = nums.length - 1; i > index; i--) {
+        nums[i] = nums[i - 1];
+    }
+    // 将 num 赋给 index 处的元素
+    nums[index] = num;
+}
+```
 
