@@ -48,7 +48,7 @@ Therefore, the computer only needs to perform a single address calculation to lo
 
 <img width="1339" height="293" alt="image" src="https://github.com/user-attachments/assets/742bf0a3-6344-4c3e-990d-732593a7a69f" />
 
-#### Why Do Array Indexes Start at 0?（为什么数组索引从 0 开始？）
+#### 为什么数组索引从 0 开始？(Why Do Array Indexes Start at 0?)
 
 数组索引从 `0` 开始，这可能看起来有些不直观，因为人们通常习惯从 `1` 开始计数。然而，从内存地址计算的角度来看，索引本质上表示元素相对于数组起始地址的偏移量（offset）。
 
@@ -58,7 +58,7 @@ Array indexes start at `0`, which may seem counterintuitive because people natur
 
 The first element has an offset of `0` from the starting address, so its index is naturally `0`.
 
-#### Random Access（随机访问）
+#### 随机访问 (Random Access)
 
 由于任意元素的地址都可以通过上述公式直接计算，因此数组支持**随机访问（Random Access）**。
 
