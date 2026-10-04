@@ -20,7 +20,7 @@ int[] nums = {1,3,2,5,4}
 
 数组元素存储在连续的内存空间中，因此可以根据数组的起始地址和元素索引直接计算出目标元素的内存地址，从而快速访问该元素。
 
-Array elements are stored in contiguous memory locations. Therefore, the memory address of any element can be calculated directly using the array's starting address and the element's index, allowing efficient access to that element.
+Array elements are stored in contiguous memory locations. Therefore, the memory address of any element can be calculated directly from the array's starting address and the element's index, allowing efficient access to that element.
 
 <img width="801" height="322" alt="image" src="https://github.com/user-attachments/assets/95eb532f-a2f4-4bf4-b84c-08d4935364c5" />
 
@@ -42,27 +42,35 @@ For example, in an `int` array, each element occupies `4` bytes. If the starting
 000 + 4 × 3 = 012
 ```
 
-计算机只需进行一次地址计算，便可直接定位到目标元素，而无需遍历前面的元素。
+因此，计算机只需进行一次地址计算，便可直接定位到目标元素，而无需依次遍历前面的元素。
 
-The computer only needs to perform a single address calculation to locate the target element directly, without traversing the preceding elements.
+Therefore, the computer only needs to perform a single address calculation to locate the target element directly, without traversing the preceding elements.
 
 <img width="1339" height="293" alt="image" src="https://github.com/user-attachments/assets/742bf0a3-6344-4c3e-990d-732593a7a69f" />
+
+#### Why Do Array Indexes Start at 0?（为什么数组索引从 0 开始？）
 
 数组索引从 `0` 开始，这可能看起来有些不直观，因为人们通常习惯从 `1` 开始计数。然而，从内存地址计算的角度来看，索引本质上表示元素相对于数组起始地址的偏移量（offset）。
 
 Array indexes start at `0`, which may seem counterintuitive because people naturally tend to count from `1`. However, from the perspective of memory address calculation, an index essentially represents the offset of an element from the array's starting address.
 
-第一个元素距离数组起始地址的偏移量为 `0`，因此其索引为 `0` 是最合理且最高效的设计。
+第一个元素距离数组起始地址的偏移量为 `0`，因此其索引为 `0`。
 
-The first element has an offset of `0` from the starting address, making an index of `0` both logical and efficient.
+The first element has an offset of `0` from the starting address, so its index is naturally `0`.
 
-由于任意元素的地址都可以通过上述公式直接计算，因此数组支持**随机访问（Random Access）**。这里的“随机”并不表示随机选择元素，而是表示可以直接访问任意索引位置的元素。
+#### Random Access（随机访问）
 
-Because the address of any element can be calculated directly using the formula above, arrays support **Random Access**. Here, "random" does not mean randomly selecting an element; instead, it refers to the ability to directly access an element at any index.
+由于任意元素的地址都可以通过上述公式直接计算，因此数组支持**随机访问（Random Access）**。
 
-无论访问的是索引 `3` 还是索引 `3,000,000`，都只需要一次地址计算，因此访问操作的时间复杂度为 **O(1)**。
+Because the address of any element can be calculated directly using the formula above, arrays support **Random Access**.
 
-Whether accessing index `3` or index `3,000,000`, only a single address calculation is required. Therefore, array access has a time complexity of **O(1)**.
+这里的“随机”并不表示随机选择元素，而是表示可以直接访问任意索引位置的元素，而无需遍历数组中的其他元素。
+
+Here, "random" does not mean randomly selecting an element. Instead, it refers to the ability to directly access an element at any index without traversing other elements in the array.
+
+无论访问的是索引 `3` 还是索引 `3,000,000`，都只需要一次地址计算，因此数组访问元素的时间复杂度为 **O(1)**。
+
+Whether accessing index `3` or index `3,000,000`, only a single address calculation is required. Therefore, accessing an array element has a time complexity of **O(1)**.
 
 #### Example
 
@@ -78,9 +86,11 @@ int randomAccess(int[] nums) {
 }
 ```
 
-在上述示例中，随机生成的索引仅用于演示数组可以访问任意位置的元素。无论选择哪个索引，访问操作都能够在 **O(1)** 时间内完成。
-
-In the example above, the randomly generated index is used only to demonstrate that an array can access an element at any
+> **Note**
+>
+> 在上述示例中，随机生成的索引仅用于演示数组能够访问任意位置的元素，并不代表随机访问的定义。
+>
+> In the example above, the randomly generated index is used only to demonstrate that an array can access an element at any position. It should not be interpreted as the definition of random access.
 
 ### 3.   插入元素 (Insert element)
 数组元素在内存中是“紧挨着的”，它们之间没有空间再存放任何数据。如图 4-3 所示，如果想在数组中间插入一个元素，则需要将该元素之后的所有元素都向后移动一位，之后再把元素赋值给该索引。
