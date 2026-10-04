@@ -108,12 +108,16 @@ void insert(int[] nums, int num, int index) {
 }
 ```
 
-### 4.   删除元素
+### 4.   删除元素 (Delete element)
 同理，如图 4-4 所示，若想删除索引i处的元素，则需要把索引i之后的元素都向前移动一位。
+
+Similarly, as shown in Figure 4-4, if you want to delete the element at index i, all elements following index i must be shifted forward by one position.
 
 <img width="1090" height="785" alt="image" src="https://github.com/user-attachments/assets/3b256377-a49d-430f-af90-1ae91fbef895" />
 
 请注意，删除元素完成后，原先末尾的元素变得“无意义”了，所以我们无须特意去修改它。
+
+Note that once the element has been removed, the element originally at the end becomes "meaningless," so there is no need to explicitly modify it.
 
 ```java
 /* 删除索引 index 处的元素 */
@@ -125,7 +129,7 @@ void remove(int[] nums, int index) {
 }
 ```
 
-总的来看，数组的插入与删除操作有以下缺点。
-- 时间复杂度高：数组的插入和删除的平均时间复杂度均为 O(n)，其中n为数组长度。
-- 丢失元素：由于数组的长度不可变，因此在插入元素后，超出数组长度范围的元素会丢失。
-- 内存浪费：我们可以初始化一个比较长的数组，只用前面一部分，这样在插入数据时，丢失的末尾元素都是“无意义”的，但这样做会造成部分内存空间浪费。
+总的来看，数组的插入与删除操作有以下缺点。(Overall, array insertion and deletion operations have the following drawbacks.)
+- 时间复杂度高：数组的插入和删除的平均时间复杂度均为 O(n)，其中n为数组长度。(High time complexity: The average time complexity for both insertion and deletion in an array is O(n), where n is the length of the array.)
+- 丢失元素：由于数组的长度不可变，因此在插入元素后，超出数组长度范围的元素会丢失。(Loss of elements: Since the array's length is fixed, elements falling outside the array's bounds after an insertion are lost.)
+- 内存浪费：我们可以初始化一个比较长的数组，只用前面一部分，这样在插入数据时，丢失的末尾元素都是“无意义”的，但这样做会造成部分内存空间浪费。(Memory wastage: We could initialize a relatively long array and use only the initial portion; the unused elements at the end would be "meaningless" during data insertion, but this approach results in wasted memory space.)
