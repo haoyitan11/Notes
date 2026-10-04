@@ -72,7 +72,7 @@ Here, "random" does not mean randomly selecting an element. Instead, it refers t
 
 Whether accessing index `3` or index `3,000,000`, only a single address calculation is required. Therefore, accessing an array element has a time complexity of **O(1)**.
 
-#### Example
+Example
 
 ```java
 /* Random access to an element */
