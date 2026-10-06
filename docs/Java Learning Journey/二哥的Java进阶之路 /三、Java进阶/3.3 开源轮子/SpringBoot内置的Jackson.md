@@ -25,3 +25,10 @@ Jackson 的核心模块由三部分组成：
 ## 01、引入 Jackson 依赖
 要想使用 Jackson，需要在 pom.xml 文件中添加 Jackson 的依赖。
 
+```java
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>2.10.1</version>
+</dependency>
+```
