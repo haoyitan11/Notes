@@ -39,4 +39,200 @@ jackson-databind 依赖于 jackson-core 和 jackson-annotations，所以添加�
 
 Maven 之所以讨人喜欢的一点就在这，能偷偷摸摸地帮我们把该做的做了。
 
+## 02、使用 ObjectMapper
+Jackson 最常用的 API 就是基于”对象绑定” 的 ObjectMapper，它通过 writeValue 的系列方法将 Java 对象序列化为 JSON，并且可以存储成不同的格式。
 
+- writeValueAsString(Object value) 方法，将对象存储成字符串
+- writeValueAsBytes(Object value) 方法，将对象存储成字节数组
+- writeValue(File resultFile, Object value) 方法，将对象存储成文件
+
+来看一下存储成字符串的代码示例：
+```java
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+/**
+ * 微信搜索「沉默王二」，回复 Java
+ *
+ * @author 沉默王二
+ * @date 2020/11/26
+ */
+public class Demo {
+    public static void main(String[] args) throws JsonProcessingException {
+        Writer wanger = new Writer("沉默王二", 18);
+        ObjectMapper mapper = new ObjectMapper();
+        String jsonString = mapper.writerWithDefaultPrettyPrinter()
+                .writeValueAsString(wanger);
+        System.out.println(jsonString);
+    }
+}
+
+class Writer {
+    private String name;
+    private int age;
+
+    public Writer(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+}
+```
+
+程序输出结果如下所示：
+```java
+{
+  "name" : "沉默王二",
+  "age" : 18
+}
+```
+
+不是所有的字段都支持序列化和反序列化，需要符合以下规则：
+
+- 如果字段的修饰符是 public，则该字段可序列化和反序列化（不是标准写法）。
+- 如果字段的修饰符不是 public，但是它的 getter 方法和 setter 方法是 public，则该字段可序列化和反序列化。getter 方法用于序列化，setter 方法用于反序列化。
+- 如果字段只有 public 的 setter 方法，而无 public 的 getter 方 法，则该字段只能用于反序列化。
+
+如果想更改默认的序列化和反序列化规则，需要调用 ObjectMapper 的 setVisibility() 方法。否则将会抛出 InvalidDefinitionException 异常。
+
+ObjectMapper 通过 readValue 的系列方法从不同的数据源将 JSON 反序列化为 Java 对象。
+
+- readValue(String content, Class<T> valueType) 方法，将字符串反序列化为 Java 对象
+- readValue(byte[] src, Class<T> valueType) 方法，将字节数组反序列化为 Java 对象
+- readValue(File src, Class<T> valueType) 方法，将文件反序列化为 Java 对象
+
+来看一下将字符串反序列化为 Java 对象的代码示例：
+```java
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+/**
+ * 微信搜索「沉默王二」，回复 Java
+ *
+ * @author 沉默王二
+ * @date 2020/11/26
+ */
+public class Demo {
+    public static void main(String[] args) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        String jsonString = "{\n" +
+                "  \"name\" : \"沉默王二\",\n" +
+                "  \"age\" : 18\n" +
+                "}";
+        Writer deserializedWriter = mapper.readValue(jsonString, Writer.class);
+        System.out.println(deserializedWriter);
+    }
+}
+
+class Writer{
+    private String name;
+    private int age;
+
+    // getter/setter
+
+    @Override
+    public String toString() {
+        return "Writer{" +
+                "name='" + name + '\'' +
+                ", age=" + age +
+                '}';
+    }
+}
+```
+
+程序输出结果如下所示：
+```java
+Writer{name='沉默王二', age=18}
+```
+
+PS：如果反序列化的对象有带参的构造方法，它必须有一个空的默认构造方法，否则将会抛出 InvalidDefinitionException 一行。
+```java
+Exception in thread "main" com.fasterxml.jackson.databind.exc.InvalidDefinitionException: Cannot construct instance of `com.itwanger.jackson.Writer` (no Creators, like default construct, exist): cannot deserialize from Object value (no delegate- or property-based Creator)
+ at [Source: (String)"{
+  "name" : "沉默王二",
+  "age" : 18
+}"; line: 2, column: 3]
+	at com.fasterxml.jackson.databind.exc.InvalidDefinitionException.from(InvalidDefinitionException.java:67)
+	at com.fasterxml.jackson.databind.DeserializationContext.reportBadDefinition(DeserializationContext.java:1589)
+	at com.fasterxml.jackson.databind.DeserializationContext.handleMissingInstantiator(DeserializationContext.java:1055)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializerBase.deserializeFromObjectUsingNonDefault(BeanDeserializerBase.java:1297)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializer.deserializeFromObject(BeanDeserializer.java:326)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializer.deserialize(BeanDeserializer.java:159)
+	at com.fasterxml.jackson.databind.ObjectMapper._readMapAndClose(ObjectMapper.java:4202)
+	at com.fasterxml.jackson.databind.ObjectMapper.readValue(ObjectMapper.java:3205)
+	at com.fasterxml.jackson.databind.ObjectMapper.readValue(ObjectMapper.java:3173)
+	at com.itwanger.jackson.Demo.main(Demo.java:19)
+```
+
+Jackson 最常用的 API 就是基于”对象绑定” 的 ObjectMapper，
+
+ObjectMapper 也可以将 JSON 解析为基于“树模型”的 JsonNode 对象，来看下面的示例。
+```java
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+/**
+ * 微信搜索「沉默王二」，回复 Java
+ *
+ * @author 沉默王二
+ * @date 2020/11/26
+ */
+public class JsonNodeDemo {
+    public static void main(String[] args) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        String json = "{ \"name\" : \"沉默王二\", \"age\" : 18 }";
+        JsonNode jsonNode = mapper.readTree(json);
+        String name = jsonNode.get("name").asText();
+        System.out.println(name); // 沉默王二
+    }
+}
+```
+
+借助 TypeReference 可以将 JSON 字符串数组转成泛型 List，来看下面的示例：
+
+```java
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.List;
+
+/**
+ * 微信搜索「沉默王二」，回复 Java
+ *
+ * @author 沉默王二
+ * @date 2020/11/26
+ */
+public class TypeReferenceDemo {
+    public static void main(String[] args) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        String json = "[{ \"name\" : \"沉默王三\", \"age\" : 18 }, { \"name\" : \"沉默王二\", \"age\" : 19 }]";
+        List<Author> listAuthor = mapper.readValue(json, new TypeReference<List<Author>>(){});
+        System.out.println(listAuthor);
+    }
+}
+class Author{
+    private String name;
+    private int age;
+
+    // getter/setter
+
+    // toString
+}
+```
