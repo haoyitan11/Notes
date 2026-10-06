@@ -236,3 +236,59 @@ class Author{
     // toString
 }
 ```
+
+## 03、更高级的配置
+Jackson 之所以牛掰的一个很重要的因素是可以实现高度灵活的自定义配置。
+
+在实际的应用场景中，JSON 中常常会有一些 Java 对象中没有的字段，这时候，如果直接解析的话，会抛出 UnrecognizedPropertyException 异常。
+
+下面是一串 JSON 字符串：
+
+```java
+String jsonString = "{\n" +
+                "  \"name\" : \"沉默王二\",\n" +
+                "  \"age\" : 18\n" +
+                "  \"sex\" : \"男\",\n" +
+                "}";
+```
+
+但 Java 对象 Writer 中没有定义 sex 字段：
+
+```java
+class Writer{
+    private String name;
+    private int age;
+
+    // getter/setter
+}
+```
+
+我们来尝试解析一下：
+```java
+ObjectMapper mapper = new ObjectMapper();
+Writer deserializedWriter = mapper.readValue(jsonString, Writer.class);
+```
+
+不出意外，抛出异常了，sex 无法识别。
+```java
+Exception in thread "main" com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException: Unrecognized field "sex" (class com.itwanger.jackson.Writer), not marked as ignorable (2 known properties: "name", "age"])
+ at [Source: (String)"{
+  "name" : "沉默王二",
+  "age" : 18,
+  "sex" : "男"
+}"; line: 4, column: 12] (through reference chain: com.itwanger.jackson.Writer["sex"])
+```
+
+怎么办呢？可以通过 configure() 方法忽略掉这些“无法识别”的字段。
+```java
+mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+```
+
+除此之外，还有其他一些有用的配置信息，来了解一下：
+```java
+// 在序列化时忽略值为 null 的属性
+mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+// 忽略值为默认值的属性
+mapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_DEFAULT);
+```
+
