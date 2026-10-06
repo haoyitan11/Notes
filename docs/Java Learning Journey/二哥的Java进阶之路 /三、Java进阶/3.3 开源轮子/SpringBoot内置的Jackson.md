@@ -21,3 +21,7 @@ Jackson 的核心模块由三部分组成：
 - jackson-core，核心包，提供基于“流模式”解析的相关 API，包括 JsonPaser 和 JsonGenerator。
 - jackson-annotations，注解包，提供标准的注解功能；
 - jackson-databind ，数据绑定包，提供基于“对象绑定”解析的相关 API （ ObjectMapper ） 和基于“树模型”解析的相关 API （JsonNode）。
+
+## 01、引入 Jackson 依赖
+要想使用 Jackson，需要在 pom.xml 文件中添加 Jackson 的依赖。
+
