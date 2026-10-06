@@ -32,3 +32,11 @@ Jackson 的核心模块由三部分组成：
     <version>2.10.1</version>
 </dependency>
 ```
+
+jackson-databind 依赖于 jackson-core 和 jackson-annotations，所以添加完 jackson-databind 之后，Maven 会自动将 jackson-core 和 jackson-annotations 引入到项目当中。
+
+<img width="1944" height="618" alt="image" src="https://github.com/user-attachments/assets/d95b48d8-01b0-4737-bcfe-2374953808d2" />
+
+Maven 之所以讨人喜欢的一点就在这，能偷偷摸摸地帮我们把该做的做了。
+
+
