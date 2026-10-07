@@ -7,6 +7,7 @@ This document explains file handling in batch applications — **what** Java dep
 ---
 
 # Part 1: File Download
+<img width="3080" height="3990" alt="image" src="https://github.com/user-attachments/assets/ca68c5cf-0e6e-4798-b6c8-3206750ac931" />
 
 File download has two methods based on source protocol:
 - **HTTP Method** - Download from REST API endpoints
@@ -448,6 +449,7 @@ public class SftpDownloadConfiguration {
 ---
 
 # Part 2: File Upload
+<img width="3080" height="2600" alt="image" src="https://github.com/user-attachments/assets/622bb686-a0cd-45f9-813b-649de2561500" />
 
 File upload uses SFTP protocol via Spring Integration.
 
@@ -730,6 +732,7 @@ public class SftpConfiguration {
 ---
 
 # Part 3: File Generation (Writing)
+<img width="3080" height="2240" alt="image" src="https://github.com/user-attachments/assets/0bb01673-e7f7-4752-89bb-56301751a01b" />
 
 File generation writes data to local filesystem as CSV/report files.
 
@@ -1010,6 +1013,7 @@ protected File writeFile(List<Record> data, String filename) throws IOException 
 ---
 
 # Part 4: File Reading (Parsing)
+<img width="3080" height="2160" alt="image" src="https://github.com/user-attachments/assets/f0a1af61-7a41-4e22-a9d2-6d9b705cb8f4" />
 
 File reading parses CSV files from local filesystem.
 
